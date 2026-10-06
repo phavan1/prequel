@@ -24,6 +24,7 @@ function route() {
   const params = Object.fromEntries(new URLSearchParams(query || ''));
   params.args = rest;
   setLogDate(params.d || null);
+  document.body.classList.remove('heavy-day');
   const screen = ROUTES[name] || home;
   if (current && current.unmount) current.unmount();
   current = screen;

@@ -1,11 +1,24 @@
 import { get, save, exportJSON, importJSON, isPersisted, today, reset, backupDue } from '../store.js';
-import { EXERCISES } from '../data.js';
-import { esc, nav, him, toast, openSheet, closeSheet, downloadFile } from '../ui.js';
+import { EXERCISES, AREAS } from '../data.js';
+import { esc, nav, him, toast, openSheet, closeSheet, downloadFile, prettyDate } from '../ui.js';
+import { ensureGoals, count, unitOf, checkFinished, openNewGoal, openEditGoal, openLog } from '../goals.js';
+import { hill, wireHills, ribbon, restClock, noticing } from '../charts.js';
+import { dateKey } from '../store.js';
+
+let hillKey = 'all';
 
 export function mount(root) {
+  ensureGoals();
   render(root);
+  checkFinished();
+  wireHills(root);
   root.addEventListener('click', e => {
-    const t = e.target;
+    const t = e.target; let b;
+    if (t.closest('[data-newgoal]')) { openNewGoal(() => render(root)); return; }
+    if (t.closest('[data-loggoal]')) { openLog(null, () => render(root)); return; }
+    if ((b = t.closest('[data-goal]'))) { openEditGoal(b.dataset.goal, () => render(root)); return; }
+    if ((b = t.closest('[data-hill]'))) { hillKey = b.dataset.hill; render(root); return; }
+    if ((b = t.closest('[data-wx]'))) { b.closest('.chartwrap').querySelector('.readout').textContent = b.dataset.wx; return; }
     if (t.closest('[data-export]')) { backup(root); return; }
     if (t.closest('[data-fresh]')) { startFresh(root); return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
@@ -56,10 +69,14 @@ function openSettings(root) {
 
 function render(root) {
   const st = get();
-  const goal = (name, n, of, colour) => '<div class="goal"><span class="lbl" style="text-transform:none;letter-spacing:0">' + name + '</span><span class="n">' + n + '<small> / ' + of + '</small></span><span class="bar"><i style="width:' + Math.max(3, Math.min(100, n / of * 100)) + '%;background:' + colour + '"></i></span></div>';
-  const cooked = st.foods.filter(f => f.tags.includes('Cooked it myself')).length;
-  const newFoods = st.foods.filter(f => f.tags.includes('Tried something new')).length;
-  const restDays = new Set(st.rests.map(r => r.date)).size;
+  const COL = { sessions: '#1F55D0', cooked: '#E5893D', newfood: '#3E9E6E', breakfast: '#E5893D', restdays: '#D9A400', wins: '#D6698C', letters: '#3E9E6E', lanterns: '#3E9E6E' };
+  const colourOf = g => g.kind === 'own' ? AREAS.goal.colour : (COL[g.source] || AREAS.win.colour);
+  const goal = g => { const n = count(g); return '<button type="button" class="goal" data-goal="' + g.id + '"><span class="lbl" style="text-transform:none;letter-spacing:0">' + esc(g.name) + '</span><span class="n">' + n + '<small> / ' + g.target + '</small></span><span class="bar"><i style="width:' + Math.max(3, Math.min(100, n / g.target * 100)) + '%;background:' + colourOf(g) + '"></i></span></button>'; };
+  const active = st.goals.filter(g => !g.finished), finished = st.goals.filter(g => g.finished).sort((a, b) => b.finished - a.finished);
+  const ownActive = active.some(g => g.kind === 'own');
+  const HILLS = { all: ['Everything', st.moments.map(m => m.date), '#D6698C', 'moments'], move: ['Gym', st.sessions.map(x => x.date), '#1F55D0', 'sessions'], cooked: ['Cooked', st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.date), '#E5893D', 'meals'], rest: ['Rest days', Array.from(new Set(st.rests.map(r => r.date))), '#D9A400', 'days'] };
+  const H = HILLS[hillKey] || HILLS.all;
+  const notice = noticing(st);
   const wins = st.moments.filter(m => m.area === 'win').length;
   const lanterns = st.mind.filter(n => n.letGo).length;
 
@@ -82,10 +99,19 @@ function render(root) {
 
   root.innerHTML =
     '<div class="hero">' + him('skate', 'breathe', 'Your character skating, feeling himself') + '<div class="txt"><h1>How far you\'ve come</h1><p class="say">Everything here only goes up.</p></div></div>' +
-    '<div class="grid2">' + goal('Gym sessions', st.sessions.length, 100, '#1F55D0') + goal('Home-cooked meals', cooked, 50, '#E5893D') + goal('New foods tried', newFoods, 25, '#3E9E6E') + goal('Days of rest logged', restDays, 100, '#D9A400') + '</div>' +
+    '<div class="lbl">Your goals</div>' +
+    '<div class="grid2">' + active.map(g => goal(g)).join('') + '<button type="button" class="goal newgoal" data-newgoal><b>+ New goal</b><span>count up to anything</span></button></div>' +
+    (ownActive ? '<button type="button" class="btn alt wide" data-loggoal>Log one of your own goals</button>' : '') +
+    (finished.length ? '<div class="lbl">The finished shelf</div><div class="trophies">' + finished.map(g => '<button type="button" class="trophy" data-goal="' + g.id + '"><span class="star">★</span><span>' + esc(g.name) + '<small>' + g.target + ' ' + esc(unitOf(g)) + ' · ' + esc(prettyDate(dateKey(new Date(g.finished)))) + '</small></span></button>').join('') + '</div>' : '') +
     '<div class="grid3"><div class="count"><b>' + wins + '</b><span>tiny wins</span></div><div class="count"><b>' + lanterns + '</b><span>lanterns let go</span></div><div class="count"><b>' + st.letters.length + '</b><span>letters</span></div></div>' +
     '<div class="grid2"><a class="rowlink" href="#/sky"><span>Your sky</span><b>›</b></a><a class="rowlink" href="#/quilt"><span>Your quilt</span><b>›</b></a></div>' +
-    (looks.length ? '<div class="lbl">Look-backs</div>' + looks.map(l => '<div class="lookback" style="background:' + l[0] + '">' + esc(l[1]) + '</div>').join('') : '') +
+    '<div class="lbl">Looking back</div>' +
+    '<div class="card"><b>Your hill</b><p class="muted" style="font-size:13px;margin:0">It only ever climbs. A break is just a flat bit of the path.</p>' +
+      '<div class="chips">' + Object.keys(HILLS).map(k => '<button type="button" class="chip small" data-hill="' + k + '" aria-pressed="' + (k === hillKey) + '">' + HILLS[k][0] + '</button>').join('') + '</div>' + hill(H[1], H[2], H[3]) + '</div>' +
+    '<div class="card"><b>Your weather ribbon</b><p class="muted" style="font-size:13px;margin:0">Every day you checked in, as a stripe. No good or bad, just weather.</p>' + ribbon(st.weather) + '</div>' +
+    '<div class="card"><b>When you rest</b><p class="muted" style="font-size:13px;margin:0">All your rests on one clock. Your real pattern, no score.</p>' + restClock(st.rests) + '</div>' +
+    (notice ? '<div class="lookback" style="background:#DFF0DC">' + esc(notice) + '</div>' : '') +
+    (looks.length ? looks.map(l => '<div class="lookback" style="background:' + l[0] + '">' + esc(l[1]) + '</div>').join('') : '') +
     (backupDue() ? '<div class="card nudgecard"><b>It\'s been a while since your last backup.</b><p class="muted" style="font-size:14px;margin:0">No rush. Whenever you\'ve got a minute, it keeps everything safe.</p><button type="button" class="btn" data-export>Save one now</button></div>' : '') +
     '<div class="card"><div class="lbl">Keep your data safe</div><p class="muted" style="font-size:14px;line-height:1.45">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive), especially before changing phones.</p><p class="muted" style="font-size:12px" id="persist"></p>' +
       '<div class="grid2"><button type="button" class="btn" data-export>Save a backup</button><button type="button" class="btn alt" data-import>Restore</button></div><input type="file" id="importFile" accept="application/json,.json" hidden>' +

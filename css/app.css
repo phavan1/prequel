@@ -88,20 +88,22 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---------- home ---------- */
-.room { position: relative; height: 330px; border-radius: 28px; background: var(--room-2); border: 1px solid var(--line); overflow: hidden; }
+.room { position: relative; height: 400px; border-radius: 28px; background: var(--room-2); border: 1px solid var(--line); overflow: hidden; }
 .room .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: #EADAB0; }
-.room .window { position: absolute; left: 16px; top: 16px; width: 132px; height: 112px; border-radius: 14px; border: 6px solid var(--paper); background: #141A33; overflow: hidden; display: block; }
+.room .window { position: absolute; left: 14px; top: 14px; width: 120px; height: 98px; border-radius: 14px; border: 6px solid var(--paper); background: #141A33; overflow: hidden; display: block; }
 .room .window canvas { width: 100%; height: 100%; display: block; }
 .room .window { z-index: 2; }
 .room .window span { position: absolute; right: 6px; bottom: 4px; font-size: 10px; font-weight: 800; color: #C9D6FF; }
-.room .stage { position: absolute; left: 0; right: 0; bottom: 26px; display: flex; justify-content: center; }
+.room .stage { position: absolute; right: 4px; bottom: 26px; z-index: 3; display: flex; justify-content: flex-end; }
+.room .stage.wide { left: 0; right: 0; justify-content: center; }
 .room .stage button { border: 0; background: transparent; padding: 0; }
-.room .him { height: 220px; width: auto; max-width: 280px; object-fit: contain; }
+.room .him { height: 205px; width: auto; max-width: 280px; object-fit: contain; }
 .room .him.wide { height: auto; width: 225px; max-height: 230px; }
 .room .window, .room .bubble, .room .note { z-index: 2; }
-.room .bubble { position: absolute; right: 14px; top: 18px; width: 46%; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; font-family: var(--font-hand); font-size: 19px; line-height: 1.05; }
-.room .note { position: absolute; right: 14px; top: 18px; width: 140px; padding: 10px 12px; background: #FFF1A8; border-radius: 4px; transform: rotate(3deg); box-shadow: 0 2px 0 #E2CF7A; font-family: var(--font-hand); font-size: 18px; line-height: 1.05; color: var(--ink); }
-.quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.room .bubble { position: absolute; left: 14px; top: 126px; width: 46%; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; font-family: var(--font-hand); font-size: 19px; line-height: 1.05; }
+.room .note { position: absolute; left: 18px; top: 128px; width: 140px; padding: 10px 12px; background: #FFF1A8; border-radius: 4px; transform: rotate(3deg); box-shadow: 0 2px 0 #E2CF7A; font-family: var(--font-hand); font-size: 18px; line-height: 1.05; color: var(--ink); }
+.quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; }
+.quick a:active { transform: scale(.97); background: var(--blue-soft); }
 .quick a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 76px; border-radius: 18px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); font-weight: 800; font-size: 13px; }
 .quick a.primary { background: var(--blue); border-color: var(--blue); color: #FFFFFF; }
 .quick svg { width: 24px; height: 24px; }
@@ -326,3 +328,42 @@ body:has(.screen-sky) { background: #0B1026; overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .hello img, .hello .d, .hello h1, .hello p { animation: none; } }
 button.rowlink { text-align: left; font-family: inherit; }
 .item .tap { flex: 1; min-width: 0; width: auto; height: auto; min-height: 44px; padding: 0; text-align: left; font: inherit; color: var(--ink); }
+
+/* ---------- the room's things: pinboard, spice shelf, bed + quilt ---------- */
+.room .pinboard { position: absolute; right: 14px; top: 14px; width: 118px; height: 76px; border-radius: 8px; background: #D9B98A; border: 5px solid #B98A5B; display: block; z-index: 2; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
+.room .pinboard i { position: absolute; width: 26px; height: 24px; box-shadow: 0 1px 0 rgba(0,0,0,.12); }
+.room .pinboard i b { position: absolute; left: 10px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: #C2412D; }
+.room .pinboard em { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-hand); font-style: normal; font-size: 16px; color: #7A5B36; }
+.room .shelf { position: absolute; right: 10px; top: 100px; width: 140px; height: 52px; display: block; z-index: 1; }
+.room .shelf svg { width: 100%; height: 100%; display: block; }
+.room .shelf span { position: absolute; right: 2px; top: 6px; font-size: 10px; font-weight: 900; color: #8B6A46; }
+.room .bed { position: absolute; left: 4px; bottom: 30px; width: 200px; height: 108px; display: block; z-index: 1; }
+.room .bed svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.room .bed canvas { position: absolute; left: 31%; top: 45%; width: 66%; height: 41%; border-radius: 6px; }
+.jarlist { display: flex; flex-direction: column; gap: 6px; }
+.jarrow { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border-radius: 12px; background: var(--room); font-weight: 800; font-size: 14px; }
+.jarrow i { width: 14px; height: 18px; border-radius: 4px; flex: none; }
+.jarrow span { flex: 1; }
+.jarrow small { color: var(--ink-soft); font-weight: 700; }
+/* heavy day: the whole home softens and dims */
+.screen-home.heavy { --room: #EFE6CF; --room-2: #E6DCC2; }
+body.heavy-day { background: #EFE6CF; }
+.screen-home.heavy .room { filter: saturate(.75) brightness(.96); }
+.screen-home.heavy .gentle { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- goals, finished shelf, kind charts ---------- */
+button.goal { text-align: left; font: inherit; color: inherit; }
+.goal.newgoal { border-style: dashed; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.goal.newgoal b { color: var(--blue); font-size: 15px; }
+.goal.newgoal span { color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+.trophies { display: flex; flex-direction: column; gap: 8px; }
+.trophy { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 14px; border-radius: 16px; border: 1px solid #EBD58E; background: #FFF6D8; font: inherit; font-weight: 800; text-align: left; color: var(--ink); }
+.trophy .star { font-size: 22px; color: #D9A400; }
+.trophy small { display: block; font-weight: 700; color: var(--ink-soft); font-size: 12px; }
+.chartwrap { display: flex; flex-direction: column; gap: 4px; }
+.chartwrap svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.chartwrap .ribbon { height: 54px; border-radius: 10px; overflow: hidden; }
+.readout { min-height: 18px; font-size: 13px; font-weight: 800; color: var(--ink-soft); }
+.endlbl { font: 900 13px var(--font-body); fill: var(--ink); }
+.axlbl { font: 700 10px var(--font-body); fill: var(--ink-soft); }
+.restclock { width: 190px; max-width: 70%; align-self: center; display: block; margin: 0 auto; }

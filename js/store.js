@@ -49,6 +49,8 @@ function fresh() {
     units: {},        // exercise key -> 'kg' | 'plate'
     customExercises: {},
     customWorkouts: [],
+    goals: [],        // {id, kind:'linked'|'own', source, name, target, from, created, finished}
+    goalLogs: [],     // {id, goalId, date, ts}  your own goals, logged by you
     workoutAdds: {},  // workout id -> [[key, sets, range]] kept additions
     subsAdded: {},    // exercise key -> [names]
     settings: { name: '', tinyWins: DEFAULT_TINY_WINS.slice(), kindLines: DEFAULT_KIND_LINES.slice() }

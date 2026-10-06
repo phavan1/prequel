@@ -4,7 +4,8 @@ export const AREAS = {
   food: { name: 'Food', colour: '#E5893D' },
   rest: { name: 'Rest', colour: '#D9A400' },
   win: { name: 'Tiny win', colour: '#D6698C' },
-  mind: { name: 'Mind', colour: '#3E9E6E' }
+  mind: { name: 'Mind', colour: '#3E9E6E' },
+  goal: { name: 'Your goals', colour: '#7A5BC7' }
 };
 
 // t: wr = weight × reps, hold = seconds, mins = minutes. rest: c = compound, i = isolation. m = machine (kg or plate #)

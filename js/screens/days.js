@@ -1,6 +1,7 @@
 import { get, save, today, dateKey, parseKey } from '../store.js';
 import { AREAS, weatherByName, EXERCISES } from '../data.js';
 import { esc, nav, prettyDate, setLogDate, timeOf, openSheet, closeSheet } from '../ui.js';
+import { openLog } from '../goals.js';
 
 let month = null, selected = null;
 
@@ -15,6 +16,7 @@ export function mount(root, params) {
     if ((b = t.closest('[data-month]'))) { const n = Number(b.dataset.month); const d = new Date(month[0], month[1] + n, 1); month = [d.getFullYear(), d.getMonth()]; render(root); return; }
     if ((b = t.closest('[data-delm]'))) { confirmDelete(root, b.dataset.delm); return; }
     if ((b = t.closest('[data-sess]'))) { editSession(root, b.dataset.sess); return; }
+    if (t.closest('[data-goals]')) { openLog(selected, () => render(root)); return; }
     if ((b = t.closest('[data-go]'))) { const go = b.dataset.go; location.hash = '#/' + go + (selected === today() ? '' : (go.includes('?') ? '&' : '?') + 'd=' + selected); }
   });
 }
@@ -23,7 +25,7 @@ function confirmDelete(root, id) {
   const st = get(), m = st.moments.find(x => x.id === id); if (!m) return;
   openSheet('<h2>Remove this?</h2><p class="muted">' + esc(m.text) + '</p><button type="button" class="btn danger" data-yes>Remove it</button><button type="button" class="btn alt" data-close>Keep it</button>', ev => {
     if (!ev.target.closest('[data-yes]')) return;
-    if (m.ref) ['sessions', 'rests', 'foods', 'weather'].forEach(l => { st[l] = st[l].filter(x => x.id !== m.ref); });
+    if (m.ref) ['sessions', 'rests', 'foods', 'weather', 'goalLogs', 'letters'].forEach(l => { if (st[l]) st[l] = st[l].filter(x => x.id !== m.ref); });
     st.moments = st.moments.filter(x => x.id !== id);
     save(); closeSheet(); render(root);
   });
@@ -86,6 +88,6 @@ function render(root) {
       ? moments.map(m => '<div class="item"><i style="background:' + (AREAS[m.area] || AREAS.mind).colour + '"></i>' + (m.ref && st.sessions.some(x => x.id === m.ref) ? '<button type="button" class="tap" data-sess="' + m.ref + '">' + esc(m.text) + (m.bright ? ' ✦' : '') + ' <b style="color:var(--blue)">· sets ›</b></button>' : '<span>' + esc(m.text) + (m.bright ? ' ✦' : '') + '</span>') + '<button type="button" data-delm="' + m.id + '" aria-label="Remove this moment">×</button></div>').join('')
       : '<p class="empty">Nothing here yet. Add anything you remember. It counts just the same.</p>') +
     '<div class="lbl">Add to this day</div>' +
-    '<div class="grid3">' + [['move', 'Move'], ['food', 'Food'], ['rest', 'Rest'], ['wins', 'Tiny win'], ['weather', 'Weather'], ['wins?heavy=1', 'Heavy day']].map(o => '<button type="button" class="btn alt" data-go="' + o[0] + '">' + o[1] + '</button>').join('') + '</div>' +
+    '<div class="grid3">' + [['move', 'Move'], ['food', 'Food'], ['rest', 'Rest'], ['wins', 'Tiny win'], ['weather', 'Weather'], ['wins?heavy=1', 'Heavy day']].map(o => '<button type="button" class="btn alt" data-go="' + o[0] + '">' + o[1] + '</button>').join('') + '<button type="button" class="btn alt" data-goals>Your goals</button></div>' +
     nav('days');
 }

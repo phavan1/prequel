@@ -7,7 +7,7 @@ const COOL = [['#1F55D0', '#DCE7FF'], ['#8FB0D9', '#F1F5FC'], ['#6CC2B4', '#E2F4
 const MID = [['#1F55D0', '#FFF4CC'], ['#5DAE7E', '#E1F2E6'], ['#8FB0D9', '#FFF1DE'], ['#D96C8A', '#FBE3EA'], ['#23262F', '#F3EEDF'], ['#6CC2B4', '#FFF4CC']];
 const WARM = [['#F4C430', '#FFF4CC'], ['#F2A65A', '#FFEBD6'], ['#E2402F', '#FFE1DA'], ['#D96C8A', '#FFF1DE'], ['#5DAE7E', '#FFF4CC'], ['#1F55D0', '#FFE7B8']];
 const FEEL_PATTERNS = { rested: ['stars', 'flowers', 'dots', 'scallops', 'knots'], okay: ['stripes', 'checks', 'gingham', 'plaid', 'diamonds', 'crosses'], groggy: ['waves', 'zigzag', 'triangles', 'knots', 'stripes'] };
-const PAT = {
+export const PAT = {
   stripes(g, s, a, b, r) { g.fillStyle = b; g.fillRect(0, 0, s, s); const ang = [0, 45, 90, 135][Math.floor(r() * 4)] * Math.PI / 180, w = 3 + r() * 5; g.save(); g.translate(s / 2, s / 2); g.rotate(ang); g.fillStyle = a; for (let x = -s; x < s; x += w * 2) g.fillRect(x, -s, w, s * 2); g.restore(); },
   dots(g, s, a, b, r) { g.fillStyle = b; g.fillRect(0, 0, s, s); const rad = 1.4 + r() * 1.8, sp = 7 + r() * 5; g.fillStyle = a; let row = 0; for (let y = 2; y < s + sp; y += sp, row++) for (let x = (row % 2) * sp / 2; x < s + sp; x += sp) { g.beginPath(); g.arc(x, y, rad, 0, 7); g.fill(); } },
   checks(g, s, a, b, r) { const n = 3 + Math.floor(r() * 4), c = s / n; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { g.fillStyle = (i + j) % 2 ? a : b; g.fillRect(i * c, j * c, c + 0.5, c + 0.5); } },
@@ -30,7 +30,7 @@ function fabricFor(r, hours, feel) {
 }
 
 // one patch per day of rest
-function patches() {
+export function patches() {
   const byDay = {};
   get().rests.forEach(r => { (byDay[r.date] = byDay[r.date] || []).push(r); });
   return Object.keys(byDay).sort().map(date => {

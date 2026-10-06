@@ -57,7 +57,7 @@ function render(root, keepNote) {
     '<div class="hero">' + him(tags.includes('Cooked it myself') ? 'cooking' : 'eating', 'breathe', 'Your character eating with you') +
       '<div class="txt"><h1>A food moment</h1><p class="say">Eating with you. A banana counts.</p></div></div>' +
     '<div class="chips">' + FOOD_TAGS.map(t => '<button type="button" class="chip" data-tag="' + esc(t) + '" aria-pressed="' + tags.includes(t) + '">' + esc(t) + '</button>').join('') + '</div>' +
-    '<label class="sr" for="note">What did you have? (optional)</label><input id="note" type="text" placeholder="What did you have? (optional)" autocomplete="off" value="' + esc(note) + '">' +
+    '<label class="sr" for="note">What did you have? (optional)</label><input id="note" type="text" placeholder="' + (tags.includes('Tried something new') ? 'What was it? It gets a jar on his shelf' : 'What did you have? (optional)') + '" autocomplete="off" value="' + esc(note) + '">' +
     '<button type="button" class="btn wide" data-log>Log it</button>' +
     '<div class="grid2"><div class="count"><b>' + cooked + ' <small class="muted" style="font-size:13px">/ 50</small></b><span>home-cooked meals</span></div><div class="count"><b>' + newFoods + ' <small class="muted" style="font-size:13px">/ 25</small></b><span>new foods tried</span></div></div>' +
     '<div class="top"><div class="lbl">Comfort menu · saved by good-day you</div><button type="button" class="btn ghost" data-addcomfort style="min-height:36px;padding:0 4px">+ Save one</button></div>' +
