@@ -1,4 +1,4 @@
-import { get, save, exportJSON, importJSON, isPersisted, today } from '../store.js';
+import { get, save, exportJSON, importJSON, isPersisted, today, reset, backupDue } from '../store.js';
 import { EXERCISES } from '../data.js';
 import { esc, nav, him, toast, openSheet, closeSheet, downloadFile } from '../ui.js';
 
@@ -6,7 +6,8 @@ export function mount(root) {
   render(root);
   root.addEventListener('click', e => {
     const t = e.target;
-    if (t.closest('[data-export]')) { downloadFile('prequel-backup-' + today() + '.json', exportJSON(), 'application/json'); return; }
+    if (t.closest('[data-export]')) { backup(root); return; }
+    if (t.closest('[data-fresh]')) { startFresh(root); return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
     if (t.closest('[data-settings]')) { openSettings(root); }
   });
@@ -18,6 +19,22 @@ export function mount(root) {
       file.text().then(txt => { try { importJSON(txt); closeSheet(); toast('Restored. Welcome back.'); render(root); } catch (err) { closeSheet(); toast(err.message || 'That file couldn\'t be read.'); } });
     });
     e.target.value = '';
+  });
+}
+
+function backup(root) {
+  downloadFile('prequel-backup-' + today() + '.json', exportJSON(), 'application/json');
+  get().lastBackup = Date.now(); save(); render(root);
+}
+
+// start fresh: asks twice, and offers a backup first
+function startFresh(root) {
+  openSheet('<h2>Start fresh?</h2><p class="muted">This clears everything: your sky, quilt, sessions, notes, letters, and the workouts and exercises you made. The app goes back to how it was on day one.</p><p class="muted">If there\'s any chance you\'ll want it back, save a backup first. You can restore it any time.</p>' +
+    '<button type="button" class="btn" data-o="backup">Save a backup first</button><button type="button" class="btn danger" data-o="wipe">Clear everything</button><button type="button" class="btn alt" data-close>Keep everything</button>', ev => {
+    const o = ev.target.closest('[data-o]'); if (!o) return;
+    if (o.dataset.o === 'backup') { backup(root); return; }
+    if (!o.dataset.armed) { o.dataset.armed = '1'; o.textContent = 'Yes, clear it all. Tap again'; return; }
+    reset(); closeSheet(); toast('A fresh start. Hello again.'); location.hash = '#/home';
   });
 }
 
@@ -69,9 +86,12 @@ function render(root) {
     '<div class="grid3"><div class="count"><b>' + wins + '</b><span>tiny wins</span></div><div class="count"><b>' + lanterns + '</b><span>lanterns let go</span></div><div class="count"><b>' + st.letters.length + '</b><span>letters</span></div></div>' +
     '<div class="grid2"><a class="rowlink" href="#/sky"><span>Your sky</span><b>›</b></a><a class="rowlink" href="#/quilt"><span>Your quilt</span><b>›</b></a></div>' +
     (looks.length ? '<div class="lbl">Look-backs</div>' + looks.map(l => '<div class="lookback" style="background:' + l[0] + '">' + esc(l[1]) + '</div>').join('') : '') +
+    (backupDue() ? '<div class="card nudgecard"><b>It\'s been a while since your last backup.</b><p class="muted" style="font-size:14px;margin:0">No rush. Whenever you\'ve got a minute, it keeps everything safe.</p><button type="button" class="btn" data-export>Save one now</button></div>' : '') +
     '<div class="card"><div class="lbl">Keep your data safe</div><p class="muted" style="font-size:14px;line-height:1.45">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive), especially before changing phones.</p><p class="muted" style="font-size:12px" id="persist"></p>' +
-      '<div class="grid2"><button type="button" class="btn" data-export>Save a backup</button><button type="button" class="btn alt" data-import>Restore</button></div><input type="file" id="importFile" accept="application/json,.json" hidden></div>' +
+      '<div class="grid2"><button type="button" class="btn" data-export>Save a backup</button><button type="button" class="btn alt" data-import>Restore</button></div><input type="file" id="importFile" accept="application/json,.json" hidden>' +
+      '<p class="muted" style="font-size:12px;margin:0">' + (st.lastBackup ? 'Last backup: ' + new Date(st.lastBackup).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'No backup saved yet.') + '</p></div>' +
     '<button type="button" class="btn alt wide" data-settings>Your name, kind words and tiny wins</button>' +
+    '<button type="button" class="btn ghost wide" data-fresh>Start fresh</button>' +
     nav('me');
   isPersisted().then(p => { const el = root.querySelector('#persist'); if (el) el.textContent = p ? 'This phone has promised to keep your data.' : 'Tip: adding the app to your home screen helps the phone keep your data.'; });
 }

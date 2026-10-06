@@ -73,6 +73,7 @@ function renderStart() {
     '<div class="lbl">Or pick yourself</div>' +
     '<div class="grid2">' + workouts().map(w => '<button type="button" class="wbtn" data-start="' + w.id + '"><b>' + esc(w.n) + '</b><span>' + esc(w.d) + '</span></button>').join('') +
       '<button type="button" class="wbtn new" data-newwk="1"><b>+ New workout</b><span>name it, pick exercises</span></button></div>' +
+    '<button type="button" class="rowlink" data-manage="1" style="width:100%"><span>Change or remove your workouts, exercises and swaps</span><b>›</b></button>' +
     nav('move');
 }
 
@@ -210,6 +211,7 @@ function onClick(e) {
   if ((b = t.closest('[data-light]'))) { light = b.dataset.light; renderStart(); return; }
   if ((b = t.closest('[data-start]'))) { startWorkout(b.dataset.start); return; }
   if (t.closest('[data-newwk]')) { openNewWk(); return; }
+  if (t.closest('[data-manage]')) { openManage(); return; }
   if (!a) return;
   if (t.closest('[data-leave]')) {
     openSheet('<h2>Leave this workout?</h2><p class="muted">Your sets so far are kept. You can come back to it from Move, or finish it now so it counts.</p>' +
@@ -294,11 +296,11 @@ function addToWorkout(key) {
   say = 'Added ' + lib[key].n.toLowerCase() + (keep ? ', and it\'s saved in ' + a.n + ' now.' : ' for today.');
   closeSheet(); renderWk();
 }
-function openNewWk() {
-  const draft = { name: '', picked: [] };
+function openNewWk(existing) {
+  const draft = existing ? { name: existing.n, picked: existing.items.map(x => x[0]) } : { name: '', picked: [] };
   const draw = msg => {
     const lib = EX();
-    return '<h2>New workout</h2><p class="muted">Name it however feels like you. Tap exercises in the order you like to do them.</p>' +
+    return '<h2>' + (existing ? 'Change workout' : 'New workout') + '</h2><p class="muted">Name it however feels like you. Tap exercises in the order you like to do them.</p>' +
       '<label class="field-label" for="wkName">NAME</label><input id="wkName" type="text" placeholder="e.g. Legs + lazy cardio" autocomplete="off" value="' + esc(draft.name) + '" enterkeyhint="done">' +
       '<div class="lbl">Exercises' + (draft.picked.length ? ' · ' + draft.picked.length + ' picked' : '') + '</div>' +
       '<div class="chips">' + Object.keys(lib).map(k => { const n = draft.picked.indexOf(k); return '<button type="button" class="chip small" data-draft="' + k + '" aria-pressed="' + (n >= 0) + '">' + (n >= 0 ? (n + 1) + ' · ' : '') + esc(lib[k].n) + '</button>'; }).join('') + '</div>' +
@@ -315,9 +317,58 @@ function openNewWk() {
       draft.name = document.getElementById('wkName').value.trim();
       if (!draft.name) { redraw('Give it a name first.'); return; }
       if (!draft.picked.length) { redraw('Pick at least one exercise.'); return; }
-      const lib = EX();
-      get().customWorkouts.push({ id: 'u' + uid(), n: draft.name, d: draft.picked.length + (draft.picked.length === 1 ? ' exercise' : ' exercises') + ' · yours', items: draft.picked.map(k => [k, lib[k].t === 'mins' ? '1' : '2', defRange(lib[k].t)]) });
+      const lib = EX(), old = existing ? existing.items : [];
+      const w = { id: existing ? existing.id : 'u' + uid(), n: draft.name, d: draft.picked.length + (draft.picked.length === 1 ? ' exercise' : ' exercises') + ' · yours', items: draft.picked.map(k => (old.find(x => x[0] === k) || [k, lib[k].t === 'mins' ? '1' : '2', defRange(lib[k].t)]).slice()) };
+      const list = get().customWorkouts, at = list.findIndex(x => x.id === w.id);
+      if (at >= 0) list[at] = w; else list.push(w);
       save(); closeSheet(); renderStart(); toast('Saved ' + draft.name);
     }
+  });
+}
+
+// ---------- you're in control: change or remove anything you've added ----------
+function openManage() {
+  const st = get(), lib = EX();
+  const wkName = id => (byId(id) || { n: '?' }).n;
+  const row = (label, sub, btns) => '<div class="mgrow"><span>' + esc(label) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' + btns + '</div>';
+  const x = (attr) => '<button type="button" class="x" ' + attr + '>Remove</button>';
+  const adds = [];
+  Object.keys(st.workoutAdds).forEach(wid => (st.workoutAdds[wid] || []).forEach((it, j) => adds.push([wid, j, it])));
+  const swaps = [];
+  Object.keys(st.subsAdded).forEach(k => (st.subsAdded[k] || []).forEach((n, j) => swaps.push([k, j, n])));
+  const exKeys = Object.keys(st.customExercises);
+  const empty = '<p class="muted" style="font-size:13px;margin:0">Nothing here yet.</p>';
+  openSheet('<h2>Your workouts and exercises</h2><p class="muted">Change or remove anything you\'ve added. Your past sessions stay exactly as they were. Tap Remove twice to be sure.</p>' +
+    '<div class="lbl">Workouts you made</div>' + (st.customWorkouts.length ? st.customWorkouts.map(w => row(w.n, w.items.length + (w.items.length === 1 ? ' exercise' : ' exercises'), '<button type="button" data-m="editwk" data-id="' + w.id + '">Change</button>' + x('data-m="delwk" data-id="' + w.id + '"'))).join('') : empty) +
+    '<div class="lbl">Added to playbook workouts</div>' + (adds.length ? adds.map(([wid, j, it]) => row((lib[it[0]] || { n: '?' }).n, 'in ' + wkName(wid), x('data-m="deladd" data-id="' + wid + '" data-j="' + j + '"'))).join('') : empty) +
+    '<div class="lbl">Exercises you made</div>' + (exKeys.length ? exKeys.map(k => row(st.customExercises[k].n, TYPES.find(t => t[0] === st.customExercises[k].t)[1], '<button type="button" data-m="renex" data-id="' + k + '">Rename</button>' + x('data-m="delex" data-id="' + k + '"'))).join('') : empty) +
+    '<div class="lbl">Swaps you added</div>' + (swaps.length ? swaps.map(([k, j, n]) => row(n, 'for ' + (lib[k] || { n: '?' }).n.toLowerCase(), x('data-m="delswap" data-id="' + k + '" data-j="' + j + '"'))).join('') : empty) +
+    '<button type="button" class="btn alt" data-close>Done</button>', ev => {
+    const b = ev.target.closest('[data-m]'); if (!b) return;
+    const m = b.dataset.m, id = b.dataset.id, j = Number(b.dataset.j);
+    if (m === 'editwk') { openNewWk(st.customWorkouts.find(w => w.id === id)); return; }
+    if (m === 'renex') { renameEx(id); return; }
+    // removing asks twice, right on the button
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Sure?'; return; }
+    if (m === 'delwk') st.customWorkouts = st.customWorkouts.filter(w => w.id !== id);
+    if (m === 'deladd') { st.workoutAdds[id].splice(j, 1); if (!st.workoutAdds[id].length) delete st.workoutAdds[id]; }
+    if (m === 'delswap') { st.subsAdded[id].splice(j, 1); if (!st.subsAdded[id].length) delete st.subsAdded[id]; }
+    if (m === 'delex') {
+      if (act() && act().items.some(it => it[0] === id)) { toast('It\'s in your open workout. Finish that first.'); return; }
+      delete st.customExercises[id]; delete st.subsAdded[id]; delete st.lifts[id]; delete st.units[id];
+      st.customWorkouts.forEach(w => { w.items = w.items.filter(it => it[0] !== id); });
+      st.customWorkouts = st.customWorkouts.filter(w => w.items.length);
+      Object.keys(st.workoutAdds).forEach(wid => { st.workoutAdds[wid] = st.workoutAdds[wid].filter(it => it[0] !== id); if (!st.workoutAdds[wid].length) delete st.workoutAdds[wid]; });
+    }
+    save(); renderStart(); openManage(); toast('Removed.');
+  });
+}
+function renameEx(k) {
+  const e = get().customExercises[k];
+  openSheet('<h2>Rename exercise</h2><label class="sr" for="renIn">Exercise name</label><input id="renIn" type="text" value="' + esc(e.n) + '" autocomplete="off" enterkeyhint="done"><button type="button" class="btn" data-o="1">Save</button><button type="button" class="btn alt" data-back="1">Back</button>', ev => {
+    if (ev.target.closest('[data-back]')) { openManage(); return; }
+    if (!ev.target.closest('[data-o]')) return;
+    const v = document.getElementById('renIn').value.trim(); if (!v) return;
+    e.n = v; save(); renderStart(); openManage(); toast('Renamed.');
   });
 }

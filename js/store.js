@@ -122,4 +122,12 @@ export function importJSON(text) {
   state.settings = Object.assign(fresh().settings, data.settings || {});
   save();
 }
+// start fresh: everything back to how it was on day one
+export function reset() { state = fresh(); save(); }
+// a gentle nudge to save a backup roughly once a month, once there's something worth keeping
+export function backupDue() {
+  if (!state || state.moments.length < 5) return false;
+  const since = state.lastBackup || state.created || Date.now();
+  return Date.now() - since > 30 * 864e5;
+}
 export async function isPersisted() { try { return navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : false; } catch (e) { return false; } }

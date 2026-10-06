@@ -1,5 +1,5 @@
-import { get, save, uid, addMoment, today, dateKey } from '../store.js';
-import { esc, nav, backLink, him, toast, prettyDate } from '../ui.js';
+import { get, save, uid, addMoment, removeById, today, dateKey } from '../store.js';
+import { esc, nav, backLink, him, toast, prettyDate, openSheet, closeSheet } from '../ui.js';
 
 let showing = null;
 
@@ -11,12 +11,30 @@ export function mount(root, params) {
     const t = e.target, st = get(); let b;
     if (t.closest('[data-open]')) { openOne(); render(root); return; }
     if (t.closest('[data-fold]')) { showing = null; render(root); return; }
+    if (t.closest('[data-editletter]') && showing) {
+      const l = showing;
+      openSheet('<h2>Change this letter</h2><label class="sr" for="letterEd">Letter</label><textarea id="letterEd" rows="9">' + esc(l.text) + '</textarea><button type="button" class="btn" data-o="save">Save</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
+        if (!ev.target.closest('[data-o]')) return;
+        const v = document.getElementById('letterEd').value.trim(); if (!v) return;
+        l.text = v; save(); closeSheet(); render(root); toast('Changed.');
+      });
+      return;
+    }
+    if (t.closest('[data-delletter]') && showing) {
+      const l = showing;
+      openSheet('<h2>Remove this letter?</h2><p class="muted">It\'ll be gone for good, along with its star.</p><button type="button" class="btn danger" data-o="del">Remove it</button><button type="button" class="btn alt" data-close>Keep it</button>', ev => {
+        if (!ev.target.closest('[data-o]')) return;
+        removeById('letters', l.id); showing = null; closeSheet(); render(root); toast('Removed.');
+      });
+      return;
+    }
     if ((b = t.closest('[data-read]'))) { showing = st.letters.find(l => l.id === b.dataset.read) || null; if (showing && !showing.opened) { showing.opened = Date.now(); save(); } render(root); window.scrollTo(0, 0); return; }
     if (t.closest('[data-seal]')) {
       const text = (root.querySelector('#letter').value || '').trim(); if (!text) { root.querySelector('#letter').focus(); return; }
       const wx = st.weather.filter(w => w.date === today()).sort((a, b) => a.ts - b.ts).pop();
-      st.letters.push({ id: uid(), text, ts: Date.now(), weather: wx ? wx.types.join(' + ') : '', opened: null });
-      addMoment('mind', 'Wrote a letter to future me', today(), { bright: 1 });
+      const id = uid();
+      st.letters.push({ id, text, ts: Date.now(), weather: wx ? wx.types.join(' + ') : '', opened: null });
+      addMoment('mind', 'Wrote a letter to future me', today(), { bright: 1, ref: id });
       save(); render(root); toast('Sealed. It\'ll be here on a stormy day.');
     }
   });
@@ -39,7 +57,7 @@ function render(root) {
     '<div class="top">' + backLink('#/mind', 'Mind') + '<span class="lbl">' + sealed + ' sealed</span></div>' +
     '<div><h1>Letters from good-day you</h1><p class="sub">Written on sunny days. Handed to you on stormy ones.</p></div>' +
     (showing
-      ? '<div class="paper"><span class="lbl">Written ' + esc(prettyDate(dateKey(new Date(showing.ts)), { weekday: 'long', day: 'numeric', month: 'long' })) + (showing.weather ? ' · ' + esc(showing.weather.toLowerCase()) : '') + '</span><p class="tx">' + esc(showing.text) + '</p><button type="button" class="btn alt" data-fold>Fold it back up</button></div>'
+      ? '<div class="paper"><span class="lbl">Written ' + esc(prettyDate(dateKey(new Date(showing.ts)), { weekday: 'long', day: 'numeric', month: 'long' })) + (showing.weather ? ' · ' + esc(showing.weather.toLowerCase()) : '') + '</span><p class="tx">' + esc(showing.text) + '</p><button type="button" class="btn alt" data-fold>Fold it back up</button><div class="paperacts"><button type="button" class="btn ghost" data-editletter>Change it</button><button type="button" class="btn ghost" data-delletter>Remove it</button></div></div>'
       : st.letters.length
         ? '<button type="button" class="envelope" data-open aria-label="Open a letter"><svg viewBox="0 0 324 170" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,0 162,96 324,0" fill="none" stroke="#E2CF9E" stroke-width="2"></polyline></svg><span class="seal"></span><span class="cap">' + (sealed ? 'From you, for today · tap to open' : 'All opened · tap to reread one') + '</span></button>'
         : '<div class="hero">' + him('letter', 'breathe', 'Your character reading a letter') + '<div class="txt"><p class="say">No letters yet. Write one on a good day, and I\'ll keep it safe.</p></div></div>') +

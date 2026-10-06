@@ -1,5 +1,5 @@
-import { get, save, uid, addMoment, today, addDays, parseKey } from '../store.js';
-import { esc, nav, toast, prettyDate } from '../ui.js';
+import { get, save, uid, addMoment, removeById, today, addDays, parseKey } from '../store.js';
+import { esc, nav, toast, prettyDate, openSheet, closeSheet } from '../ui.js';
 
 const COLOURS = ['#FFF1A8', '#DCE7FF', '#FFD9CC', '#DFF0DC', '#EBDDF2'];
 let when = '';
@@ -28,6 +28,27 @@ export function mount(root) {
       addMoment('mind', 'Let go: ' + n.text, today(), { ref: n.id });
       save(); render(root); toast('Folded into a lantern. It\'s floating up into your sky.'); return;
     }
+    if ((b = t.closest('[data-editnote]'))) { editNote(root, b.dataset.editnote); return; }
+  });
+}
+
+// tap a note (or a lantern) to change it, bring it back, or remove it completely
+function editNote(root, id) {
+  const st = get(), n = st.mind.find(x => x.id === id); if (!n) return;
+  openSheet((n.letGo ? '<h2>A lantern you let go</h2>' : '<h2>Change this note</h2>') +
+    '<label class="field-label" for="noteTx">NOTE</label><input id="noteTx" type="text" value="' + esc(n.text) + '" autocomplete="off" enterkeyhint="done">' +
+    (n.letGo ? '' : '<label class="field-label" for="noteDay">BRING IT UP AROUND · leave empty for no nudge</label><input id="noteDay" type="date" value="' + esc(n.remindOn || '') + '">') +
+    '<button type="button" class="btn" data-o="save">Save</button>' +
+    (n.letGo ? '<button type="button" class="btn alt" data-o="back">Bring it back to my notes</button>' : '') +
+    '<button type="button" class="btn danger" data-o="del">Remove it completely</button><button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
+    const o = ev.target.closest('[data-o]'); if (!o) return;
+    if (o.dataset.o === 'del') { removeById('mind', id); closeSheet(); render(root); toast('Gone, like it was never written.'); return; }
+    if (o.dataset.o === 'back') { n.letGo = null; st.moments = st.moments.filter(m => m.ref !== id); save(); closeSheet(); render(root); toast('It\'s back on your board.'); return; }
+    const text = document.getElementById('noteTx').value.trim(); if (!text) return;
+    n.text = text;
+    const day = document.getElementById('noteDay'); if (day) n.remindOn = day.value || null;
+    st.moments.forEach(m => { if (m.ref === id) m.text = 'Let go: ' + text; });
+    save(); closeSheet(); render(root); toast('Changed.');
   });
 }
 
@@ -37,7 +58,7 @@ function render(root, keep) {
   const open = st.mind.filter(n => !n.letGo).sort((a, b) => (a.remindOn || '9999').localeCompare(b.remindOn || '9999'));
   const lanterns = st.mind.filter(n => n.letGo).length;
   root.innerHTML =
-    '<div><h1>Things on my mind</h1><p class="sub">No due dates. No overdue. Just a place to put things down.</p></div>' +
+    '<div><h1>Things on my mind</h1><p class="sub">No due dates. No overdue. Just a place to put things down. Tap a note to change it.</p></div>' +
     '<div class="card">' +
       '<label class="field-label" for="jot">JOT SOMETHING DOWN</label><input id="jot" type="text" placeholder="e.g. check that email from uni" autocomplete="off" value="' + esc(jot) + '" enterkeyhint="done">' +
       '<div class="lbl">Remind me around</div>' +
@@ -49,9 +70,10 @@ function render(root, keep) {
       ? '<div class="notes">' + open.map((n, i) => {
           const due = n.remindOn && n.remindOn <= d;
           const meta = !n.remindOn ? 'no nudge' : due ? 'hey, this one' : 'around ' + prettyDate(n.remindOn).toLowerCase();
-          return '<div class="sticky" style="background:' + COLOURS[i % COLOURS.length] + ';transform:rotate(' + ((i % 3) - 1) * 1.5 + 'deg)"><span class="tx">' + esc(n.text) + '</span><span class="mt">' + esc(meta) + '</span><button type="button" data-letgo="' + n.id + '">Let it go</button></div>';
+          return '<div class="sticky" style="background:' + COLOURS[i % COLOURS.length] + ';transform:rotate(' + ((i % 3) - 1) * 1.5 + 'deg)"><button type="button" class="tx" data-editnote="' + n.id + '" aria-label="Change this note">' + esc(n.text) + '</button><span class="mt">' + esc(meta) + '</span><button type="button" data-letgo="' + n.id + '">Let it go</button></div>';
         }).join('') + '</div>'
       : '<p class="empty">Nothing on your mind here right now. That\'s a nice kind of empty.</p>') +
+    (lanterns ? '<details class="letgo"><summary>Lanterns you\'ve let go</summary>' + st.mind.filter(n => n.letGo).sort((a, b) => b.letGo - a.letGo).map(n => '<button type="button" class="item" data-editnote="' + n.id + '" style="width:100%;text-align:left"><i style="background:#3E9E6E"></i><span>' + esc(n.text) + '</span><b style="padding-right:12px;color:var(--blue)">›</b></button>').join('') + '</details>' : '') +
     '<p class="muted" style="font-size:13px">' + lanterns + (lanterns === 1 ? ' lantern' : ' lanterns') + ' let go so far. Doing it or not doing it, both count as letting go.</p>' +
     '<a class="rowlink" href="#/letters"><span>Letters from good-day you</span><b>' + st.letters.length + '</b></a>' +
     nav('mind');

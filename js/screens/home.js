@@ -1,4 +1,4 @@
-import { get, today } from '../store.js';
+import { get, today, backupDue } from '../store.js';
 import { AREAS, weatherByName } from '../data.js';
 import { esc, him, nav, pop, pick, setLogDate } from '../ui.js';
 
@@ -55,6 +55,7 @@ export function mount(root) {
       '<a href="#/wins">' + svg(ICONS.win) + 'Tiny win</a>' +
     '</div>' +
     '<a class="rowlink" href="#/wins?heavy=1"><span>' + (heavy ? 'Today\'s heavy. Go gently.' : 'Today feels heavy') + '</span><b>›</b></a>' +
+    (backupDue() ? '<a class="rowlink" href="#/me" style="background:#FFF1C4"><span>Time for a little backup? It keeps everything safe.</span><b>›</b></a>' : '') +
     '<a class="rowlink" href="#/me"><span>Road to 100 sessions</span><b>' + sessions + '</b></a>' +
     '<a class="rowlink" href="#/days"><span>' + (todayCount ? todayCount + (todayCount === 1 ? ' moment' : ' moments') + ' today' : 'Nothing logged today, and that\'s okay') + '</span><b>›</b></a>' +
     nav('home');

@@ -1,4 +1,4 @@
-import { load } from './store.js';
+import { load, get, save, today } from './store.js';
 import * as home from './screens/home.js';
 import * as weather from './screens/weather.js';
 import * as move from './screens/move.js';
@@ -11,7 +11,7 @@ import * as days from './screens/days.js';
 import * as me from './screens/me.js';
 import * as sky from './screens/sky.js';
 import * as quilt from './screens/quilt.js';
-import { closeSheet, setLogDate } from './ui.js';
+import { closeSheet, setLogDate, esc, reduceMotion } from './ui.js';
 
 const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt };
 let root = document.getElementById('app');
@@ -36,9 +36,30 @@ function route() {
   if (!params.keepScroll) window.scrollTo(0, 0);
 }
 
+// a soft hello, only the first time you open the app each day. Tap to skip.
+function hello() {
+  const st = get(), d = today();
+  if (st.lastHello === d) return;
+  st.lastHello = d; save();
+  const h = new Date().getHours();
+  const part = h < 5 ? 'Hey, night owl' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const name = st.settings.name ? ', ' + esc(st.settings.name) : '';
+  const lines = st.settings.kindLines.length ? st.settings.kindLines : ['Glad you\'re here.'];
+  const pose = h < 5 ? 'nightwatch' : 'waving';
+  const el = document.createElement('div');
+  el.className = 'hello'; el.setAttribute('role', 'status');
+  el.innerHTML = '<img src="art/' + pose + '.webp" alt="" draggable="false"><div class="d">' + new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + part + name + '</h1><p>' + esc(lines[Math.floor(Math.random() * lines.length)]) + '</p>';
+  document.body.appendChild(el);
+  let gone = false;
+  const go = () => { if (gone) return; gone = true; el.classList.add('out'); setTimeout(() => el.remove(), 550); };
+  el.addEventListener('click', go);
+  setTimeout(go, reduceMotion ? 1400 : 2400);
+}
+
 load().then(() => {
   window.addEventListener('hashchange', route);
   route();
+  hello();
   document.documentElement.classList.add('ready');
 });
 

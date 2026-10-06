@@ -296,3 +296,33 @@ body:has(.screen-sky) { background: #0B1026; overflow: hidden; }
 .sky-card .x { position: absolute; right: 8px; top: 8px; width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; color: #5E584B; border-radius: 12px; }
 .sky-toast { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 130px); z-index: 5; transform: translateX(-50%); width: min(340px, calc(100% - 32px)); text-align: center; padding: 14px 18px; border-radius: 18px; background: rgba(250,243,220,0.96); color: #23262F; box-shadow: 0 10px 30px rgba(0,0,0,0.4); --ink-soft: #5E584B; }
 .sky-toast .n { font-family: var(--font-hand); font-size: 28px; line-height: 1.05; margin-top: 2px; }
+
+/* ---------- you're in control ---------- */
+.sticky button.tx { margin: 0; align-self: stretch; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; text-align: left; font-family: var(--font-hand); font-size: 20px; line-height: 1.05; font-weight: 400; }
+.letgo { display: flex; flex-direction: column; gap: 8px; }
+.letgo summary { font-weight: 800; font-size: 14px; color: var(--ink-soft); min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.letgo .item { margin-top: 8px; }
+.paperacts { display: flex; gap: 8px; flex-wrap: wrap; }
+.paperacts .btn { flex: 1; }
+.mgrow { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 4px 4px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--room); font-weight: 800; font-size: 14px; }
+.mgrow span { flex: 1; min-width: 0; }
+.mgrow small { display: block; font-weight: 700; color: var(--ink-soft); font-size: 12px; }
+.mgrow button { min-height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-weight: 800; font-size: 13px; color: var(--ink); }
+.mgrow button.x { color: var(--red); }
+.setedit { display: grid; grid-template-columns: 28px 1fr 1fr 40px; gap: 6px; align-items: center; }
+.setedit input { min-height: 44px; padding: 0 10px; text-align: center; }
+.setedit .n { font-weight: 900; color: var(--ink-soft); text-align: center; }
+.setedit button { height: 40px; border: 0; background: transparent; color: var(--red); font-size: 18px; }
+.exhead { font-weight: 900; font-size: 15px; margin-top: 6px; }
+.nudgecard { background: #FFF1C4; border: 1px solid #EBD58E; }
+.hello { position: fixed; inset: 0; z-index: 60; background: var(--cream, #FAF3DC); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center; color: var(--ink); transition: opacity .5s ease; }
+.hello.out { opacity: 0; pointer-events: none; }
+.hello img { width: 180px; height: auto; animation: helloIn .9s cubic-bezier(.2,.9,.3,1.3) both; }
+.hello .d { font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); animation: fadeUp .6s .25s both; }
+.hello h1 { font-family: var(--font-hand); font-size: 40px; font-weight: 400; margin: 0; animation: fadeUp .6s .35s both; }
+.hello p { margin: 0; color: var(--ink-soft); font-weight: 700; max-width: 300px; animation: fadeUp .6s .5s both; }
+@keyframes helloIn { from { transform: translateY(24px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fadeUp { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hello img, .hello .d, .hello h1, .hello p { animation: none; } }
+button.rowlink { text-align: left; font-family: inherit; }
+.item .tap { flex: 1; min-width: 0; width: auto; height: auto; min-height: 44px; padding: 0; text-align: left; font: inherit; color: var(--ink); }
