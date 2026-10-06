@@ -9,9 +9,11 @@ import * as mind from './screens/mind.js';
 import * as letters from './screens/letters.js';
 import * as days from './screens/days.js';
 import * as me from './screens/me.js';
-import { closeSheet } from './ui.js';
+import * as sky from './screens/sky.js';
+import * as quilt from './screens/quilt.js';
+import { closeSheet, setLogDate } from './ui.js';
 
-const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me };
+const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt };
 let root = document.getElementById('app');
 let current = null;
 
@@ -21,6 +23,7 @@ function route() {
   const [name, ...rest] = path.split('/');
   const params = Object.fromEntries(new URLSearchParams(query || ''));
   params.args = rest;
+  setLogDate(params.d || null);
   const screen = ROUTES[name] || home;
   if (current && current.unmount) current.unmount();
   current = screen;

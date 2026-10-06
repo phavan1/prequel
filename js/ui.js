@@ -22,7 +22,12 @@ export function dateChip() {
 }
 // any screen with a date chip re-renders when it changes
 document.addEventListener('change', e => {
-  if (e.target.matches('[data-logdate]')) { setLogDate(e.target.value || today()); window.dispatchEvent(new HashChangeEvent('hashchange')); }
+  if (!e.target.matches('[data-logdate]')) return;
+  // the chosen day travels in the address, so it only applies to this screen
+  const [path, query] = location.hash.replace(/^#/, '').split('?');
+  const q = new URLSearchParams(query || ''); const v = e.target.value || today();
+  if (v === today()) q.delete('d'); else q.set('d', v);
+  const s = q.toString(); location.hash = path + (s ? '?' + s : '');
 });
 
 export function timeOf(ts) { return new Date(ts).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }).toLowerCase(); }

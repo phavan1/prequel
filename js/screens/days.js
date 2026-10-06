@@ -14,7 +14,7 @@ export function mount(root, params) {
     if ((b = t.closest('[data-day]'))) { selected = b.dataset.day; render(root); return; }
     if ((b = t.closest('[data-month]'))) { const n = Number(b.dataset.month); const d = new Date(month[0], month[1] + n, 1); month = [d.getFullYear(), d.getMonth()]; render(root); return; }
     if ((b = t.closest('[data-delm]'))) { confirmDelete(root, b.dataset.delm); return; }
-    if ((b = t.closest('[data-go]'))) { setLogDate(selected); location.hash = '#/' + b.dataset.go; }
+    if ((b = t.closest('[data-go]'))) { const go = b.dataset.go; location.hash = '#/' + go + (selected === today() ? '' : (go.includes('?') ? '&' : '?') + 'd=' + selected); }
   });
 }
 

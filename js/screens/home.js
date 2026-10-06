@@ -40,7 +40,7 @@ export function mount(root) {
     '<div class="top"><div><div class="lbl">' + new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + greet + name + '</h1></div></div>' +
     '<div class="room">' +
       '<div class="floor"></div>' +
-      '<div class="window" aria-label="Your sky so far"><canvas id="mini"></canvas><span>' + st.moments.length + ' stars</span></div>' +
+      '<a class="window" href="#/sky" aria-label="Open your sky"><canvas id="mini"></canvas><span>' + st.moments.length + ' stars ›</span></a>' +
       (due.length
         ? '<a class="note" href="#/mind">hey… ' + esc(due[0].text.toLowerCase()) + '?</a>'
         : '<div class="bubble" id="line">' + esc(line) + '</div>') +

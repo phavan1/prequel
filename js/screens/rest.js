@@ -103,6 +103,7 @@ function render(root) {
     '<div class="ring">' + ring(rests, date) + '</div>' +
     (rests.length ? '<div class="card">' + rests.map(r => '<div class="entry"><span class="t">' + timeOf(r.start) + '</span><span>to ' + timeOf(r.end) + ' · ' + hm(Math.round((r.end - r.start) / 60000)) + (r.feel ? ' · ' + esc(r.feel) : '') + '</span><button type="button" class="x" data-del="' + r.id + '" aria-label="Remove this rest">×</button></div>').join('') + '</div>' : '') +
     '<button type="button" class="btn alt wide" data-manual>+ Add a rest by hand</button>' +
+    '<a class="rowlink" href="#/quilt"><span>Your quilt · ' + new Set(st.rests.map(r => r.date)).size + ' patches</span><b>›</b></a>' +
     '<div class="lbl">Awake for a bit? What did you do</div>' +
     '<div class="chips">' + NIGHT_THINGS.map(n => '<button type="button" class="chip small" data-awake="' + esc(n) + '">' + esc(n) + '</button>').join('') + '</div>' +
     '<div class="card"><div class="lbl">For your doctor</div><p class="muted" style="font-size:14px">Your rests as a sleep diary, ready to save or send. ' + st.rests.length + ' logged so far.</p><button type="button" class="btn alt" data-diary>Export sleep diary</button></div>' +
