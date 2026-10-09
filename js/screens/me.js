@@ -1,6 +1,6 @@
-import { get, save, exportJSON, importJSON, isPersisted, today, reset, backupDue } from '../store.js';
+import { get } from '../store.js';
 import { EXERCISES, AREAS } from '../data.js';
-import { esc, nav, him, toast, openSheet, closeSheet, downloadFile, prettyDate } from '../ui.js';
+import { esc, nav, him, prettyDate } from '../ui.js';
 import { ensureGoals, count, unitOf, checkFinished, openNewGoal, openEditGoal, openLog } from '../goals.js';
 import { hill, wireHills, ribbon, restClock, noticing } from '../charts.js';
 import { dateKey } from '../store.js';
@@ -19,52 +19,6 @@ export function mount(root) {
     if ((b = t.closest('[data-goal]'))) { openEditGoal(b.dataset.goal, () => render(root)); return; }
     if ((b = t.closest('[data-hill]'))) { hillKey = b.dataset.hill; render(root); return; }
     if ((b = t.closest('[data-wx]'))) { b.closest('.chartwrap').querySelector('.readout').textContent = b.dataset.wx; return; }
-    if (t.closest('[data-export]')) { backup(root); return; }
-    if (t.closest('[data-fresh]')) { startFresh(root); return; }
-    if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
-    if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
-    if (t.closest('[data-settings]')) { openSettings(root); }
-  });
-  root.addEventListener('change', e => {
-    if (e.target.id !== 'importFile' || !e.target.files[0]) return;
-    const file = e.target.files[0];
-    openSheet('<h2>Restore this backup?</h2><p class="muted">Everything in the app now will be replaced with what\'s in ' + esc(file.name) + '.</p><button type="button" class="btn" data-yes>Restore it</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
-      if (!ev.target.closest('[data-yes]')) return;
-      file.text().then(txt => { try { importJSON(txt); closeSheet(); toast('Restored. Welcome back.'); render(root); } catch (err) { closeSheet(); toast(err.message || 'That file couldn\'t be read.'); } });
-    });
-    e.target.value = '';
-  });
-}
-
-function backup(root) {
-  downloadFile('prequel-backup-' + today() + '.json', exportJSON(), 'application/json');
-  get().lastBackup = Date.now(); save(); render(root);
-}
-
-// start fresh: asks twice, and offers a backup first
-function startFresh(root) {
-  openSheet('<h2>Start fresh?</h2><p class="muted">This clears everything: your sky, quilt, sessions, notes, letters, and the workouts and exercises you made. The app goes back to how it was on day one.</p><p class="muted">If there\'s any chance you\'ll want it back, save a backup first. You can restore it any time.</p>' +
-    '<button type="button" class="btn" data-o="backup">Save a backup first</button><button type="button" class="btn danger" data-o="wipe">Clear everything</button><button type="button" class="btn alt" data-close>Keep everything</button>', ev => {
-    const o = ev.target.closest('[data-o]'); if (!o) return;
-    if (o.dataset.o === 'backup') { backup(root); return; }
-    if (!o.dataset.armed) { o.dataset.armed = '1'; o.textContent = 'Yes, clear it all. Tap again'; return; }
-    reset(); closeSheet(); toast('A fresh start. Hello again.'); location.hash = '#/home';
-  });
-}
-
-function openSettings(root) {
-  const s = get().settings;
-  openSheet('<h2>Make it yours</h2>' +
-    '<label class="field-label" for="sName">WHAT HE CALLS YOU</label><input id="sName" type="text" value="' + esc(s.name) + '" placeholder="Your name or nickname" autocomplete="off">' +
-    '<label class="field-label" for="sLines">KIND THINGS HE SAYS · one per line, in your own words</label><textarea id="sLines" rows="8">' + esc(s.kindLines.join('\n')) + '</textarea>' +
-    '<label class="field-label" for="sWins">YOUR TINY WINS · one per line</label><textarea id="sWins" rows="8">' + esc(s.tinyWins.join('\n')) + '</textarea>' +
-    '<button type="button" class="btn" data-savesettings>Save</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
-    if (!ev.target.closest('[data-savesettings]')) return;
-    const lines = v => v.split('\n').map(x => x.trim()).filter(Boolean);
-    s.name = document.getElementById('sName').value.trim();
-    s.kindLines = lines(document.getElementById('sLines').value);
-    s.tinyWins = lines(document.getElementById('sWins').value);
-    save(); closeSheet(); toast('Saved'); render(root);
   });
 }
 
@@ -99,6 +53,7 @@ function render(root) {
   if (lifted > 0) looks.push(['#FFF1C4', elephants >= 1 ? 'All together you\'ve lifted about ' + (elephants >= 2 ? Math.floor(elephants) + ' elephants' : 'one whole elephant') + '.' : 'All together you\'ve lifted ' + Math.round(lifted).toLocaleString() + ' kg so far. An elephant is about 4,000.']);
 
   root.innerHTML =
+    '<a class="gear" href="#/settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>' +
     '<div class="hero">' + him('skate', 'breathe', 'Your character skating, feeling himself') + '<div class="txt"><h1>How far you\'ve come</h1><p class="say">Everything here only goes up.</p></div></div>' +
     '<div class="lbl">Your goals</div>' +
     '<div class="grid2">' + active.map(g => goal(g)).join('') + '<button type="button" class="goal newgoal" data-newgoal><b>+ New goal</b><span>count up to anything</span></button></div>' +
@@ -115,13 +70,5 @@ function render(root) {
     '<div class="card"><b>When you rest</b><p class="muted" style="font-size:13px;margin:0">All your rests on one clock. Your real pattern, no score.</p>' + restClock(st.rests) + '</div>' +
     (notice ? '<div class="lookback" style="background:#DFF0DC">' + esc(notice) + '</div>' : '') +
     (looks.length ? looks.map(l => '<div class="lookback" style="background:' + l[0] + '">' + esc(l[1]) + '</div>').join('') : '') +
-    (backupDue() ? '<div class="card nudgecard"><b>It\'s been a while since your last backup.</b><p class="muted" style="font-size:14px;margin:0">No rush. Whenever you\'ve got a minute, it keeps everything safe.</p><button type="button" class="btn" data-export>Save one now</button></div>' : '') +
-    '<div class="card"><div class="lbl">Keep your data safe</div><p class="muted" style="font-size:14px;line-height:1.45">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive), especially before changing phones.</p><p class="muted" style="font-size:12px" id="persist"></p>' +
-      '<div class="grid2"><button type="button" class="btn" data-export>Save a backup</button><button type="button" class="btn alt" data-import>Restore</button></div><input type="file" id="importFile" accept="application/json,.json" hidden>' +
-      '<p class="muted" style="font-size:12px;margin:0">' + (st.lastBackup ? 'Last backup: ' + new Date(st.lastBackup).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'No backup saved yet.') + '</p></div>' +
-    '<div class="card"><div class="lbl">Look</div><div class="seg3">' + [['light', 'Light'], ['dark', 'Cosy dark'], ['auto', 'Match my phone']].map(o => '<button type="button" data-look="' + o[0] + '" aria-pressed="' + ((st.settings.theme || 'light') === o[0]) + '">' + o[1] + '</button>').join('') + '</div></div>' +
-    '<button type="button" class="btn alt wide" data-settings>Your name, kind words and tiny wins</button>' +
-    '<button type="button" class="btn ghost wide" data-fresh>Start fresh</button>' +
     nav('me');
-  isPersisted().then(p => { const el = root.querySelector('#persist'); if (el) el.textContent = p ? 'This phone has promised to keep your data.' : 'Tip: adding the app to your home screen helps the phone keep your data.'; });
 }

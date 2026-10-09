@@ -60,12 +60,29 @@ export function mount(root, params) {
   });
 }
 
+// the + at the end of the tabs: a new goal of your own (it gets a tab straight away, and shows on Me too),
+// goals that are resting, and the optional tabs
 function tabSheet(root) {
-  const s = get().settings; s.dayTabs = s.dayTabs || [];
-  openSheet('<h2>Calendar tabs</h2><p class="muted" style="margin:0">All, Move, Food and Rest are always there, and each of your own goals gets a tab. Add these if you want them:</p>' +
+  const st = get(), s = st.settings; s.dayTabs = s.dayTabs || [];
+  const resting = (st.goals || []).filter(g => g.kind === 'own' && g.paused && !g.finished);
+  const sheet = openSheet('<h2>Add to your calendar</h2>' +
+    '<div class="card newgoalcard"><b>A new goal of your own</b><p class="muted" style="font-size:13px;margin:0">Swimming, reading, calling home: anything. It gets its own tab here and shows on Me too.</p>' +
+      '<label class="sr" for="ngName">Goal name</label><input id="ngName" type="text" placeholder="What is it?" autocomplete="off">' +
+      '<div class="addrow"><label class="sr" for="ngTarget">Count up to</label><input id="ngTarget" type="text" inputmode="numeric" placeholder="Count up to, e.g. 20"><button type="button" class="btn" data-ng>Add</button></div><div class="err" id="ngErr"></div></div>' +
+    (resting.length ? '<div class="lbl">Resting goals</div>' + resting.map(g => '<button type="button" class="mgrow" data-wake="' + g.id + '" style="width:100%;text-align:left"><span>' + esc(g.name) + '<small>kept safe</small></span><b style="color:var(--blue)">Pick back up</b></button>').join('') : '') +
+    '<div class="lbl">More tabs</div>' +
     OPTIONAL.map(o => '<button type="button" class="mgrow" data-opt="' + o[0] + '" style="width:100%;text-align:left"><span>' + o[1] + '</span><b style="color:var(--blue)">' + (s.dayTabs.includes(o[0]) ? 'Shown ✓' : 'Add') + '</b></button>').join('') +
     '<button type="button" class="btn ghost" data-close>Done</button>', ev => {
-    const b = ev.target.closest('[data-opt]'); if (!b) return;
+    const t = ev.target; let b;
+    if (t.closest('[data-ng]')) {
+      const name = sheet.querySelector('#ngName').value.trim(), target = parseInt(sheet.querySelector('#ngTarget').value, 10);
+      if (!name) { sheet.querySelector('#ngErr').textContent = 'Give it a name first.'; return; }
+      if (!(target > 0)) { sheet.querySelector('#ngErr').textContent = 'Pick a number to count up to.'; return; }
+      const g = { id: 'g' + Date.now().toString(36), kind: 'own', source: null, name, target, from: 0, created: Date.now(), finished: null };
+      st.goals.push(g); save(); tab = 'g:' + g.id; closeSheet(); render(root); return;
+    }
+    if ((b = t.closest('[data-wake]'))) { const g = st.goals.find(x => x.id === b.dataset.wake); if (g) { g.paused = null; save(); tab = 'g:' + g.id; } closeSheet(); render(root); return; }
+    if (!(b = t.closest('[data-opt]'))) return;
     const k = b.dataset.opt; s.dayTabs = s.dayTabs.includes(k) ? s.dayTabs.filter(x => x !== k) : s.dayTabs.concat(k);
     if (!s.dayTabs.includes(tab) && OPTIONAL.some(o => o[0] === tab)) tab = 'all';
     save(); closeSheet(); render(root); tabSheet(root);

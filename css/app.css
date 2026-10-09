@@ -538,3 +538,12 @@ html[data-theme="dark"] .tabsrow button[aria-pressed="true"], html[data-theme="d
 .trophy.resting { background: var(--paper); border-color: var(--line); }
 .trophy.resting .star { color: var(--ink-soft); }
 .grid1 { display: grid; grid-template-columns: 1fr; gap: 8px; }
+
+.gear { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 16px; z-index: 5; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--paper); border: 1px solid var(--line); color: var(--ink); }
+.gear svg { width: 22px; height: 22px; }
+.screen-me { position: relative; }
+.screen-me .hero { margin-top: 44px; }
+.rowsub { display: block; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.rowlink span { display: flex; flex-direction: column; }
+.newgoalcard { gap: 8px; }
+.mgrow small { display: block; }
