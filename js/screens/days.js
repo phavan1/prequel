@@ -88,6 +88,6 @@ function render(root) {
       ? moments.map(m => '<div class="item"><i style="background:' + (AREAS[m.area] || AREAS.mind).colour + '"></i>' + (m.ref && st.sessions.some(x => x.id === m.ref) ? '<button type="button" class="tap" data-sess="' + m.ref + '">' + esc(m.text) + (m.bright ? ' ✦' : '') + ' <b style="color:var(--blue)">· sets ›</b></button>' : '<span>' + esc(m.text) + (m.bright ? ' ✦' : '') + '</span>') + '<button type="button" data-delm="' + m.id + '" aria-label="Remove this moment">×</button></div>').join('')
       : '<p class="empty">Nothing here yet. Add anything you remember. It counts just the same.</p>') +
     '<div class="lbl">Add to this day</div>' +
-    '<div class="grid3">' + [['move', 'Move'], ['food', 'Food'], ['rest', 'Rest'], ['wins', 'Tiny win'], ['weather', 'Weather'], ['wins?heavy=1', 'Heavy day']].map(o => '<button type="button" class="btn alt" data-go="' + o[0] + '">' + o[1] + '</button>').join('') + '<button type="button" class="btn alt" data-goals>Your goals</button></div>' +
+    '<div class="grid3">' + [['move', 'Move'], ['food', 'Food'], ['rest', 'Rest'], ['wins', 'Tiny win'], ['weather', 'Weather'], ['wins?heavy=1', 'Soft day']].map(o => '<button type="button" class="btn alt" data-go="' + o[0] + '">' + o[1] + '</button>').join('') + '<button type="button" class="btn alt" data-goals>Your goals</button></div>' +
     nav('days');
 }

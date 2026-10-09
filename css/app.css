@@ -1,3 +1,9 @@
+/* fonts live inside the app, so it looks the same with no signal */
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/nunito-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/nunito-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 800; font-display: swap; src: url('../fonts/nunito-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 900; font-display: swap; src: url('../fonts/nunito-latin-900-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Gaegu'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('../fonts/gaegu-latin-700-normal.woff2') format('woff2'); }
 /* Prequel: warm cream room, hoodie blue, sunny yellow. One calm look everywhere; the rest screen goes to night. */
 :root {
   --room: #FAF3DC;
@@ -329,22 +335,22 @@ body:has(.screen-sky) { background: #0B1026; overflow: hidden; }
 button.rowlink { text-align: left; font-family: inherit; }
 .item .tap { flex: 1; min-width: 0; width: auto; height: auto; min-height: 44px; padding: 0; text-align: left; font: inherit; color: var(--ink); }
 
-/* ---------- the room's things: pinboard, spice shelf, bed + quilt ---------- */
-.room .pinboard { position: absolute; right: 14px; top: 14px; width: 118px; height: 76px; border-radius: 8px; background: #D9B98A; border: 5px solid #B98A5B; display: block; z-index: 2; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
-.room .pinboard i { position: absolute; width: 26px; height: 24px; box-shadow: 0 1px 0 rgba(0,0,0,.12); }
-.room .pinboard i b { position: absolute; left: 10px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: #C2412D; }
-.room .pinboard em { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-hand); font-style: normal; font-size: 16px; color: #7A5B36; }
-.room .shelf { position: absolute; right: 10px; top: 100px; width: 140px; height: 52px; display: block; z-index: 1; }
-.room .shelf svg { width: 100%; height: 100%; display: block; }
-.room .shelf span { position: absolute; right: 2px; top: 6px; font-size: 10px; font-weight: 900; color: #8B6A46; }
-.room .bed { position: absolute; left: 4px; bottom: 30px; width: 200px; height: 108px; display: block; z-index: 1; }
-.room .bed svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.room .bed canvas { position: absolute; left: 31%; top: 45%; width: 66%; height: 41%; border-radius: 6px; }
-.jarlist { display: flex; flex-direction: column; gap: 6px; }
-.jarrow { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border-radius: 12px; background: var(--room); font-weight: 800; font-size: 14px; }
-.jarrow i { width: 14px; height: 18px; border-radius: 4px; flex: none; }
-.jarrow span { flex: 1; }
-.jarrow small { color: var(--ink-soft); font-weight: 700; }
+/* ---------- the room: a window, his quilt in a hoop, him on a rug ---------- */
+.room { height: 372px; }
+.room .window { left: 12px; top: 12px; width: 176px; height: 157px; border: 0; border-radius: 0; background: transparent; overflow: visible; }
+.room .window canvas { background: linear-gradient(#141A33, #26306A); position: absolute; left: 14.3%; top: 12%; width: 71.4%; height: 61.3%; border-radius: 2px; }
+.room .window .frame { position: absolute; inset: 0; width: 100%; height: 100%; }
+.room .window span { right: auto; left: 50%; transform: translateX(-50%); bottom: auto; top: 70%; padding: 2px 8px; border-radius: 999px; background: rgba(20,26,51,.55); white-space: nowrap; }
+.room .hoop { position: absolute; right: 22px; top: 136px; width: 84px; height: 95px; display: block; z-index: 2; }
+.room .hoop canvas { position: absolute; left: 11.4%; top: 23.6%; width: 77%; height: 68%; border-radius: 50%; }
+.room .hoop .ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.room .rug { position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px; width: 270px; height: 50px; }
+.room .stage.wide { left: 0; right: 0; bottom: 22px; justify-content: center; }
+.room .him.wide { width: 230px; max-height: 215px; }
+.room .bubble { left: auto; right: 14px; top: 22px; width: 42%; }
+.room .note { left: auto; right: 18px; top: 26px; }
+.softask span { display: flex; align-items: center; gap: 10px; }
+.softask svg { width: 22px; height: 22px; color: var(--blue); }
 /* heavy day: the whole home softens and dims */
 .screen-home.heavy { --room: #EFE6CF; --room-2: #E6DCC2; }
 body.heavy-day { background: #EFE6CF; }

@@ -1,21 +1,21 @@
-import { get, save, today, backupDue, addMoment } from '../store.js';
-import { mulberry32, hashStr } from '../sky-model.js';
+import { get, save, today, backupDue } from '../store.js';
+import { mulberry32 } from '../sky-model.js';
 import { patches, PAT } from './quilt.js';
 import { ensureGoals, checkFinished, openLog } from '../goals.js';
 import { AREAS, weatherByName } from '../data.js';
-import { esc, him, nav, pop, pick, setLogDate, toast, openSheet, prettyDate } from '../ui.js';
+import { esc, him, nav, pop, pick, setLogDate, toast } from '../ui.js';
 
 const ICONS = {
   move: '<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>',
   food: '<path d="M4 12h16a8 8 0 0 1-16 0zM9 8c0-2 2-2 2-4M14 8c0-2 2-2 2-4"/>',
   rest: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
   goal: '<path d="M12 21V4M12 4l7 3-7 3"/><path d="M8 21h8"/>',
+  blanket: '<path d="M3 8c3-2 6-2 9 0s6 2 9 0v10c-3 2-6 2-9 0s-6-2-9 0z"/><path d="M3 13c3-2 6-2 9 0s6 2 9 0"/>',
   win: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'
 };
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
 
-const STICKY = ['#FFF1A8', '#DCE7FF', '#FFD9CC', '#DFF0DC', '#EBDDF2'];
-const JAR = ['#E5893D', '#C2412D', '#D9A400', '#5DAE7E', '#8B5A3C', '#D96C8A', '#6CC2B4', '#B07CC6', '#3E9E6E', '#F2A65A'];
+const SOFT_ASK = ['Wanna slow down?', 'Wanna take a breather?', 'Fancy a slower one?', 'Need a cosy minute?', 'Wanna press pause?'];
 let root = null;
 
 export function mount(r) {
@@ -27,74 +27,55 @@ export function mount(r) {
   if (!document.querySelector('.hello')) checkFinished(); else setTimeout(checkFinished, 2600);
 }
 
-// new things you've tried: each one is a jar on his shelf
-function jars() {
-  return get().foods.filter(f => f.tags.includes('Tried something new')).sort((a, b) => a.ts - b.ts)
-    .map(f => { const label = (f.note || 'Something new').trim(); const h = hashStr(label.toLowerCase()); return { label, date: f.date, colour: JAR[h % JAR.length], tall: 20 + (h >> 4) % 9 }; });
-}
+// a proper window: wooden frame, four panes, sill, a little plant, curtains tied back
+const WINDOW = '<svg class="frame" viewBox="0 0 168 150" aria-hidden="true">' +
+  '<path fill-rule="evenodd" fill="#C99A6B" d="M20 8h128a6 6 0 0 1 6 6v100a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6V14a6 6 0 0 1 6-6zM24 18v92h120V18z"/>' +
+  '<rect x="81" y="18" width="6" height="92" fill="#C99A6B"/><rect x="24" y="61" width="120" height="6" fill="#C99A6B"/>' +
+  '<rect x="6" y="118" width="156" height="9" rx="3" fill="#B98A5B"/>' +
+  '<path d="M126 118c0-6 2-8 8-8h6c6 0 8 2 8 8z" fill="#D9673B"/><path d="M137 110c-6-6-8-14-4-18 3 6 4 11 4 18zM137 110c3-8 9-12 13-11-3 6-7 9-13 11zM137 110c-1-9 1-15 5-18 1 7-1 13-5 18z" fill="#5DAE7E"/>' +
+  '<rect x="2" y="1" width="164" height="5" rx="2.5" fill="#9C7249"/>' +
+  '<path d="M4 6h18c-1 22-3 40-8 54 6 16 9 34 9 56H4z" fill="#FFF6E0" stroke="#E8D7B0"/><path d="M164 6h-18c1 22 3 40 8 54-6 16-9 34-9 56h19z" fill="#FFF6E0" stroke="#E8D7B0"/>' +
+  '<path d="M9 14c0 14 1 30 2 44M159 14c0 14-1 30-2 44" stroke="#EADBB8" fill="none"/>' +
+  '<rect x="3" y="57" width="20" height="5" rx="2.5" fill="#1F55D0"/><rect x="145" y="57" width="20" height="5" rx="2.5" fill="#1F55D0"/></svg>';
+// an embroidery hoop on the wall holding a little piece of your quilt
+const HOOP = '<svg class="ring" viewBox="0 0 92 104" aria-hidden="true"><path d="M46 2 L34 18 M46 2 L58 18" stroke="#9C7249" stroke-width="1.5" fill="none"/><circle cx="46" cy="2.5" r="2.5" fill="#9C7249"/>' +
+  '<rect x="40" y="13" width="12" height="9" rx="2" fill="#B98A5B"/><circle cx="46" cy="60" r="39" fill="none" stroke="#C99A6B" stroke-width="7"/><circle cx="46" cy="60" r="35.5" fill="none" stroke="#B98A5B" stroke-width="1.2"/></svg>';
 
 function render() {
   const st = get(), d = today(), hour = new Date().getHours();
   const wx = st.weather.filter(w => w.date === d).sort((a, b) => a.ts - b.ts);
   const lastWx = wx[wx.length - 1];
-  const heavy = !!st.heavy[d];
-  const open = st.mind.filter(n => !n.letGo);
-  const due = open.filter(n => n.remindOn && n.remindOn <= d);
-  root.classList.toggle('heavy', heavy);
-  document.body.classList.toggle('heavy-day', heavy);
+  const soft = !!st.heavy[d];
+  const due = st.mind.filter(n => !n.letGo && n.remindOn && n.remindOn <= d);
+  root.classList.toggle('heavy', soft);
+  document.body.classList.toggle('heavy-day', soft);
 
-  let pose = 'standing';
-  if (hour < 5) pose = 'nightwatch';
-  else if (heavy) pose = 'lying';
-  else if (due.length) pose = 'stickynote';
-  else if (lastWx) pose = (weatherByName(lastWx.types[lastWx.types.length - 1]) || [])[5] || 'standing';
-  const wide = ['lying', 'nightwatch', 'skate', 'asleep', 'legday'].includes(pose);
-
+  // he sits with you; on a soft day he's curled up under his blanket
+  const pose = soft ? 'asleep' : 'nightwatch';
   const greet = hour < 5 ? 'Still up' : hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
   const name = st.settings.name ? ', ' + esc(st.settings.name) : '';
   let line = pick(st.settings.kindLines.length ? st.settings.kindLines : ['Hey, you.']);
   if (hour < 5) line = 'Can\'t sleep? I\'ll keep the lamp on.';
-  else if (heavy) line = 'Heavy one today. I\'m lying down too.';
+  if (soft) line = 'No plans today. I\'m right here.';
 
   const wxText = wx.length ? 'Inside today: ' + esc(lastWx.types.join(' + ').toLowerCase()) : 'How\'s the weather inside?';
   const wxDots = wx.length ? '<span class="wx-dots">' + lastWx.types.map(t => '<i style="background:' + (weatherByName(t) || [0, 0, '#ccc'])[2] + '"></i>').join('') + '</span>' : '<b>+</b>';
-  const J = jars(), shown = J.slice(-7);
-
-  // three tiny wins for a heavy day, the same three all day
-  const wins = st.settings.tinyWins.slice();
-  const rr = mulberry32(hashStr(d));
-  for (let i = wins.length - 1; i > 0; i--) { const j = Math.floor(rr() * (i + 1)); [wins[i], wins[j]] = [wins[j], wins[i]]; }
-  const doneToday = new Set(st.moments.filter(m => m.date === d && m.area === 'win').map(m => m.text));
 
   root.innerHTML =
     '<div class="top"><div><div class="lbl">' + new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + greet + name + '</h1></div></div>' +
     '<div class="room">' +
-      '<div class="floor"></div>' +
-      '<a class="window" href="#/sky" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas><span>' + st.moments.length + ' stars ›</span></a>' +
-      '<a class="pinboard" href="#/mind" aria-label="Things on my mind, ' + open.length + ' notes">' +
-        open.slice(0, 4).map((n, i) => '<i style="background:' + STICKY[i % STICKY.length] + ';left:' + (8 + i * 24) + 'px;top:' + (10 + (i % 2) * 18) + 'px;transform:rotate(' + ((i % 3) - 1) * 6 + 'deg)"><b></b></i>').join('') +
-        (open.length ? '' : '<em>clear</em>') + '</a>' +
-      '<a class="shelf" href="#/home" data-shelf aria-label="Spice shelf, ' + J.length + ' jars">' +
-        '<svg viewBox="0 0 140 52" aria-hidden="true">' +
-          shown.map((j, i) => { const x = 6 + i * 19, h = j.tall; return '<rect x="' + x + '" y="' + (40 - h) + '" width="15" height="' + h + '" rx="4" fill="' + j.colour + '" opacity=".88"/><rect x="' + (x + 1.5) + '" y="' + (37 - h) + '" width="12" height="5" rx="1.5" fill="#8B6A46"/><rect x="' + (x + 3) + '" y="' + (40 - h * 0.62) + '" width="9" height="6" rx="1" fill="#FFFDF6"/>'; }).join('') +
-          (J.length ? '' : '<rect x="8" y="16" width="15" height="24" rx="4" fill="none" stroke="#C9B48A" stroke-dasharray="3 3"/>') +
-          '<rect x="0" y="40" width="140" height="6" rx="2" fill="#B98A5B"/><rect x="14" y="46" width="5" height="6" fill="#9C7249"/><rect x="121" y="46" width="5" height="6" fill="#9C7249"/>' +
-        '</svg>' + (J.length > shown.length ? '<span>+' + (J.length - shown.length) + '</span>' : '') + '</a>' +
-      '<a class="bed" href="#/quilt" aria-label="Your quilt, ' + new Set(st.rests.map(x => x.date)).size + ' patches">' +
-        '<svg viewBox="0 0 170 92" aria-hidden="true"><rect x="2" y="8" width="16" height="80" rx="6" fill="#B98A5B"/><rect x="10" y="78" width="6" height="12" fill="#9C7249"/><rect x="156" y="78" width="6" height="12" fill="#9C7249"/><rect x="12" y="46" width="156" height="34" rx="8" fill="#FFFDF6" stroke="#E2D3AE"/><ellipse cx="34" cy="46" rx="18" ry="9" fill="#FFFDF6" stroke="#E2D3AE"/></svg>' +
-        '<canvas id="miniquilt"></canvas></a>' +
-      (due.length && !heavy
+      '<div class="floor"></div><svg class="rug" viewBox="0 0 240 44" aria-hidden="true"><ellipse cx="120" cy="22" rx="118" ry="20" fill="#DCE7FF"/><ellipse cx="120" cy="22" rx="104" ry="14" fill="none" stroke="#9FB8E8" stroke-width="2" stroke-dasharray="6 5"/></svg>' +
+      '<a class="window" href="#/sky" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas>' + WINDOW + '<span>' + st.moments.length + ' stars</span></a>' +
+      '<a class="hoop" href="#/quilt" aria-label="Your quilt"><canvas id="miniquilt"></canvas>' + HOOP + '</a>' +
+      (due.length && !soft
         ? '<a class="note" href="#/mind">hey… ' + esc(due[0].text.toLowerCase()) + '?</a>'
         : '<div class="bubble" id="line">' + esc(line) + '</div>') +
-      '<div class="stage' + (wide ? ' wide' : '') + '"><button type="button" id="tap" aria-label="Say hi">' + him(pose, (wide ? 'wide ' : '') + 'breathe', 'Your character') + '</button></div>' +
+      '<div class="stage wide"><button type="button" id="tap" aria-label="Say hi">' + him(pose, 'wide breathe', 'Your character') + '</button></div>' +
     '</div>' +
-    (heavy
-      ? '<div class="card gentle"><p class="say" style="margin:0">One small thing, if you want it. Or nothing. Both are okay.</p>' +
-          '<div class="chips">' + wins.slice(0, 3).map(w => '<button type="button" class="chip" data-win="' + esc(w) + '" aria-pressed="' + doneToday.has(w) + '">' + esc(w) + '</button>').join('') + '</div></div>' +
-        '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'Open a letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
-        '<a class="rowlink" href="#/food"><span>Your comfort menu</span><b>›</b></a>' +
-        '<a class="rowlink" href="#/weather"><span>' + wxText + '</span>' + wxDots + '</a>' +
-        '<button type="button" class="btn ghost wide" data-unheavy>Feeling a bit lighter now</button>'
+    (soft
+      ? '<div class="card gentle"><b>Soft day</b><p class="muted" style="margin:0">Nothing to log, nothing to do. Little games are coming in the next update.</p></div>' +
+        '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'A letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
+        '<button type="button" class="btn ghost wide" data-unheavy>Back to a regular day</button>'
       : (st.active ? '<a class="rowlink" href="#/move" style="border-color:var(--blue)"><span>' + esc(st.active.n) + ' is still open</span><b>›</b></a>' : '') +
         '<a class="rowlink" href="#/weather"><span>' + wxText + '</span>' + wxDots + '</a>' +
         '<div class="quick">' +
@@ -104,7 +85,7 @@ function render() {
           '<a href="#/home" data-goals>' + svg(ICONS.goal) + 'Goals</a>' +
         '</div>' +
         (backupDue() ? '<a class="rowlink" href="#/me" style="background:#FFF1C4"><span>Time for a little backup? It keeps everything safe.</span><b>›</b></a>' : '') +
-        '<button type="button" class="rowlink" data-heavy style="width:100%"><span>Today feels heavy</span><b>›</b></button>') +
+        '<button type="button" class="rowlink softask" data-heavy style="width:100%"><span>' + svg(ICONS.blanket) + pick(SOFT_ASK) + '</span><b>›</b></button>') +
     nav('home');
 
   drawMini(root.querySelector('#mini'), st);
@@ -120,23 +101,8 @@ function onClick(e) {
     return;
   }
   if (t.closest('[data-heavy]')) { st.heavy[d] = true; save(); render(); window.scrollTo(0, 0); return; }
-  if (t.closest('[data-unheavy]')) { delete st.heavy[d]; save(); render(); toast('Glad it lifted a little.'); return; }
-  if ((b = t.closest('[data-win]'))) {
-    if (b.getAttribute('aria-pressed') === 'true') return;
-    addMoment('win', b.dataset.win, d, { bright: 1 });
-    toast('That counts, and on a hard day it shines brighter.'); render(); return;
-  }
-  if (t.closest('[data-shelf]')) { e.preventDefault(); openShelf(); return; }
+  if (t.closest('[data-unheavy]')) { delete st.heavy[d]; save(); render(); toast('Glad you took a breather.'); return; }
   if (t.closest('[data-goals]')) { e.preventDefault(); openLog(null, () => render()); }
-}
-
-function openShelf() {
-  const J = jars();
-  openSheet('<h2>The spice shelf</h2><p class="muted">Every new food you try adds a jar. Log food and tag it "Tried something new".</p>' +
-    (J.length
-      ? '<div class="jarlist">' + J.slice().reverse().map(j => '<div class="jarrow"><i style="background:' + j.colour + '"></i><span>' + esc(j.label) + '</span><small>' + esc(prettyDate(j.date)) + '</small></div>').join('') + '</div>'
-      : '<p class="empty">No jars yet. The first new thing you try goes here.</p>') +
-    '<a class="btn" href="#/food">Log food</a><button type="button" class="btn alt" data-close>Close</button>', null);
 }
 
 // his quilt, made of your real patches, newest at the top
@@ -145,7 +111,7 @@ function drawQuilt(cv) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 120, h = cv.clientHeight || 36;
   cv.width = w * dpr; cv.height = h * dpr;
   const g = cv.getContext('2d'); g.scale(dpr, dpr);
-  const cols = 8, rows = 3, cw = w / cols, ch = h / rows;
+  const cols = 4, rows = 4, cw = w / cols, ch = h / rows;
   const P = patches().slice(-cols * rows).reverse();
   g.fillStyle = '#F3E6C4'; g.fillRect(0, 0, w, h);
   P.forEach((p, i) => {

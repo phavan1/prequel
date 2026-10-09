@@ -36,7 +36,7 @@ function render(root) {
     '<div class="top">' + backLink() + dateChip() + '</div>' +
     (heavy
       ? '<div class="lowroom">' + him('lying', '', 'Your character lying face down on the floor next to you') + '</div>' +
-        '<div><p class="say" style="font-size:26px">Heavy one today. I\'m lying down too.</p><p class="sub">One small thing, if you want it. Or nothing. Both are okay.</p></div>'
+        '<div><p class="say" style="font-size:26px">A soft day. No plans needed.</p><p class="sub">One small thing, if you want it. Or nothing. Both are okay.</p></div>'
       : '<div class="hero">' + him('cheer', '', 'Your character celebrating') + '<div class="txt"><h1>Tiny wins</h1><p class="say">On hard days, these are the big ones.</p></div></div>') +
     '<div class="chips wins">' + st.settings.tinyWins.map(w => '<button type="button" class="chip" data-win="' + esc(w) + '" aria-pressed="' + doneToday.has(w) + '">' + esc(w) + '</button>').join('') + '</div>' +
     '<div class="addrow"><label class="sr" for="newWin">Add your own tiny win</label><input id="newWin" type="text" placeholder="Add your own tiny win" autocomplete="off"><button type="button" class="btn alt" data-addwin>Add</button></div>' +
@@ -44,7 +44,7 @@ function render(root) {
     (heavy
       ? '<a class="rowlink" href="#/letters?open=1"><span>' + (sealed ? 'Open a letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
         '<a class="rowlink" href="#/food"><span>Your comfort menu</span><b>›</b></a>' +
-        '<button type="button" class="btn ghost" data-unheavy>' + (date === today() ? 'Feeling a bit lighter now' : 'Not a heavy day after all') + '</button>'
+        '<button type="button" class="btn ghost" data-unheavy>' + (date === today() ? 'Feeling a bit lighter now' : 'Not a soft day after all') + '</button>'
       : '') +
     nav('home');
 }
