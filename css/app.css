@@ -349,7 +349,7 @@ button.rowlink { text-align: left; font-family: inherit; }
 .room .him.wide { width: 230px; max-height: 215px; }
 .room .bubble { left: auto; right: 14px; top: 22px; width: 42%; }
 .room .note { left: auto; right: 18px; top: 26px; }
-.softask span { display: flex; align-items: center; gap: 10px; }
+.softask span, .rowlink.softask span { display: flex; flex-direction: row; align-items: center; gap: 12px; }
 .softask svg { width: 22px; height: 22px; color: var(--blue); }
 /* heavy day: the whole home softens and dims */
 .screen-home.heavy { --room: #F6E4D2; --room-2: #F0D6BF; --paper: #FFF6EC; --line: #EBCDB2; }
@@ -547,3 +547,28 @@ html[data-theme="dark"] .tabsrow button[aria-pressed="true"], html[data-theme="d
 .rowlink span { display: flex; flex-direction: column; }
 .newgoalcard { gap: 8px; }
 .mgrow small { display: block; }
+
+/* share cards */
+.sharetitle { font-family: "Gaegu", cursive; font-size: 28px; margin: 2px 0 8px; }
+.sharekinds { margin-bottom: 10px; }
+.sharekinds .chip[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.milepick { margin-bottom: 10px; }
+.milepick .chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.milepick .chip { flex: none; white-space: nowrap; }
+.milepick .chip[aria-pressed="true"] { border: 2px solid var(--blue); }
+.sharestage { position: relative; display: flex; justify-content: center; align-items: center; margin: 4px 0 10px; }
+.sharestage canvas { width: min(66vw, 290px, calc((100svh - 400px) * 0.5625)); height: auto; aspect-ratio: 9 / 16; border-radius: 22px; box-shadow: 0 18px 40px rgba(20,26,51,.28), 0 2px 6px rgba(20,26,51,.15); touch-action: pan-y; }
+.sharenav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: 24px; font-weight: 900; line-height: 1; }
+.sharenav.prev { left: 0; } .sharenav.next { right: 0; }
+.lookdots { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.lookdots button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink-soft); font: 800 13px "Nunito", system-ui, sans-serif; }
+.lookdots button i { width: 8px; height: 8px; border-radius: 50%; border: 2px solid currentColor; }
+.lookdots button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
+.lookdots button[aria-pressed="true"] i { background: currentColor; }
+.sharenote { font-size: 13px; text-align: center; margin: 10px 4px 0; }
+.sharecta { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; margin: 10px 0 4px; border-radius: 20px; background: linear-gradient(120deg, #1F55D0, #3B2E6B 70%, #D6698C); color: #FFFFFF; text-decoration: none; }
+.sharecta span { display: flex; flex-direction: column; gap: 2px; }
+.sharecta b { font-size: 16px; font-weight: 900; }
+.sharecta small { font-size: 12.5px; opacity: .9; font-weight: 700; }
+.sharecta svg { width: 26px; height: 26px; flex: none; }
+.screen-share [data-share] { position: sticky; bottom: calc(var(--tabbar) + 14px + env(safe-area-inset-bottom)); z-index: 4; box-shadow: 0 10px 24px rgba(31,85,208,.35); }

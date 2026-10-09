@@ -13,9 +13,10 @@ import * as sky from './screens/sky.js';
 import * as quilt from './screens/quilt.js';
 import * as skate from './screens/skate.js';
 import * as settings from './screens/settings.js';
+import * as share from './screens/share.js';
 import { closeSheet, setLogDate, esc, reduceMotion } from './ui.js';
 
-const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, settings };
+const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, settings, share };
 let root = document.getElementById('app');
 let current = null;
 

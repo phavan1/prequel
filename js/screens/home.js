@@ -10,7 +10,7 @@ const ICONS = {
   food: '<path d="M4 12h16a8 8 0 0 1-16 0zM9 8c0-2 2-2 2-4M14 8c0-2 2-2 2-4"/>',
   rest: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
   goal: '<path d="M12 21V4M12 4l7 3-7 3"/><path d="M8 21h8"/>',
-  blanket: '<path d="M3 8c3-2 6-2 9 0s6 2 9 0v10c-3 2-6 2-9 0s-6-2-9 0z"/><path d="M3 13c3-2 6-2 9 0s6 2 9 0"/>',
+  mug: '<path d="M4 10h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M16 12h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3c-.7 1 .7 2 0 3M12 3c-.7 1 .7 2 0 3"/>',
   win: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'
 };
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
@@ -85,7 +85,7 @@ function render() {
           '<a href="#/home" data-goals>' + svg(ICONS.goal) + 'Goals</a>' +
         '</div>' +
         (backupDue() ? '<a class="rowlink" href="#/settings" style="background:#FFF1C4"><span>Time for a little backup? It keeps everything safe.</span><b>›</b></a>' : '') +
-        '<button type="button" class="rowlink softask" data-heavy style="width:100%"><span>' + svg(ICONS.blanket) + pick(SOFT_ASK) + '</span><b>›</b></button>') +
+        '<button type="button" class="rowlink softask" data-heavy style="width:100%"><span>' + svg(ICONS.mug) + pick(SOFT_ASK) + '</span><b>›</b></button>') +
     nav('home');
 
   drawMini(root.querySelector('#mini'), st);
