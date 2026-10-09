@@ -64,7 +64,7 @@ function render() {
   root.innerHTML =
     '<div class="top"><div><div class="lbl">' + new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + greet + name + '</h1></div></div>' +
     '<div class="room">' +
-      '<div class="floor"></div><svg class="rug" viewBox="0 0 240 44" aria-hidden="true"><ellipse cx="120" cy="22" rx="118" ry="20" fill="#DCE7FF"/><ellipse cx="120" cy="22" rx="104" ry="14" fill="none" stroke="#9FB8E8" stroke-width="2" stroke-dasharray="6 5"/></svg>' +
+      '<div class="floor"></div>' + (soft ? '' : '<svg class="rug" viewBox="0 0 240 44" aria-hidden="true"><ellipse cx="120" cy="22" rx="118" ry="20" fill="#DCE7FF"/><ellipse cx="120" cy="22" rx="104" ry="14" fill="none" stroke="#9FB8E8" stroke-width="2" stroke-dasharray="6 5"/></svg>') +
       '<a class="window" href="#/sky" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas>' + WINDOW + '<span>' + st.moments.length + ' stars</span></a>' +
       '<a class="hoop" href="#/quilt" aria-label="Your quilt"><canvas id="miniquilt"></canvas>' + HOOP + '</a>' +
       (due.length && !soft
@@ -133,6 +133,18 @@ function drawMini(cv, st) {
   cv.width = w * dpr; cv.height = h * dpr;
   const g = cv.getContext('2d'); g.scale(dpr, dpr);
   let seed = 7; const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+  // in the day the window shows a daytime sky; your stars come out after 7pm (the sky page itself is always night)
+  const hr = new Date().getHours();
+  if (hr >= 6 && hr < 19) {
+    const top = hr < 8 ? '#FFD6A5' : hr >= 17 ? '#FFC38A' : '#8FC1F2', bot = hr < 8 ? '#CFE3FF' : hr >= 17 ? '#B9C8F0' : '#DDEEFF';
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    const sx = w * (0.15 + 0.7 * (hr - 6) / 13), sy = h * (0.22 + 0.25 * Math.abs(hr - 12.5) / 6.5);
+    const glow = g.createRadialGradient(sx, sy, 2, sx, sy, 26); glow.addColorStop(0, 'rgba(255,240,180,.9)'); glow.addColorStop(1, 'rgba(255,240,180,0)');
+    g.fillStyle = glow; g.fillRect(0, 0, w, h); g.fillStyle = '#FFE58A'; g.beginPath(); g.arc(sx, sy, 8, 0, 7); g.fill();
+    const cloud = (x, y, k) => { g.fillStyle = 'rgba(255,255,255,.92)'; [[0, 0, 9], [10, -4, 11], [21, 0, 9], [10, 3, 9]].forEach(c => { g.beginPath(); g.arc(x + c[0] * k, y + c[1] * k, c[2] * k, 0, 7); g.fill(); }); };
+    cloud(w * 0.55, h * 0.62, 0.9); cloud(w * 0.08, h * 0.78, 0.7); cloud(w * 0.7, h * 0.28, 0.6);
+    return;
+  }
   for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(201,214,255,' + (0.15 + rnd() * 0.3) + ')'; g.fillRect(rnd() * w, rnd() * h, 1, 1); }
   st.moments.slice(-120).forEach(m => {
     const x = rnd() * w, y = rnd() * (h - 14) + 2, r = 0.8 + rnd() * 1.4 + (m.bright ? 0.8 : 0);
