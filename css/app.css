@@ -394,3 +394,43 @@ body:has(.screen-skate) { overflow: hidden; overscroll-behavior: none; }
 .sk-over .big { font-size: 40px; font-weight: 900; color: #23262F; }
 .room .stage { pointer-events: none; } .room .stage button { pointer-events: auto; }
 .screen-skate.night .sk-hud { color: #F3EEDF; }
+
+/* ---------- food ---------- */
+.foodhead { display: flex; align-items: center; gap: 14px; padding: 10px 16px 10px 6px; border-radius: 24px; background: var(--room-2); border: 1px solid var(--line); text-align: left; font: inherit; color: var(--ink); min-height: 112px; overflow: hidden; }
+.foodhead .him { height: 104px; width: auto; flex: none; margin-bottom: -12px; }
+.foodhead span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.foodhead small { font-size: 12px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
+.foodhead b { font-size: 22px; font-weight: 900; }
+.foodhead em { font-style: normal; font-weight: 800; color: var(--blue); font-size: 14px; }
+.fsearch input { width: 100%; min-height: 56px; border-radius: 18px; font-size: 17px; padding: 0 18px; border: 1.5px solid var(--line); background: var(--paper); }
+.fsearch input:focus { border-color: var(--blue); outline: none; }
+.reslist { display: flex; flex-direction: column; gap: 6px; }
+.res { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; padding: 8px 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--paper); text-align: left; font: inherit; font-weight: 800; font-size: 14px; color: var(--ink); }
+.res span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.res i { font-style: normal; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: #B2622A; }
+.res small { font-weight: 700; font-size: 12px; color: var(--ink-soft); }
+.res b { color: var(--blue); font-size: 20px; }
+.res.add { border-style: dashed; background: transparent; }
+.res.add span { color: var(--blue); }
+.daylist { gap: 0; padding: 6px 14px; }
+.daylist .entry { display: flex; align-items: center; gap: 10px; min-height: 52px; width: 100%; border: 0; border-bottom: 1px solid var(--line); background: transparent; font: inherit; text-align: left; color: var(--ink); padding: 6px 0; }
+.daylist .entry:last-child { border-bottom: 0; }
+.daylist .t { font-size: 12px; font-weight: 800; color: var(--ink-soft); width: 56px; flex: none; }
+.daylist .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; font-weight: 800; font-size: 14px; }
+.daylist .nm small { font-weight: 700; font-size: 12px; color: var(--ink-soft); }
+.daylist .kc { font-size: 13px; font-weight: 800; color: var(--ink-soft); }
+.qty { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.qty button { min-height: 58px; border-radius: 16px; border: 1px solid var(--line); background: var(--room); font-size: 20px; font-weight: 900; color: var(--ink); }
+.qty button[aria-pressed="true"] { background: var(--blue); color: #fff; border-color: var(--blue); }
+.snack { position: fixed; left: 50%; bottom: calc(var(--tabbar) + env(safe-area-inset-bottom, 0px) + 14px); transform: translate(-50%, 20px); opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 16px; background: #23262F; color: #fff; font-weight: 800; font-size: 14px; width: min(92vw, 420px); z-index: 30; transition: opacity .2s, transform .2s; }
+.snack.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.snack span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.snack button { min-height: 38px; padding: 0 14px; border-radius: 12px; border: 0; background: #FFF1A8; color: #23262F; font-weight: 900; }
+.labelgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.labelgrid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
+.labelgrid input { min-height: 44px; }
+.nutable { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.nutable div { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 12px; border-radius: 12px; background: var(--room); font-size: 13px; font-weight: 700; }
+.nutable b { font-size: 15px; font-weight: 900; }
+.wchart { width: 100%; height: auto; }
+.usuals .chip { min-height: 40px; font-size: 14px; }

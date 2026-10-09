@@ -49,6 +49,9 @@ function fresh() {
     units: {},        // exercise key -> 'kg' | 'plate'
     customExercises: {},
     customWorkouts: [],
+    myFoods: [],      // {id, name, from, n:[12] per portion, per100?, unit, unitG, measures?, kind, uses}
+    meals: [],        // {id, date, ts, name, foodId, n, unit, unitG, qty, sure, kind}
+    weights: [],      // {id, date, ts, kg, where}
     goals: [],        // {id, kind:'linked'|'own', source, name, target, from, created, finished}
     goalLogs: [],     // {id, goalId, date, ts}  your own goals, logged by you
     workoutAdds: {},  // workout id -> [[key, sets, range]] kept additions

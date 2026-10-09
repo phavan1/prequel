@@ -74,7 +74,7 @@ function render(root) {
   const goal = g => { const n = count(g); return '<button type="button" class="goal" data-goal="' + g.id + '"><span class="lbl" style="text-transform:none;letter-spacing:0">' + esc(g.name) + '</span><span class="n">' + n + '<small> / ' + g.target + '</small></span><span class="bar"><i style="width:' + Math.max(3, Math.min(100, n / g.target * 100)) + '%;background:' + colourOf(g) + '"></i></span></button>'; };
   const active = st.goals.filter(g => !g.finished), finished = st.goals.filter(g => g.finished).sort((a, b) => b.finished - a.finished);
   const ownActive = active.some(g => g.kind === 'own');
-  const HILLS = { all: ['Everything', st.moments.map(m => m.date), '#D6698C', 'moments'], move: ['Gym', st.sessions.map(x => x.date), '#1F55D0', 'sessions'], cooked: ['Cooked', st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.date), '#E5893D', 'meals'], rest: ['Rest days', Array.from(new Set(st.rests.map(r => r.date))), '#D9A400', 'days'] };
+  const HILLS = { all: ['Everything', st.moments.map(m => m.date), '#D6698C', 'moments'], move: ['Gym', st.sessions.map(x => x.date), '#1F55D0', 'sessions'], cooked: ['Cooked', st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.date).concat((st.meals || []).filter(m => (st.myFoods || []).some(f => f.id === m.foodId && f.kind === 'home')).map(m => m.date)), '#E5893D', 'meals'], rest: ['Rest days', Array.from(new Set(st.rests.map(r => r.date))), '#D9A400', 'days'] };
   const H = HILLS[hillKey] || HILLS.all;
   const notice = noticing(st);
   const wins = st.moments.filter(m => m.area === 'win').length;

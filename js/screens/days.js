@@ -25,7 +25,7 @@ function confirmDelete(root, id) {
   const st = get(), m = st.moments.find(x => x.id === id); if (!m) return;
   openSheet('<h2>Remove this?</h2><p class="muted">' + esc(m.text) + '</p><button type="button" class="btn danger" data-yes>Remove it</button><button type="button" class="btn alt" data-close>Keep it</button>', ev => {
     if (!ev.target.closest('[data-yes]')) return;
-    if (m.ref) ['sessions', 'rests', 'foods', 'weather', 'goalLogs', 'letters'].forEach(l => { if (st[l]) st[l] = st[l].filter(x => x.id !== m.ref); });
+    if (m.ref) ['sessions', 'rests', 'foods', 'meals', 'weather', 'goalLogs', 'letters'].forEach(l => { if (st[l]) st[l] = st[l].filter(x => x.id !== m.ref); });
     st.moments = st.moments.filter(x => x.id !== id);
     save(); closeSheet(); render(root);
   });

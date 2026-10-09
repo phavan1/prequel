@@ -4,11 +4,13 @@ import { get, save, uid, addMoment, today, dateKey } from './store.js';
 import { esc, him, openSheet, closeSheet, toast, prettyDate } from './ui.js';
 
 const tsOfDay = rests => { const m = {}; rests.forEach(r => { if (!m[r.date] || r.end < m[r.date]) m[r.date] = r.end || r.start; }); return Object.values(m); };
+// a meal counts as home-cooked when the food it came from is marked home-cooked
+const homeMeals = st => { const home = new Set((st.myFoods || []).filter(f => f.kind === 'home').map(f => f.id)); return (st.meals || []).filter(m => home.has(m.foodId) || m.kind === 'home').map(m => m.ts); };
 export const SOURCES = {
   sessions: { label: 'Gym sessions', unit: 'sessions', items: st => st.sessions.map(s => s.ts) },
-  cooked: { label: 'Home-cooked meals', unit: 'meals', items: st => st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.ts) },
-  newfood: { label: 'New foods tried', unit: 'new foods', items: st => st.foods.filter(f => f.tags.includes('Tried something new')).map(f => f.ts) },
-  breakfast: { label: 'Breakfasts', unit: 'breakfasts', items: st => st.foods.filter(f => f.tags.includes('Breakfast')).map(f => f.ts) },
+  cooked: { label: 'Home-cooked meals', unit: 'meals', items: st => st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.ts).concat(homeMeals(st)) },
+  newfood: { label: 'New foods tried', unit: 'new foods', items: st => st.foods.filter(f => f.tags.includes('Tried something new')).map(f => f.ts).concat((st.myFoods || []).map(f => f.created || 0)) },
+  breakfast: { label: 'Breakfasts', unit: 'breakfasts', items: st => st.foods.filter(f => f.tags.includes('Breakfast')).map(f => f.ts).concat((st.meals || []).filter(m => new Date(m.ts).getHours() < 11).map(m => m.ts)) },
   restdays: { label: 'Days of rest logged', unit: 'days', items: st => tsOfDay(st.rests) },
   wins: { label: 'Tiny wins (any)', unit: 'tiny wins', items: st => st.moments.filter(m => m.area === 'win').map(m => m.ts) },
   letters: { label: 'Letters to future me', unit: 'letters', items: st => st.letters.map(l => l.ts) },
