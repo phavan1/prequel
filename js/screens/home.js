@@ -51,7 +51,7 @@ function render() {
   document.body.classList.toggle('heavy-day', soft);
 
   // he sits with you; on a soft day he's curled up under his blanket
-  const pose = soft ? 'asleep' : 'nightwatch';
+  const pose = soft ? 'asleep' : (hour >= 6 && hour < 19 ? 'sitting' : 'nightwatch');
   const greet = hour < 5 ? 'Still up' : hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
   const name = st.settings.name ? ', ' + esc(st.settings.name) : '';
   let line = pick(st.settings.kindLines.length ? st.settings.kindLines : ['Hey, you.']);

@@ -1,5 +1,5 @@
 // Offline support: the app opens even with no signal. Change VERSION when you publish an update.
-const VERSION = 'prequel-v10';
+const VERSION = 'prequel-v11';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/store.js', 'js/data.js', 'js/ui.js', 'js/sky-model.js', 'js/goals.js', 'js/charts.js', 'js/nutrition.js', 'data/foods.json',
@@ -7,7 +7,7 @@ const SHELL = [
   'js/screens/wins.js', 'js/screens/mind.js', 'js/screens/letters.js', 'js/screens/days.js', 'js/screens/me.js', 'js/screens/sky.js', 'js/screens/quilt.js', 'js/screens/skate.js',
   ...['nunito-latin-500', 'nunito-latin-700', 'nunito-latin-800', 'nunito-latin-900', 'gaegu-latin-700'].map(n => 'fonts/' + n + '-normal.woff2'),
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
-  ...['standing', 'waving', 'lying', 'asleep', 'eating', 'cooking', 'umbrella', 'sunny', 'nightwatch', 'letter', 'cheer', 'stickynote', 'skate', 'legday'].map(n => 'art/' + n + '.webp')
+  ...['standing', 'waving', 'lying', 'asleep', 'eating', 'cooking', 'umbrella', 'sunny', 'nightwatch', 'letter', 'cheer', 'stickynote', 'skate', 'legday', 'sitting'].map(n => 'art/' + n + '.webp')
 ];
 
 self.addEventListener('install', e => {

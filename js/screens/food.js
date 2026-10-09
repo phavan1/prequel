@@ -270,7 +270,7 @@ function recipeSheet(editId) {
   sheet.addEventListener('change', e => {
     const el = e.target; if (el.dataset.iu == null) return;
     const it = R.items[Number(el.dataset.iu)], g = gramsOf(it), mi = Number(el.value);
-    it.mi = mi; it.count = mi < 0 ? Math.round(g) : Math.max(0.5, Math.round(g / it.measures[mi][1] * 2) / 2);
+    it.count = mi < 0 ? Math.round(g) : (it.mi < 0 ? 1 : it.count); it.mi = mi;
     drawList();
   });
   drawList();

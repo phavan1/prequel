@@ -457,3 +457,4 @@ details.more summary { font-weight: 800; font-size: 13px; color: var(--ink-soft)
 .ingrow span small { font-weight: 700; font-size: 11px; color: var(--ink-soft); }
 .ingrow select { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; padding: 0 4px; width: 100%; }
 #ingRes:empty { display: none; }
+.reslist.scroll { display: block; } .reslist.scroll > * { flex-shrink: 0; width: 100%; margin-bottom: 6px; }
