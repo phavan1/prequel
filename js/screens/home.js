@@ -85,7 +85,7 @@ function render() {
           '<a href="#/home" data-goals>' + svg(ICONS.goal) + 'Goals</a>' +
         '</div>' +
         (backupDue() ? '<a class="rowlink" href="#/settings" style="background:#FFF1C4"><span>Time for a little backup? It keeps everything safe.</span><b>›</b></a>' : '') +
-        '<button type="button" class="rowlink softask" data-heavy style="width:100%"><span>' + svg(ICONS.mug) + pick(SOFT_ASK) + '</span><b>›</b></button>') +
+        '<button type="button" class="rowlink softask" data-heavy style="width:100%"><span><i class="softemoji" aria-hidden="true">🍵</i><em>' + pick(SOFT_ASK) + '</em></span><b>›</b></button>') +
     nav('home');
 
   drawMini(root.querySelector('#mini'), st);
