@@ -491,3 +491,44 @@ html[data-theme="dark"] .screen-home.heavy .room .floor { background: #3A291E; }
 .seg3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .seg3 button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-weight: 800; font-size: 13px; color: var(--ink); }
 .seg3 button[aria-pressed="true"] { border: 2px solid var(--blue); background: var(--blue-soft); }
+
+/* ---------- days ---------- */
+.tabsrow { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
+.tabsrow::-webkit-scrollbar { display: none; }
+.tabsrow button { flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); font-weight: 800; font-size: 14px; color: var(--ink); }
+.tabsrow button[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+.tabsrow .ic { width: 20px; height: 20px; }
+.cal2 { background: var(--paper); border: 1px solid var(--line); border-radius: 24px; padding: 12px 10px 14px; }
+.cal2 .monthbar { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px; }
+.cal2 .monthbar button { width: 40px; height: 40px; border-radius: 12px; border: 0; background: transparent; font-size: 24px; font-weight: 900; color: var(--ink); }
+.cal2 .monthbar button:disabled { opacity: .25; }
+.cal2 .dow, .cal2 .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 8px; }
+.cal2 .dow { font-size: 12px; font-weight: 900; color: var(--ink-soft); text-align: center; padding-bottom: 8px; }
+.cal2 .d { position: relative; justify-self: center; width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--line); background: transparent; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cal2 .d:disabled { opacity: .35; }
+.cal2 .d.lv1 { border: 2px solid color-mix(in srgb, var(--blue) 40%, transparent); }
+.cal2 .d.lv2 { border: 3px solid color-mix(in srgb, var(--blue) 70%, transparent); }
+.cal2 .d.lv3 { border: 3.5px solid var(--blue); }
+.cal2 .d.today::after { content: ""; position: absolute; bottom: -8px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--ink); }
+.cal2 .d[aria-pressed="true"] { background: var(--blue); color: #fff; border-color: var(--blue); }
+.cal2 .badge { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; padding: 2px; border-radius: 50%; background: var(--paper); color: var(--blue); border: 1px solid var(--line); }
+.calsum { font-size: 14px; font-weight: 700; color: var(--ink-soft); text-align: center; margin: -2px 8px 0; }
+.daycard { background: var(--paper); border: 1px solid var(--line); border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.drow { border-radius: 16px; background: var(--room); }
+.dhead { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px; padding: 8px 14px; border: 0; background: transparent; text-align: left; color: var(--ink); font: inherit; }
+.dhead .ic { width: 24px; height: 24px; flex: none; color: var(--blue); }
+.dhead span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.dhead b { font-size: 15px; font-weight: 900; }
+.dhead small { font-size: 13px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dhead i { font-style: normal; font-size: 22px; font-weight: 900; color: var(--ink-soft); width: 20px; text-align: center; }
+.dbody { padding: 0 14px 10px 50px; display: flex; flex-direction: column; }
+.ditem { display: flex; align-items: center; gap: 8px; min-height: 44px; border-top: 1px solid var(--line); font-size: 14px; font-weight: 700; }
+.ditem span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ditem small { font-size: 12px; color: var(--ink-soft); }
+.ditem .x { width: 40px; height: 40px; border: 0; background: transparent; color: var(--ink-soft); font-size: 18px; }
+.lnk { border: 0; background: transparent; color: var(--blue); font-weight: 800; font-size: 13px; padding: 8px 0; text-align: left; }
+.daycard .btn .ic { width: 18px; height: 18px; }
+.addgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.addgrid button { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 84px; justify-content: center; border-radius: 16px; border: 1px solid var(--line); background: var(--room); font-weight: 800; font-size: 13px; color: var(--ink); }
+.addgrid .ic { width: 26px; height: 26px; color: var(--blue); }
+html[data-theme="dark"] .tabsrow button[aria-pressed="true"], html[data-theme="dark"] .cal2 .d[aria-pressed="true"] { background: #3D66E0; border-color: #3D66E0; }
