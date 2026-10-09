@@ -69,7 +69,8 @@ function render(root) {
     '<div class="card"><p class="muted" style="font-size:14px;line-height:1.45;margin:0">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive), especially before changing phones.</p><p class="muted" style="font-size:12px;margin:0" id="persist"></p>' +
       '<div class="grid2"><button type="button" class="btn" data-export>Save a backup</button><button type="button" class="btn alt" data-import>Restore</button></div><input type="file" id="importFile" accept="application/json,.json" hidden>' +
       '<p class="muted" style="font-size:12px;margin:0">' + (st.lastBackup ? 'Last backup: ' + new Date(st.lastBackup).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'No backup saved yet.') + '</p></div>' +
-    '<button type="button" class="btn ghost wide" data-fresh style="margin-top:12px">Start fresh</button>' +
+    '<div class="lbl">Reset</div>' +
+    '<div class="card"><b>Start fresh</b><p class="muted" style="font-size:13px;margin:0">Clears everything in the app and takes it back to day one. It asks twice, and offers a backup first.</p><button type="button" class="btn danger wide" data-fresh>Start fresh…</button></div>' +
     nav('me');
   isPersisted().then(p => { const el = root.querySelector('#persist'); if (el) el.textContent = p ? 'This phone has promised to keep your data.' : 'Tip: adding the app to your home screen helps the phone keep your data.'; });
 }
