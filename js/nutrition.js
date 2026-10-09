@@ -53,9 +53,10 @@ export function logFood(food, date, opts = {}) {
 }
 export function totalOf(m) { return m.n ? m.n.map(v => v == null ? null : v * (m.qty || 1)) : null; }
 export function sumDay(list) {
-  const t = new Array(12).fill(0), has = new Array(12).fill(false); let counted = 0, blank = 0;
-  list.forEach(m => { const v = totalOf(m); if (!v) { blank++; return; } counted++; v.forEach((x, i) => { if (x != null) { t[i] += x; has[i] = true; } }); });
-  return { t, has, counted, blank };
+  // a blank on a label stays unknown, never zero; cnt says how many foods each total is based on
+  const t = new Array(12).fill(0), has = new Array(12).fill(false), cnt = new Array(12).fill(0); let counted = 0, blank = 0;
+  list.forEach(m => { const v = totalOf(m); if (!v) { blank++; return; } counted++; v.forEach((x, i) => { if (x != null) { t[i] += x; has[i] = true; cnt[i]++; } }); });
+  return { t, has, cnt, counted, blank };
 }
 export function qtyLabel(m) {
   const q = m.qty || 1, u = m.unit || '1 serving';
@@ -78,4 +79,21 @@ export function search(q, limit = 12) {
     return [s, f];
   }).sort((a, b) => a[0] - b[0]).slice(0, limit).map(x => x[1]);
   return { mine, db };
+}
+
+// ---------- your own recipes: ingredients in, numbers per portion out ----------
+export function recipeTotals(items) {
+  const t = new Array(12).fill(null);
+  items.forEach(it => it.per100.forEach((v, i) => { if (v != null) t[i] = (t[i] || 0) + v * it.grams / 100; }));
+  return t;
+}
+export function ingredientSearch(q, limit = 8) {
+  q = q.trim().toLowerCase(); if (!q || !DB) return [];
+  const words = q.split(/\s+/);
+  // plain ingredients first: raw foods from the USDA list, then simple Indian staples
+  return DB.filter(f => words.every(w => f.key.includes(w))).map(f => {
+    let s = f.name.length / 4; if (f.key.startsWith(words[0])) s -= 20; if (/\braw\b/.test(f.key)) s -= 15; if (f.src === 'i') s += 10;
+    if (/\b(industrial|skin|commercial|frozen|canned)\b/.test(f.key)) s += 8;
+    return [s, f];
+  }).sort((a, b) => a[0] - b[0]).slice(0, limit).map(x => x[1]);
 }

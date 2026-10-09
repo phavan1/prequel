@@ -1,7 +1,7 @@
 // Food: log what you ate in a tap, see what it gave you. Nutrition is an estimate, never a score.
 import { get, save, uid, addMoment, removeById, today } from '../store.js';
 import { esc, nav, backLink, dateChip, logDate, him, timeOf, prettyDate, toast, openSheet, closeSheet } from '../ui.js';
-import { NUTRIENTS, KINDS, loadDB, myFoods, meals, weights, fromDB, adoptDB, logFood, totalOf, sumDay, qtyLabel, fmt, search } from '../nutrition.js';
+import { NUTRIENTS, KINDS, loadDB, myFoods, meals, weights, fromDB, adoptDB, bestMeasure, logFood, totalOf, sumDay, qtyLabel, fmt, search, recipeTotals, ingredientSearch } from '../nutrition.js';
 
 let root = null, query = '', linkTo = null, snackTimer = null, dbReady = false;
 
@@ -58,6 +58,7 @@ function drawResults() {
     mine.map(f => row('data-pick data-mine="' + f.id + '"', f.name, f.unit + ' · ' + kcalP(f.n), 'yours')).join('') +
     db.map((f, i) => { const s = fromDB(f); return row('data-pick data-db="' + i + '"', f.name, s.unit + ' · ' + kcalP(s.n), f.src === 'i' ? 'Indian recipe' : ''); }).join('') +
     (db.length || mine.length ? '' : '<p class="muted" style="font-size:13px;padding:6px 4px">' + (dbReady ? 'No matches in the food lists.' : 'Still loading foods…') + '</p>') +
+    '<button type="button" class="res add" data-recipe><span>+ Make it from ingredients<small>your own dish: what goes in the pot</small></span></button>' +
     '<button type="button" class="res add" data-label><span>+ Add it from a packet label<small>type the nutrition once, it\'s yours after that</small></span></button>' +
     '</div>';
   box._db = db;
@@ -92,6 +93,7 @@ function onClick(e) {
   if ((b = t.closest('[data-delold]'))) { removeById('foods', b.dataset.delold); render(); return; }
   if (t.closest('[data-totals]')) { totalsSheet(); return; }
   if (t.closest('[data-label]')) { labelSheet(); return; }
+  if (t.closest('[data-recipe]')) { recipeSheet(); return; }
   if (t.closest('[data-manage]')) { manageSheet(); return; }
   if (t.closest('[data-weight]')) { weightSheet(); }
 }
@@ -108,22 +110,27 @@ function snack(text, mealId) {
 // ---------- portion: one row of big buttons ----------
 function portionSheet(id) {
   const m = meals().find(x => x.id === id); if (!m) return;
-  const Q = [[0.5, '½'], [1, '1'], [1.5, '1½'], [2, '2'], [3, '3']];
-  const v = totalOf(m);
-  openSheet('<h2>' + esc(m.name) + '</h2><p class="muted" style="margin:0">' + (m.n ? 'How much? One portion is ' + esc(m.unit) + '.' : 'This one has no numbers yet.') + '</p>' +
-    (m.n ? '<div class="qty">' + Q.map(q => '<button type="button" data-q="' + q[0] + '" aria-pressed="' + (m.sure && m.qty === q[0]) + '">' + q[1] + '</button>').join('') + '</div>' +
-      (m.unitG ? '<div class="addrow"><label class="sr" for="gIn">Grams</label><input id="gIn" type="text" inputmode="decimal" placeholder="or type grams" value=""><button type="button" class="btn alt" data-grams>Use grams</button></div>' : '') +
-      '<p class="muted" style="font-size:13px;margin:0">' + (v ? '~' + fmt(v[0], 0) + ' cal · ' + fmt(v[1], 1) + ' g protein · ' + fmt(v[2], 2) + ' g carbs · ' + fmt(v[3], 3) + ' g fat' : '') + '</p>'
+  let q = m.qty || 1;
+  const show = v => v === 0.5 ? '½' : v === 1.5 ? '1½' : v === 2.5 ? '2½' : String(Math.round(v * 100) / 100);
+  const info = () => { const v = m.n ? m.n.map(x => x == null ? null : x * q) : null; return v ? '~' + fmt(v[0], 0) + ' cal · ' + fmt(v[1], 1) + ' g protein · ' + fmt(v[2], 2) + ' g carbs · ' + fmt(v[3], 3) + ' g fat' : ''; };
+  const sheet = openSheet('<h2>' + esc(m.name) + '</h2><p class="muted" style="margin:0">' + (m.n ? 'How many? One is ' + esc(m.unit) + '.' : 'This one has no numbers yet.') + '</p>' +
+    (m.n ? '<div class="stepper"><button type="button" data-step="-1" aria-label="Less">−</button><output id="qOut">' + show(q) + '</output><button type="button" data-step="1" aria-label="More">+</button></div>' +
+      '<div class="chips quick">' + [0.5, 1, 2, 3, 4, 5, 6, 8, 10].map(v => '<button type="button" class="chip small" data-q="' + v + '">' + show(v) + '</button>').join('') + '</div>' +
+      (m.unitG ? '<div class="addrow"><label class="sr" for="gIn">Grams</label><input id="gIn" type="text" inputmode="decimal" placeholder="or type grams"><button type="button" class="btn alt" data-grams>Use grams</button></div>' : '') +
+      '<p class="muted" id="qInfo" style="font-size:13px;margin:0">' + info() + '</p><button type="button" class="btn" data-o="ok">Save</button>'
       : '<button type="button" class="btn" data-o="link">Find its numbers</button>') +
     (m.foodId ? '<button type="button" class="btn alt" data-o="edit">Edit this food</button>' : '') +
-    '<button type="button" class="btn danger" data-o="del">Remove</button><button type="button" class="btn ghost" data-close>Done</button>', ev => {
+    '<button type="button" class="btn danger" data-o="del">Remove</button><button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
     const t = ev.target; let b;
-    if ((b = t.closest('[data-q]'))) { m.qty = Number(b.dataset.q); m.sure = true; save(); closeSheet(); render(); return; }
-    if (t.closest('[data-grams]')) { const g = parseFloat(document.getElementById('gIn').value); if (g > 0) { m.qty = Math.round(g / m.unitG * 100) / 100; m.sure = true; save(); closeSheet(); render(); } return; }
+    const set = v => { q = Math.max(0.25, Math.min(99, v)); sheet.querySelector('#qOut').textContent = show(q); sheet.querySelector('#qInfo').textContent = info(); };
+    if ((b = t.closest('[data-step]'))) { const d = Number(b.dataset.step); set(q < 1 || (q === 1 && d < 0) ? (d > 0 ? 1 : 0.5) : Math.floor(q) + d); return; }
+    if ((b = t.closest('[data-q]'))) { set(Number(b.dataset.q)); return; }
+    if (t.closest('[data-grams]')) { const g = parseFloat(document.getElementById('gIn').value); if (g > 0) set(Math.round(g / m.unitG * 100) / 100); return; }
     const o = t.closest('[data-o]'); if (!o) return;
+    if (o.dataset.o === 'ok') { m.qty = q; m.sure = true; save(); closeSheet(); render(); return; }
     if (o.dataset.o === 'del') { removeById('meals', id); closeSheet(); render(); return; }
     if (o.dataset.o === 'edit') { foodSheet(m.foodId); return; }
-    if (o.dataset.o === 'link') { linkTo = id; query = m.name; closeSheet(); render(); const q = root.querySelector('#fq'); if (q) q.focus(); }
+    if (o.dataset.o === 'link') { linkTo = id; query = m.name; closeSheet(); render(); const qi = root.querySelector('#fq'); if (qi) qi.focus(); }
   });
 }
 
@@ -139,6 +146,7 @@ function foodSheet(id) {
       (f.per100 ? '<div class="lbl">Your usual portion</div><div class="chips">' + (f.measures || []).map((ms, i) => '<button type="button" class="chip small" data-ms="' + i + '" aria-pressed="' + (draft.unit === ms[0]) + '">' + esc(ms[0]) + ' (' + ms[1] + ' g)</button>').join('') + '</div>' +
         '<div class="addrow"><label class="sr" for="uG">Grams</label><input id="uG" type="text" inputmode="decimal" placeholder="or your own portion in grams" value="' + (draft.unit && /^\d+ g$/.test(draft.unit) ? draft.unitG : '') + '"><button type="button" class="btn alt" data-ug>Set</button></div>' : '') +
       '<p class="muted" style="font-size:13px;margin:0">One portion (' + esc(draft.unit) + '): ' + (n ? '~' + fmt(n[0], 0) + ' cal · ' + fmt(n[1], 1) + ' g protein · ' + fmt(n[2], 2) + ' g carbs · ' + fmt(n[3], 3) + ' g fat' : 'no numbers') + '</p>' +
+      (f.recipe ? '<button type="button" class="btn alt" data-o="recipe">Change ingredients</button>' : '') +
       '<button type="button" class="btn" data-o="save">Save</button><button type="button" class="btn danger" data-o="del">Take off my usuals</button><button type="button" class="btn ghost" data-close>Cancel</button>';
   };
   const redraw = () => { draft.name = document.getElementById('fName').value; const sh = document.querySelector('#sheet .sheet'); sh.innerHTML = draw(); };
@@ -148,6 +156,7 @@ function foodSheet(id) {
     if ((b = t.closest('[data-ms]'))) { const ms = f.measures[Number(b.dataset.ms)]; draft.unit = ms[0]; draft.unitG = ms[1]; redraw(); return; }
     if (t.closest('[data-ug]')) { const g = parseFloat(document.getElementById('uG').value); if (g > 0) { draft.unit = g + ' g'; draft.unitG = g; } redraw(); return; }
     const o = t.closest('[data-o]'); if (!o) return;
+    if (o.dataset.o === 'recipe') { recipeSheet(id); return; }
     if (o.dataset.o === 'del') { get().myFoods = myFoods().filter(x => x.id !== id); save(); closeSheet(); render(); toast('Off your usuals. Past logs stay.'); return; }
     draft.name = document.getElementById('fName').value.trim() || f.name;
     Object.assign(f, { name: draft.name, kind: draft.kind, unit: draft.unit, unitG: draft.unitG });
@@ -164,20 +173,27 @@ function manageSheet() {
 }
 
 // ---------- a packet label, typed once ----------
+// Australian labels always list energy, protein, fat, saturated fat, carbs, sugars and sodium. Blanks stay unknown, never zero.
 function labelSheet() {
   const name = query.trim();
-  openSheet('<h2>From a packet label</h2><p class="muted" style="margin:0">Use the "per serve" column. Leave anything you don\'t know empty.</p>' +
+  let kj = true;
+  const field = i => '<label for="ln' + i + '"><span>' + (i === 0 ? 'Energy' : NUTRIENTS[i][1]) + '</span><input id="ln' + i + '" type="text" inputmode="decimal" placeholder="' + (i === 0 ? 'kJ' : NUTRIENTS[i][2]) + '"></label>';
+  openSheet('<h2>From a packet label</h2><p class="muted" style="margin:0">Use the "per serve" column. Skip anything that isn\'t on the label; it stays blank, it never counts as zero.</p>' +
     '<label class="field-label" for="lName">NAME</label><input id="lName" type="text" value="' + esc(name) + '" autocomplete="off">' +
     '<label class="field-label" for="lUnit">ONE SERVE IS</label><input id="lUnit" type="text" placeholder="e.g. 1 bar (45 g)" autocomplete="off">' +
-    '<div class="labelgrid">' + NUTRIENTS.map((n, i) => '<label for="ln' + i + '"><span>' + n[1] + '</span><input id="ln' + i + '" type="text" inputmode="decimal" placeholder="' + n[2] + '"></label>').join('') + '</div>' +
+    '<div class="seg" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" data-kj="1" aria-pressed="true">Energy in kJ</button><button type="button" data-kj="0" aria-pressed="false">Energy in Cal</button></div>' +
+    '<div class="labelgrid">' + [0, 1, 3, 4, 2, 6, 7, 5].map(field).join('') + '</div>' +
+    '<details class="more"><summary>Iron, calcium, B12, vitamin D (if listed)</summary><div class="labelgrid">' + [8, 9, 10, 11].map(field).join('') + '</div></details>' +
     '<div class="lbl">Where it\'s from</div><div class="chips">' + KINDS.map(k => '<button type="button" class="chip small" data-kind="' + k[0] + '" aria-pressed="' + (k[0] === 'packaged') + '">' + k[1] + '</button>').join('') + '</div>' +
     '<div class="err" id="lErr"></div><button type="button" class="btn" data-o="save">Save and log it</button><button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
     const t = ev.target; let b;
+    if ((b = t.closest('[data-kj]'))) { kj = b.dataset.kj === '1'; document.querySelectorAll('#sheet [data-kj]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); document.getElementById('ln0').placeholder = kj ? 'kJ' : 'Cal'; return; }
     if ((b = t.closest('[data-kind]'))) { document.querySelectorAll('#sheet [data-kind]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return; }
     if (!t.closest('[data-o]')) return;
     const nm = document.getElementById('lName').value.trim(); if (!nm) { document.getElementById('lErr').textContent = 'Give it a name first.'; return; }
     const n = NUTRIENTS.map((x, i) => { const v = parseFloat(document.getElementById('ln' + i).value); return isNaN(v) ? null : v; });
-    if (n[0] == null) { document.getElementById('lErr').textContent = 'Calories at least, so it can count.'; return; }
+    if (n[0] == null) { document.getElementById('lErr').textContent = 'Energy at least, so it can count.'; return; }
+    if (kj) n[0] = Math.round(n[0] / 4.184);
     const kind = (document.querySelector('#sheet [data-kind][aria-pressed="true"]') || {}).dataset;
     const food = { id: uid(), name: nm, from: 'label', n, unit: document.getElementById('lUnit').value.trim() || '1 serve', unitG: null, kind: kind ? kind.kind : null, uses: 0, created: Date.now() };
     myFoods().push(food);
@@ -185,11 +201,57 @@ function labelSheet() {
   });
 }
 
+// ---------- your own recipe: what goes in the pot ----------
+// Spices barely count; oil and ghee do. Numbers per portion come from the ingredients.
+function recipeSheet(editId) {
+  const old = editId ? myFoods().find(f => f.id === editId) : null;
+  const R = old && old.recipe ? { name: old.name, items: old.recipe.map(x => Object.assign({}, x)), portions: old.portions || 1, unit: old.unit } : { name: query.trim(), items: [], portions: 1, unit: '1 plate' };
+  let iq = '';
+  const per = () => recipeTotals(R.items).map(v => v == null ? null : v / R.portions);
+  const draw = () => {
+    const res = ingredientSearch(iq);
+    const p = per();
+    return '<h2>' + (old ? 'Change the recipe' : 'Make it from ingredients') + '</h2><p class="muted" style="margin:0">Add what goes in the pot. Skip the spices; don\'t forget the oil or ghee.</p>' +
+      '<label class="field-label" for="rName">DISH</label><input id="rName" type="text" value="' + esc(R.name) + '" placeholder="e.g. Chicken gravy" autocomplete="off">' +
+      '<div class="lbl">Ingredients</div>' +
+      (R.items.length ? R.items.map((it, i) => '<div class="ingrow"><span>' + esc(it.name) + '</span><input type="text" inputmode="decimal" data-ig="' + i + '" value="' + Math.round(it.grams) + '" aria-label="Grams of ' + esc(it.name) + '"><em>g</em><button type="button" data-irm="' + i + '" aria-label="Remove ' + esc(it.name) + '">×</button></div>').join('') : '<p class="muted" style="font-size:13px;margin:0">Nothing yet. Search below: chicken breast, onion, tomato, oil…</p>') +
+      '<input id="iq" type="search" placeholder="Add an ingredient" autocomplete="off" value="' + esc(iq) + '">' +
+      (res.length ? '<div class="reslist">' + res.map((f, i) => '<button type="button" class="res" data-iadd="' + i + '"><span>' + esc(f.name) + '<small>' + Math.round(f.per100[0]) + ' cal per 100 g</small></span><b>+</b></button>').join('') + '</div>' : '') +
+      '<div class="addrow"><span class="lbl" style="flex:1">Makes how many portions?</span><div class="stepper small"><button type="button" data-pstep="-1" aria-label="Fewer">−</button><output>' + R.portions + '</output><button type="button" data-pstep="1" aria-label="More">+</button></div></div>' +
+      '<label class="field-label" for="rUnit">ONE PORTION IS</label><input id="rUnit" type="text" value="' + esc(R.unit) + '" autocomplete="off">' +
+      '<p class="muted" id="rPer" style="font-size:13px;margin:0">' + (R.items.length ? 'Each portion: ~' + fmt(p[0], 0) + ' cal · ' + fmt(p[1], 1) + ' g protein · ' + fmt(p[2], 2) + ' g carbs · ' + fmt(p[3], 3) + ' g fat' : '') + '</p>' +
+      '<div class="err" id="rErr"></div><button type="button" class="btn" data-o="save">' + (old ? 'Save' : 'Save and log a portion') + '</button><button type="button" class="btn ghost" data-close>Cancel</button>';
+  };
+  const keep = () => { const n = document.getElementById('rName'), u = document.getElementById('rUnit'); if (n) R.name = n.value; if (u) R.unit = u.value; document.querySelectorAll('#sheet [data-ig]').forEach(inp => { const g = parseFloat(inp.value); if (g > 0) R.items[Number(inp.dataset.ig)].grams = g; }); };
+  const redraw = focus => { keep(); const sh = document.querySelector('#sheet .sheet'), y = sh.scrollTop; sh.innerHTML = draw(); sh.scrollTop = y; if (focus) { const el = document.getElementById('iq'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } };
+  const sheet = openSheet(draw(), ev => {
+    const t = ev.target; let b;
+    if ((b = t.closest('[data-iadd]'))) { const f = ingredientSearch(iq)[Number(b.dataset.iadd)]; const m = bestMeasure(f); R.items.push({ name: f.name, from: f.src + ':' + f.name, per100: f.per100, grams: m[1] || 100 }); iq = ''; redraw(); return; }
+    if ((b = t.closest('[data-irm]'))) { keep(); R.items.splice(Number(b.dataset.irm), 1); redraw(); return; }
+    if ((b = t.closest('[data-pstep]'))) { keep(); R.portions = Math.max(1, Math.min(30, R.portions + Number(b.dataset.pstep))); redraw(); return; }
+    const o = t.closest('[data-o]'); if (!o) return;
+    keep();
+    if (!R.name.trim()) { document.getElementById('rErr').textContent = 'Give the dish a name.'; return; }
+    if (!R.items.length) { document.getElementById('rErr').textContent = 'Add at least one ingredient.'; return; }
+    const totalG = R.items.reduce((a, x) => a + x.grams, 0);
+    const food = old || { id: uid(), from: 'recipe', kind: 'home', uses: 0, created: Date.now() };
+    Object.assign(food, { name: R.name.trim(), recipe: R.items, portions: R.portions, n: per(), unit: R.unit.trim() || '1 portion', unitG: Math.round(totalG / R.portions), per100: null });
+    if (!old) myFoods().push(food);
+    save(); closeSheet();
+    if (old) { render(); toast('Recipe saved. New logs use the new numbers.'); return; }
+    const m = logFood(food, logDate()); finishLog(m, food);
+  });
+  sheet.addEventListener('input', e => {
+    if (e.target.id === 'iq') { iq = e.target.value; redraw(true); }
+    else if (e.target.dataset.ig != null) { keep(); const p = per(); const el = sheet.querySelector('#rPer'); if (el) el.textContent = 'Each portion: ~' + fmt(p[0], 0) + ' cal · ' + fmt(p[1], 1) + ' g protein · ' + fmt(p[2], 2) + ' g carbs · ' + fmt(p[3], 3) + ' g fat'; }
+  });
+}
+
 // ---------- everything the day gave you ----------
 function totalsSheet() {
   const list = dayList(), S = sumDay(list.filter(x => x.m).map(x => x.m));
   openSheet('<h2>' + esc(prettyDate(logDate(), { weekday: 'long', day: 'numeric', month: 'long' })) + '</h2>' +
-    '<div class="nutable">' + NUTRIENTS.map((n, i) => '<div><span>' + n[1] + '</span><b>' + (S.has[i] ? fmt(S.t[i], i) + ' ' + n[2] : '–') + '</b></div>').join('') + '</div>' +
+    '<div class="nutable">' + NUTRIENTS.map((n, i) => '<div><span>' + n[1] + (S.has[i] && S.cnt[i] < S.counted ? '<small>from ' + S.cnt[i] + ' of ' + S.counted + ' foods</small>' : '') + '</span><b>' + (S.has[i] ? fmt(S.t[i], i) + ' ' + n[2] : '–') + '</b></div>').join('') + '</div>' +
     '<p class="muted" style="font-size:13px;margin:0">Good estimates, not exact. ' + (S.blank ? S.blank + (S.blank === 1 ? ' thing has' : ' things have') + ' no numbers yet; tap it in the list to fill them in. ' : '') + 'Not every food in the lists has B12 or vitamin D, so those read low.</p>' +
     '<button type="button" class="btn ghost" data-close>Close</button>', null);
 }

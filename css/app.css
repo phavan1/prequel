@@ -63,7 +63,7 @@ p { margin: 0; }
 .chip.small { min-height: 36px; padding: 0 12px; font-size: 13px; }
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-input[type="text"], input[type="time"], input[type="date"], textarea { width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid var(--line); background: #FFFFFF; padding: 10px 12px; font-size: 16px; color: var(--ink); }
+input[type="text"], input[type="search"], input[type="time"], input[type="date"], textarea { width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid var(--line); background: #FFFFFF; padding: 10px 12px; font-size: 16px; color: var(--ink); }
 textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .field-label { font-size: 12px; font-weight: 800; color: var(--ink-soft); letter-spacing: 0.04em; display: block; margin-bottom: 6px; }
 .empty { color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
@@ -434,3 +434,18 @@ body:has(.screen-skate) { overflow: hidden; overscroll-behavior: none; }
 .nutable b { font-size: 15px; font-weight: 900; }
 .wchart { width: 100%; height: auto; }
 .usuals .chip { min-height: 40px; font-size: 14px; }
+
+.stepper { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 10px; }
+.stepper button { height: 60px; border-radius: 18px; border: 1px solid var(--line); background: var(--room); font-size: 28px; font-weight: 900; color: var(--ink); }
+.stepper output { text-align: center; font-size: 40px; font-weight: 900; }
+.stepper.small { grid-template-columns: 44px 44px 44px; gap: 6px; }
+.stepper.small button { height: 44px; font-size: 22px; border-radius: 12px; }
+.stepper.small output { font-size: 22px; }
+.chips.quick .chip { min-width: 46px; justify-content: center; }
+.ingrow { display: grid; grid-template-columns: 1fr 70px 16px 40px; align-items: center; gap: 6px; padding: 4px 0 4px 12px; border-radius: 12px; background: var(--room); font-size: 13px; font-weight: 800; }
+.ingrow input { min-height: 40px; padding: 0 8px; text-align: right; }
+.ingrow em { font-style: normal; color: var(--ink-soft); font-weight: 700; }
+.ingrow button { height: 40px; border: 0; background: transparent; color: var(--ink-soft); font-size: 18px; }
+.nutable span small { display: block; font-size: 10px; font-weight: 700; color: var(--ink-soft); }
+details.more summary { font-weight: 800; font-size: 13px; color: var(--ink-soft); min-height: 40px; display: flex; align-items: center; cursor: pointer; }
+.chips.quick { flex-wrap: wrap; }
