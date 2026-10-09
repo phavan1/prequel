@@ -73,7 +73,7 @@ function render() {
       '<div class="stage wide"><button type="button" id="tap" aria-label="Say hi">' + him(pose, 'wide breathe', 'Your character') + '</button></div>' +
     '</div>' +
     (soft
-      ? '<div class="card gentle"><b>Soft day</b><p class="muted" style="margin:0">Nothing to log, nothing to do. Little games are coming in the next update.</p></div>' +
+      ? '<a class="game" href="#/skate"><span><b>Skate home</b><small>' + ((st.games && st.games.skate && st.games.skate.best) ? 'Your best: ' + st.games.skate.best + ' m' : 'Jump the bumps, grab the stars') + '</small></span><b class="go">Play ›</b></a>' +
         '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'A letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
         '<button type="button" class="btn ghost wide" data-unheavy>Back to a regular day</button>'
       : (st.active ? '<a class="rowlink" href="#/move" style="border-color:var(--blue)"><span>' + esc(st.active.n) + ' is still open</span><b>›</b></a>' : '') +
@@ -97,7 +97,7 @@ function onClick(e) {
   if ((b = t.closest('#tap'))) {
     pop(b.querySelector('.him'));
     const el = root.querySelector('#line');
-    if (el && !st.heavy[d] && new Date().getHours() >= 5) el.textContent = pick(st.settings.kindLines.length ? st.settings.kindLines : ['Hey, you.']);
+    if (el && !st.heavy[d]) el.textContent = pick(st.settings.kindLines.length ? st.settings.kindLines : ['Hey, you.']);
     return;
   }
   if (t.closest('[data-heavy]')) { st.heavy[d] = true; save(); render(); window.scrollTo(0, 0); return; }
