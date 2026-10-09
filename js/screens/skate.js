@@ -17,7 +17,7 @@ export function mount(root) {
     '<div class="sk-over" id="skOver"><h1>Skate home</h1><p>Tap to jump. Tap again in the air for a double jump.<br>Dodge the bumps, grab the stars.</p><button type="button" class="btn" id="skGo">Start skating</button></div>';
   const cv = root.querySelector('#sk'), g = cv.getContext('2d');
   const over = root.querySelector('#skOver'), scoreEl = root.querySelector('#skScore'), bestEl = root.querySelector('#skBest');
-  const img = new Image(); img.src = 'art/skate.webp';
+  const img = new Image(); img.src = 'art/skatego.webp';
   let W = 0, H = 0, ground = 0, dpr = 1;
   function size() {
     dpr = Math.min(window.devicePixelRatio || 1, 2); W = window.innerWidth; H = window.innerHeight;
@@ -28,7 +28,7 @@ export function mount(root) {
 
   const hour = new Date().getHours(), night = hour < 6 || hour >= 19;
   root.classList.toggle('night', night);
-  const PH = Math.min(110, Math.max(84, H * 0.13)), PW = PH * 506 / 640;
+  const PH = Math.min(118, Math.max(90, H * 0.14)), PW = PH * 640 / 605;
   let s; // the run
   function reset() {
     s = { t: 0, speed: 270, dist: 0, bonus: 0, y: 0, vy: 0, jumps: 0, obs: [], stars: [], pops: [], nextGap: 380, scroll: 0, dead: false };

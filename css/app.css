@@ -352,9 +352,11 @@ button.rowlink { text-align: left; font-family: inherit; }
 .softask span { display: flex; align-items: center; gap: 10px; }
 .softask svg { width: 22px; height: 22px; color: var(--blue); }
 /* heavy day: the whole home softens and dims */
-.screen-home.heavy { --room: #EFE6CF; --room-2: #E6DCC2; }
-body.heavy-day { background: #EFE6CF; }
-.screen-home.heavy .room { filter: saturate(.75) brightness(.96); }
+.screen-home.heavy { --room: #F6E4D2; --room-2: #F0D6BF; --paper: #FFF6EC; --line: #EBCDB2; }
+body.heavy-day { background: linear-gradient(180deg, #F8E7D6 0%, #F2D9C6 100%) fixed; }
+/* a soft day: lamplight-warm, like curling up with a blanket */
+.screen-home.heavy .room { background: radial-gradient(120% 90% at 30% 20%, #FBE3C8 0%, #F0D2B6 55%, #E7C3A6 100%); box-shadow: inset 0 0 60px rgba(214, 140, 90, .18); }
+.screen-home.heavy .room .floor { background: #E2BC9C; }
 .screen-home.heavy .gentle { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---------- goals, finished shelf, kind charts ---------- */
