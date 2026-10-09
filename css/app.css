@@ -532,3 +532,9 @@ html[data-theme="dark"] .screen-home.heavy .room .floor { background: #3A291E; }
 .addgrid button { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 84px; justify-content: center; border-radius: 16px; border: 1px solid var(--line); background: var(--room); font-weight: 800; font-size: 13px; color: var(--ink); }
 .addgrid .ic { width: 26px; height: 26px; color: var(--blue); }
 html[data-theme="dark"] .tabsrow button[aria-pressed="true"], html[data-theme="dark"] .cal2 .d[aria-pressed="true"] { background: #3D66E0; border-color: #3D66E0; }
+
+.goal .fresh { display: flex; flex-direction: column; font-weight: 900; font-size: 16px; color: var(--ink); }
+.goal .fresh small { font-weight: 700; font-size: 12px; color: var(--ink-soft); }
+.trophy.resting { background: var(--paper); border-color: var(--line); }
+.trophy.resting .star { color: var(--ink-soft); }
+.grid1 { display: grid; grid-template-columns: 1fr; gap: 8px; }

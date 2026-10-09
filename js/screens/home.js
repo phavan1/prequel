@@ -65,7 +65,7 @@ function render() {
     '<div class="top"><div><div class="lbl">' + new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + greet + name + '</h1></div></div>' +
     '<div class="room">' +
       '<div class="floor"></div>' + (soft ? '' : '<svg class="rug" viewBox="0 0 240 44" aria-hidden="true"><ellipse cx="120" cy="22" rx="118" ry="20" fill="#DCE7FF"/><ellipse cx="120" cy="22" rx="104" ry="14" fill="none" stroke="#9FB8E8" stroke-width="2" stroke-dasharray="6 5"/></svg>') +
-      '<a class="window" href="#/sky" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas>' + WINDOW + '<span>' + st.moments.length + ' stars</span></a>' +
+      '<a class="window" href="#/sky" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas>' + WINDOW + (st.moments.length ? '<span>' + st.moments.length + (st.moments.length === 1 ? ' star' : ' stars') + '</span>' : '') + '</a>' +
       '<a class="hoop" href="#/quilt" aria-label="Your quilt"><canvas id="miniquilt"></canvas>' + HOOP + '</a>' +
       (due.length && !soft
         ? '<a class="note" href="#/mind">hey… ' + esc(due[0].text.toLowerCase()) + '?</a>'

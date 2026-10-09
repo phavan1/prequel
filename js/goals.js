@@ -45,7 +45,7 @@ export const unitOf = g => g.kind === 'own' ? 'times' : source(g.source).unit;
 // celebrate anything newly reached, one at a time
 export function checkFinished() {
   const st = get(); ensureGoals();
-  const done = st.goals.find(g => !g.finished && count(g) >= g.target);
+  const done = st.goals.find(g => !g.finished && !g.paused && count(g) >= g.target);
   if (!done) return;
   done.finished = Date.now(); save();
   openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">' + him('cheer', 'pop', 'Your character jumping with joy') +
@@ -90,13 +90,16 @@ export function openEditGoal(id, onDone) {
   openSheet('<h2>' + esc(g.name) + '</h2><p class="muted">' + count(g) + ' ' + esc(unitOf(g)) + (g.finished ? ' · finished ' + esc(prettyDate(dateKey(new Date(g.finished)))) : ' so far') + '</p>' +
     (g.finished
       ? '<button type="button" class="btn" data-o="again">Start a fresh one, same goal</button>'
-      : '<label class="field-label" for="eName">NAME</label><input id="eName" type="text" value="' + esc(g.name) + '" autocomplete="off"><label class="field-label" for="eTarget">COUNT UP TO</label><input id="eTarget" type="text" inputmode="numeric" value="' + g.target + '"><button type="button" class="btn" data-o="save">Save</button>') +
+      : '<label class="field-label" for="eName">NAME</label><input id="eName" type="text" value="' + esc(g.name) + '" autocomplete="off"><label class="field-label" for="eTarget">COUNT UP TO</label><input id="eTarget" type="text" inputmode="numeric" value="' + g.target + '"><button type="button" class="btn" data-o="save">Save</button>' +
+        '<button type="button" class="btn alt" data-o="pause">' + (g.paused ? 'Pick it back up' : 'Rest it for now') + '</button>' +
+        '<p class="muted" style="font-size:12px;margin:0">' + (g.paused ? 'Everything you did is still here. It carries on from where you left it.' : 'Resting keeps every bit of progress. It just steps out of the way until you want it again.') + '</p>') +
     '<button type="button" class="btn danger" data-o="del">Remove this goal</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
     const o = ev.target.closest('[data-o]'); if (!o) return;
     if (o.dataset.o === 'del') {
       if (!o.dataset.armed) { o.dataset.armed = '1'; o.textContent = 'Sure? Its stars stay in your sky. Tap again'; return; }
       st.goals = st.goals.filter(x => x.id !== id); save(); closeSheet(); toast('Removed.'); if (onDone) onDone(); return;
     }
+    if (o.dataset.o === 'pause') { g.paused = g.paused ? null : Date.now(); save(); closeSheet(); toast(g.paused ? 'Resting. It\'ll be here when you want it.' : 'Welcome back to ' + g.name + '.'); if (onDone) onDone(); return; }
     if (o.dataset.o === 'again') {
       const fresh = Object.assign({}, g, { id: uid(), created: Date.now(), finished: null, from: g.kind === 'linked' ? Date.now() : 0 });
       if (g.kind === 'own') fresh.again = g.id; // own logs belong to the old one, so this starts at 0
@@ -112,7 +115,7 @@ export function openEditGoal(id, onDone) {
 export function openLog(date, onDone) {
   const st = get(); ensureGoals();
   let day = date || today();
-  const own = () => st.goals.filter(g => g.kind === 'own' && !g.finished);
+  const own = () => st.goals.filter(g => g.kind === 'own' && !g.finished && !g.paused);
   const draw = () => '<h2>Your goals</h2>' +
     '<label class="datechip' + (day !== today() ? ' past' : '') + '"><span>Logging for</span><b>' + esc(prettyDate(day)) + '</b><input type="date" id="gDay" max="' + today() + '" value="' + day + '" aria-label="Day you are logging for"></label>' +
     (own().length

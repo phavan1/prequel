@@ -72,8 +72,8 @@ function render(root) {
   const st = get();
   const COL = { sessions: '#1F55D0', cooked: '#E5893D', newfood: '#3E9E6E', breakfast: '#E5893D', restdays: '#D9A400', wins: '#D6698C', letters: '#3E9E6E', lanterns: '#3E9E6E' };
   const colourOf = g => g.kind === 'own' ? AREAS.goal.colour : (COL[g.source] || AREAS.win.colour);
-  const goal = g => { const n = count(g); return '<button type="button" class="goal" data-goal="' + g.id + '"><span class="lbl" style="text-transform:none;letter-spacing:0">' + esc(g.name) + '</span><span class="n">' + n + '<small> / ' + g.target + '</small></span><span class="bar"><i style="width:' + Math.max(3, Math.min(100, n / g.target * 100)) + '%;background:' + colourOf(g) + '"></i></span></button>'; };
-  const active = st.goals.filter(g => !g.finished), finished = st.goals.filter(g => g.finished).sort((a, b) => b.finished - a.finished);
+  const goal = g => { const n = count(g); return '<button type="button" class="goal" data-goal="' + g.id + '"><span class="lbl" style="text-transform:none;letter-spacing:0">' + esc(g.name) + '</span>' + (n ? '<span class="n">' + n + '<small> / ' + g.target + '</small></span><span class="bar"><i style="width:' + Math.max(3, Math.min(100, n / g.target * 100)) + '%;background:' + colourOf(g) + '"></i></span>' : '<span class="fresh">Ready when you are<small>counting up to ' + g.target + '</small></span>') + '</button>'; };
+  const active = st.goals.filter(g => !g.finished && !g.paused), resting = st.goals.filter(g => !g.finished && g.paused), finished = st.goals.filter(g => g.finished).sort((a, b) => b.finished - a.finished);
   const ownActive = active.some(g => g.kind === 'own');
   const HILLS = { all: ['Everything', st.moments.map(m => m.date), '#D6698C', 'moments'], move: ['Gym', st.sessions.map(x => x.date), '#1F55D0', 'sessions'], cooked: ['Cooked', st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.date).concat((st.meals || []).filter(m => (st.myFoods || []).some(f => f.id === m.foodId && f.kind === 'home')).map(m => m.date)), '#E5893D', 'meals'], rest: ['Rest days', Array.from(new Set(st.rests.map(r => r.date))), '#D9A400', 'days'] };
   const H = HILLS[hillKey] || HILLS.all;
@@ -103,8 +103,10 @@ function render(root) {
     '<div class="lbl">Your goals</div>' +
     '<div class="grid2">' + active.map(g => goal(g)).join('') + '<button type="button" class="goal newgoal" data-newgoal><b>+ New goal</b><span>count up to anything</span></button></div>' +
     (ownActive ? '<button type="button" class="btn alt wide" data-loggoal>Log one of your own goals</button>' : '') +
+    (resting.length ? '<div class="lbl">Resting for now</div><div class="trophies">' + resting.map(g => { const n = count(g); return '<button type="button" class="trophy resting" data-goal="' + g.id + '"><span class="star">☾</span><span>' + esc(g.name) + '<small>' + (n ? n + ' so far, kept safe' : 'kept safe for later') + ' · tap to pick it back up</small></span></button>'; }).join('') + '</div>' : '') +
     (finished.length ? '<div class="lbl">The finished shelf</div><div class="trophies">' + finished.map(g => '<button type="button" class="trophy" data-goal="' + g.id + '"><span class="star">★</span><span>' + esc(g.name) + '<small>' + g.target + ' ' + esc(unitOf(g)) + ' · ' + esc(prettyDate(dateKey(new Date(g.finished)))) + '</small></span></button>').join('') + '</div>' : '') +
-    '<div class="grid3"><div class="count"><b>' + wins + '</b><span>tiny wins</span></div><div class="count"><b>' + lanterns + '</b><span>lanterns let go</span></div><div class="count"><b>' + st.letters.length + '</b><span>letters</span></div></div>' +
+    // only the counts that have something in them
+    (() => { const c = [[wins, 'tiny wins'], [lanterns, 'lanterns let go'], [st.letters.length, st.letters.length === 1 ? 'letter' : 'letters']].filter(x => x[0] > 0); return c.length ? '<div class="grid' + (c.length === 1 ? '1' : c.length) + '">' + c.map(x => '<div class="count"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('') + '</div>' : ''; })() +
     '<div class="grid2"><a class="rowlink" href="#/sky"><span>Your sky</span><b>›</b></a><a class="rowlink" href="#/quilt"><span>Your quilt</span><b>›</b></a></div>' +
     '<div class="lbl">Looking back</div>' +
     '<div class="card"><b>Your hill</b><p class="muted" style="font-size:13px;margin:0">It only ever climbs. A break is just a flat bit of the path.</p>' +

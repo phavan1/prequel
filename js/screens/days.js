@@ -129,7 +129,7 @@ function editSession(root, id) {
 
 function render(root) {
   const st = get(), t = today();
-  const goals = (st.goals || []).filter(g => g.kind === 'own');
+  const goals = (st.goals || []).filter(g => g.kind === 'own' && !g.paused);
   const tabs = [['all', 'All', 'all'], ['move', 'Move', 'move'], ['food', 'Food', 'food'], ['rest', 'Rest', 'rest']]
     .concat(OPTIONAL.filter(o => (st.settings.dayTabs || []).includes(o[0])).map(o => [o[0], o[1], o[0]]))
     .concat(goals.map(g => ['g:' + g.id, g.name, 'goal']));
@@ -161,21 +161,24 @@ function render(root) {
 
 // a kind line about the month: only counts that go up, no rates, no streaks
 function summary(tab, marked, monthName, y, mo) {
+  // never a zero: an empty month gets an invitation instead of a count
   const st = get(), inMonth = d => { const p = parseKey(d); return p.getFullYear() === y && p.getMonth() === mo; };
   const days = n => n + (n === 1 ? ' day' : ' days');
-  if (tab === 'all') return marked ? 'Something logged on ' + days(marked) + ' in ' + monthName + '.' : 'Nothing logged in ' + monthName + ' yet. Any day can still be filled in.';
-  if (tab === 'move') return days(marked) + ' of movement in ' + monthName + ' · ' + st.sessions.length + (st.sessions.length === 1 ? ' session' : ' sessions') + ' all-time';
+  if (tab === 'all') return marked ? 'Something logged on ' + days(marked) + ' in ' + monthName + '.' : 'A fresh page. Any day can be filled in, whenever.';
+  if (tab === 'move') { const n = st.sessions.length; return marked ? days(marked) + ' of movement in ' + monthName + ' · ' + n + (n === 1 ? ' session' : ' sessions') + ' all-time' : (n ? n + (n === 1 ? ' session' : ' sessions') + ' so far, all-time. The next one lands here.' : 'Your first session will light up a day here.'); }
   if (tab === 'food') {
     const c = {}; (st.meals || []).filter(m => inMonth(m.date)).forEach(m => { c[m.name] = (c[m.name] || 0) + 1; });
     const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
-    return 'Food logged on ' + days(marked) + ' in ' + monthName + (top ? ' · most-eaten: ' + esc(top[0]) : '');
+    return marked ? 'Food logged on ' + days(marked) + ' in ' + monthName + (top ? ' · most-eaten: ' + esc(top[0]) : '') : 'Food you log will show up here.';
   }
-  if (tab === 'rest') return 'Rest logged on ' + days(marked) + ' in ' + monthName + '.';
-  if (tab === 'win') return st.moments.filter(m => m.area === 'win' && inMonth(m.date)).length + ' tiny wins in ' + monthName + '.';
-  if (tab === 'weather') { const c = {}; st.weather.filter(w => inMonth(w.date)).forEach(w => w.types.forEach(x => { c[x] = (c[x] || 0) + 1; })); const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return top ? 'Most common weather in ' + monthName + ': ' + esc(top[0].toLowerCase()) + '.' : 'No weather logged in ' + monthName + ' yet.'; }
+  if (tab === 'rest') return marked ? 'Rest logged on ' + days(marked) + ' in ' + monthName + '.' : 'Rests you log will show up here.';
+  if (tab === 'win') { const n = st.moments.filter(m => m.area === 'win' && inMonth(m.date)).length; return n ? n + (n === 1 ? ' tiny win' : ' tiny wins') + ' in ' + monthName + '.' : 'Tiny wins will show up here.'; }
+  if (tab === 'weather') { const c = {}; st.weather.filter(w => inMonth(w.date)).forEach(w => w.types.forEach(x => { c[x] = (c[x] || 0) + 1; })); const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return top ? 'Most common weather in ' + monthName + ': ' + esc(top[0].toLowerCase()) + '.' : 'Your weather will show up here.'; }
   const g = (st.goals || []).find(x => 'g:' + x.id === tab); if (!g) return '';
-  const all = (st.goalLogs || []).filter(l => l.goalId === g.id);
-  return esc(g.name) + ': ' + all.filter(l => inMonth(l.date)).length + ' in ' + monthName + ' · ' + all.length + ' of ' + g.target + ' overall';
+  const all = (st.goalLogs || []).filter(l => l.goalId === g.id), m = all.filter(l => inMonth(l.date)).length;
+  if (!all.length) return esc(g.name) + ' starts whenever you\'re ready. Tap a day, then "Add to this day".';
+  if (!m) return esc(g.name) + ': ' + all.length + ' so far, counting up to ' + g.target + '.';
+  return esc(g.name) + ': ' + m + ' in ' + monthName + ' · ' + all.length + ' of ' + g.target + ' so far';
 }
 
 // the chosen day: one short line per thing, tap a line to see and change the details
