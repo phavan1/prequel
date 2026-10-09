@@ -449,3 +449,11 @@ body:has(.screen-skate) { overflow: hidden; overscroll-behavior: none; }
 .nutable span small { display: block; font-size: 10px; font-weight: 700; color: var(--ink-soft); }
 details.more summary { font-weight: 800; font-size: 13px; color: var(--ink-soft); min-height: 40px; display: flex; align-items: center; cursor: pointer; }
 .chips.quick { flex-wrap: wrap; }
+
+.reslist.scroll { max-height: 44vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 2px; border-radius: 18px; }
+.reslist.addrow2 { margin-top: 8px; }
+.ingrow { grid-template-columns: 1fr 58px 104px 36px; }
+.ingrow span { display: flex; flex-direction: column; min-width: 0; }
+.ingrow span small { font-weight: 700; font-size: 11px; color: var(--ink-soft); }
+.ingrow select { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; padding: 0 4px; width: 100%; }
+#ingRes:empty { display: none; }

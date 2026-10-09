@@ -3,6 +3,7 @@ import { get, save, uid, addMoment, removeById, today } from '../store.js';
 import { esc, nav, backLink, dateChip, logDate, him, timeOf, prettyDate, toast, openSheet, closeSheet } from '../ui.js';
 import { NUTRIENTS, KINDS, loadDB, myFoods, meals, weights, fromDB, adoptDB, bestMeasure, logFood, totalOf, sumDay, qtyLabel, fmt, search, recipeTotals, ingredientSearch } from '../nutrition.js';
 
+const EMPTY = ['Eat away!', 'Snack o\'clock?', 'Feed the machine.', 'Bon appétit!', 'Tummy\'s calling.', 'Let\'s eat!', 'Fuel up, friend.'];
 let root = null, query = '', linkTo = null, snackTimer = null, dbReady = false;
 
 export function mount(r) {
@@ -33,8 +34,8 @@ function render() {
   root.innerHTML =
     '<div class="top">' + backLink() + dateChip() + '</div>' +
     '<button type="button" class="foodhead" data-totals>' + him('eating', 'breathe', 'Your character eating with you') +
-      '<span><small>' + esc(prettyDate(d)) + '</small><b>' + (mealsN ? mealsN + (mealsN === 1 ? ' thing' : ' things') + ' eaten' : 'Nothing yet') + '</b>' +
-      '<em>' + (S.counted ? '~' + Math.round(S.t[0]).toLocaleString() + ' cal · ' + Math.round(S.t[1]) + ' g protein ›' : 'A banana counts.') + '</em></span></button>' +
+      '<span><small>' + esc(prettyDate(d)) + '</small><b>' + (mealsN ? mealsN + (mealsN === 1 ? ' thing' : ' things') + ' eaten' : EMPTY[new Date().getDate() % EMPTY.length]) + '</b>' +
+      '<em>' + (S.counted ? '~' + Math.round(S.t[0]).toLocaleString() + ' cal · ' + Math.round(S.t[1]) + ' g protein ›' : 'Anything counts. A banana counts.') + '</em></span></button>' +
     '<div class="fsearch"><label class="sr" for="fq">What did you have?</label><input id="fq" type="search" placeholder="What did you have?" autocomplete="off" enterkeyhint="go" value="' + esc(query) + '"></div>' +
     '<div id="res"></div>' +
     (usuals.length ? '<div class="top"><div class="lbl">Your usuals</div><button type="button" class="btn ghost" data-manage style="min-height:34px;padding:0 4px">Edit</button></div><div class="chips usuals">' + usuals.map(f => '<button type="button" class="chip" data-usual="' + f.id + '">' + esc(f.name) + '</button>').join('') + '</div>' : '') +
@@ -53,11 +54,12 @@ function drawResults() {
   if (!q) { box.innerHTML = linkTo ? '<p class="muted" style="font-size:13px">Search for what it was, and I\'ll fill in its numbers.</p>' : ''; return; }
   const { mine, db } = search(q);
   const row = (attr, name, sub, tag) => '<button type="button" class="res" ' + attr + '><span>' + esc(name) + (tag ? ' <i>' + tag + '</i>' : '') + '<small>' + esc(sub) + '</small></span><b>+</b></button>';
-  box.innerHTML = '<div class="reslist">' +
+  box.innerHTML = '<div class="reslist scroll">' +
     (linkTo ? '' : row('data-pick data-quick="1"', 'Just log “' + q + '”', 'fill in the numbers later', '')) +
     mine.map(f => row('data-pick data-mine="' + f.id + '"', f.name, f.unit + ' · ' + kcalP(f.n), 'yours')).join('') +
     db.map((f, i) => { const s = fromDB(f); return row('data-pick data-db="' + i + '"', f.name, s.unit + ' · ' + kcalP(s.n), f.src === 'i' ? 'Indian recipe' : ''); }).join('') +
     (db.length || mine.length ? '' : '<p class="muted" style="font-size:13px;padding:6px 4px">' + (dbReady ? 'No matches in the food lists.' : 'Still loading foods…') + '</p>') +
+    '</div><div class="reslist addrow2">' +
     '<button type="button" class="res add" data-recipe><span>+ Make it from ingredients<small>your own dish: what goes in the pot</small></span></button>' +
     '<button type="button" class="res add" data-label><span>+ Add it from a packet label<small>type the nutrition once, it\'s yours after that</small></span></button>' +
     '</div>';
@@ -202,49 +204,76 @@ function labelSheet() {
 }
 
 // ---------- your own recipe: what goes in the pot ----------
-// Spices barely count; oil and ghee do. Numbers per portion come from the ingredients.
+// Count things the way you cook: 2 medium onions, 3 tomatoes, 1 tbsp oil. Grams only if you want them.
+// Only the parts that change are redrawn, so typing never fights the keyboard.
+const pickUnit = ms => { let i = ms.findIndex(m => /medium/i.test(m[0])); if (i < 0) i = ms.findIndex(m => !/\b(cup|oz|lb|g)\b/i.test(m[0])); return i; };
+const gramsOf = it => it.mi >= 0 && it.measures[it.mi] ? it.count * it.measures[it.mi][1] : it.count;
 function recipeSheet(editId) {
   const old = editId ? myFoods().find(f => f.id === editId) : null;
-  const R = old && old.recipe ? { name: old.name, items: old.recipe.map(x => Object.assign({}, x)), portions: old.portions || 1, unit: old.unit } : { name: query.trim(), items: [], portions: 1, unit: '1 plate' };
-  let iq = '';
-  const per = () => recipeTotals(R.items).map(v => v == null ? null : v / R.portions);
-  const draw = () => {
-    const res = ingredientSearch(iq);
-    const p = per();
-    return '<h2>' + (old ? 'Change the recipe' : 'Make it from ingredients') + '</h2><p class="muted" style="margin:0">Add what goes in the pot. Skip the spices; don\'t forget the oil or ghee.</p>' +
-      '<label class="field-label" for="rName">DISH</label><input id="rName" type="text" value="' + esc(R.name) + '" placeholder="e.g. Chicken gravy" autocomplete="off">' +
-      '<div class="lbl">Ingredients</div>' +
-      (R.items.length ? R.items.map((it, i) => '<div class="ingrow"><span>' + esc(it.name) + '</span><input type="text" inputmode="decimal" data-ig="' + i + '" value="' + Math.round(it.grams) + '" aria-label="Grams of ' + esc(it.name) + '"><em>g</em><button type="button" data-irm="' + i + '" aria-label="Remove ' + esc(it.name) + '">×</button></div>').join('') : '<p class="muted" style="font-size:13px;margin:0">Nothing yet. Search below: chicken breast, onion, tomato, oil…</p>') +
-      '<input id="iq" type="search" placeholder="Add an ingredient" autocomplete="off" value="' + esc(iq) + '">' +
-      (res.length ? '<div class="reslist">' + res.map((f, i) => '<button type="button" class="res" data-iadd="' + i + '"><span>' + esc(f.name) + '<small>' + Math.round(f.per100[0]) + ' cal per 100 g</small></span><b>+</b></button>').join('') + '</div>' : '') +
-      '<div class="addrow"><span class="lbl" style="flex:1">Makes how many portions?</span><div class="stepper small"><button type="button" data-pstep="-1" aria-label="Fewer">−</button><output>' + R.portions + '</output><button type="button" data-pstep="1" aria-label="More">+</button></div></div>' +
-      '<label class="field-label" for="rUnit">ONE PORTION IS</label><input id="rUnit" type="text" value="' + esc(R.unit) + '" autocomplete="off">' +
-      '<p class="muted" id="rPer" style="font-size:13px;margin:0">' + (R.items.length ? 'Each portion: ~' + fmt(p[0], 0) + ' cal · ' + fmt(p[1], 1) + ' g protein · ' + fmt(p[2], 2) + ' g carbs · ' + fmt(p[3], 3) + ' g fat' : '') + '</p>' +
-      '<div class="err" id="rErr"></div><button type="button" class="btn" data-o="save">' + (old ? 'Save' : 'Save and log a portion') + '</button><button type="button" class="btn ghost" data-close>Cancel</button>';
-  };
-  const keep = () => { const n = document.getElementById('rName'), u = document.getElementById('rUnit'); if (n) R.name = n.value; if (u) R.unit = u.value; document.querySelectorAll('#sheet [data-ig]').forEach(inp => { const g = parseFloat(inp.value); if (g > 0) R.items[Number(inp.dataset.ig)].grams = g; }); };
-  const redraw = focus => { keep(); const sh = document.querySelector('#sheet .sheet'), y = sh.scrollTop; sh.innerHTML = draw(); sh.scrollTop = y; if (focus) { const el = document.getElementById('iq'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } };
-  const sheet = openSheet(draw(), ev => {
+  const R = old && old.recipe
+    ? { name: old.name, items: old.recipe.map(x => Object.assign({ measures: [], mi: -1, count: x.grams }, x)), portions: old.portions || 1, unit: old.unit }
+    : { name: query.trim(), items: [], portions: 1, unit: '1 plate' };
+  const per = () => recipeTotals(R.items.map(it => ({ per100: it.per100, grams: gramsOf(it) }))).map(v => v == null ? null : v / R.portions);
+  const perText = () => { if (!R.items.length) return ''; const p = per(); return 'Each portion: ~' + fmt(p[0], 0) + ' cal · ' + fmt(p[1], 1) + ' g protein · ' + fmt(p[2], 2) + ' g carbs · ' + fmt(p[3], 3) + ' g fat'; };
+  const rowHtml = (it, i) => '<div class="ingrow"><span>' + esc(it.name) + '<small>≈ ' + Math.round(gramsOf(it)) + ' g</small></span>' +
+    '<input type="text" inputmode="decimal" data-ic="' + i + '" value="' + (Math.round(it.count * 100) / 100) + '" aria-label="How many">' +
+    '<select data-iu="' + i + '" aria-label="Unit">' + it.measures.map((m, j) => '<option value="' + j + '"' + (j === it.mi ? ' selected' : '') + '>' + esc(m[0].replace(/^[\d.]+\s+/, '').replace(/\s*\(.*?\)/g, '').replace(/,.*$/, '')) + '</option>').join('') + '<option value="-1"' + (it.mi < 0 ? ' selected' : '') + '>grams</option></select>' +
+    '<button type="button" data-irm="' + i + '" aria-label="Remove ' + esc(it.name) + '">×</button></div>';
+  const sheet = openSheet('<h2>' + (old ? 'Change the recipe' : 'Make it from ingredients') + '</h2><p class="muted" style="margin:0">Add what goes in the pot, counted however you count it. Skip the spices; don\'t forget the oil or ghee.</p>' +
+    '<label class="field-label" for="rName">DISH</label><input id="rName" type="text" value="' + esc(R.name) + '" placeholder="e.g. Chicken gravy" autocomplete="off">' +
+    '<div class="lbl">Ingredients</div><div id="ingList"></div>' +
+    '<input id="iq" type="search" placeholder="Add an ingredient: onion, tomato, oil…" autocomplete="off" autocorrect="off" spellcheck="false">' +
+    '<div id="ingRes" class="reslist"></div>' +
+    '<div class="addrow"><span class="lbl" style="flex:1">Makes how many portions?</span><div class="stepper small"><button type="button" data-pstep="-1" aria-label="Fewer">−</button><output id="pOut">' + R.portions + '</output><button type="button" data-pstep="1" aria-label="More">+</button></div></div>' +
+    '<label class="field-label" for="rUnit">ONE PORTION IS</label><input id="rUnit" type="text" value="' + esc(R.unit) + '" autocomplete="off">' +
+    '<p class="muted" id="rPer" style="font-size:13px;margin:0"></p>' +
+    '<div class="err" id="rErr"></div><button type="button" class="btn" data-o="save">' + (old ? 'Save' : 'Save and log a portion') + '</button><button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
     const t = ev.target; let b;
-    if ((b = t.closest('[data-iadd]'))) { const f = ingredientSearch(iq)[Number(b.dataset.iadd)]; const m = bestMeasure(f); R.items.push({ name: f.name, from: f.src + ':' + f.name, per100: f.per100, grams: m[1] || 100 }); iq = ''; redraw(); return; }
-    if ((b = t.closest('[data-irm]'))) { keep(); R.items.splice(Number(b.dataset.irm), 1); redraw(); return; }
-    if ((b = t.closest('[data-pstep]'))) { keep(); R.portions = Math.max(1, Math.min(30, R.portions + Number(b.dataset.pstep))); redraw(); return; }
+    if ((b = t.closest('[data-iadd]'))) {
+      const f = sheet._res[Number(b.dataset.iadd)]; const ms = f.measures || [];
+      R.items.push({ name: f.name, from: f.src + ':' + f.name, per100: f.per100, measures: ms, mi: pickUnit(ms), count: pickUnit(ms) >= 0 ? 1 : 100 });
+      const iq = sheet.querySelector('#iq'); iq.value = ''; drawRes(''); drawList(); return;
+    }
+    if ((b = t.closest('[data-irm]'))) { R.items.splice(Number(b.dataset.irm), 1); drawList(); return; }
+    if ((b = t.closest('[data-pstep]'))) { R.portions = Math.max(1, Math.min(30, R.portions + Number(b.dataset.pstep))); sheet.querySelector('#pOut').textContent = R.portions; sheet.querySelector('#rPer').textContent = perText(); return; }
     const o = t.closest('[data-o]'); if (!o) return;
-    keep();
-    if (!R.name.trim()) { document.getElementById('rErr').textContent = 'Give the dish a name.'; return; }
-    if (!R.items.length) { document.getElementById('rErr').textContent = 'Add at least one ingredient.'; return; }
-    const totalG = R.items.reduce((a, x) => a + x.grams, 0);
+    R.name = sheet.querySelector('#rName').value; R.unit = sheet.querySelector('#rUnit').value;
+    if (!R.name.trim()) { sheet.querySelector('#rErr').textContent = 'Give the dish a name.'; return; }
+    if (!R.items.length) { sheet.querySelector('#rErr').textContent = 'Add at least one ingredient.'; return; }
+    const items = R.items.map(it => ({ name: it.name, from: it.from, per100: it.per100, measures: it.measures, mi: it.mi, count: it.count, grams: gramsOf(it) }));
+    const totalG = items.reduce((a2, x) => a2 + x.grams, 0);
     const food = old || { id: uid(), from: 'recipe', kind: 'home', uses: 0, created: Date.now() };
-    Object.assign(food, { name: R.name.trim(), recipe: R.items, portions: R.portions, n: per(), unit: R.unit.trim() || '1 portion', unitG: Math.round(totalG / R.portions), per100: null });
+    Object.assign(food, { name: R.name.trim(), recipe: items, portions: R.portions, n: per(), unit: R.unit.trim() || '1 portion', unitG: Math.round(totalG / R.portions), per100: null });
     if (!old) myFoods().push(food);
     save(); closeSheet();
     if (old) { render(); toast('Recipe saved. New logs use the new numbers.'); return; }
     const m = logFood(food, logDate()); finishLog(m, food);
   });
+  function drawList() {
+    sheet.querySelector('#ingList').innerHTML = R.items.length ? R.items.map(rowHtml).join('') : '<p class="muted" style="font-size:13px;margin:0">Nothing yet. Search below.</p>';
+    sheet.querySelector('#rPer').textContent = perText();
+  }
+  function drawRes(q) {
+    sheet._res = ingredientSearch(q, 6);
+    sheet.querySelector('#ingRes').innerHTML = sheet._res.map((f, i) => '<button type="button" class="res" data-iadd="' + i + '"><span>' + esc(f.name) + '<small>' + Math.round(f.per100[0]) + ' cal per 100 g</small></span><b>+</b></button>').join('');
+  }
+  let timer = null;
   sheet.addEventListener('input', e => {
-    if (e.target.id === 'iq') { iq = e.target.value; redraw(true); }
-    else if (e.target.dataset.ig != null) { keep(); const p = per(); const el = sheet.querySelector('#rPer'); if (el) el.textContent = 'Each portion: ~' + fmt(p[0], 0) + ' cal · ' + fmt(p[1], 1) + ' g protein · ' + fmt(p[2], 2) + ' g carbs · ' + fmt(p[3], 3) + ' g fat'; }
+    const el = e.target;
+    if (el.id === 'iq') { clearTimeout(timer); timer = setTimeout(() => drawRes(el.value), 180); return; }
+    if (el.dataset.ic != null) {
+      const it = R.items[Number(el.dataset.ic)], v = parseFloat(el.value); if (v > 0) it.count = v;
+      el.closest('.ingrow').querySelector('small').textContent = '≈ ' + Math.round(gramsOf(it)) + ' g';
+      sheet.querySelector('#rPer').textContent = perText();
+    }
   });
+  sheet.addEventListener('change', e => {
+    const el = e.target; if (el.dataset.iu == null) return;
+    const it = R.items[Number(el.dataset.iu)], g = gramsOf(it), mi = Number(el.value);
+    it.mi = mi; it.count = mi < 0 ? Math.round(g) : Math.max(0.5, Math.round(g / it.measures[mi][1] * 2) / 2);
+    drawList();
+  });
+  drawList();
 }
 
 // ---------- everything the day gave you ----------
