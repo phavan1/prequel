@@ -460,3 +460,34 @@ details.more summary { font-weight: 800; font-size: 13px; color: var(--ink-soft)
 .ingrow select { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; padding: 0 4px; width: 100%; }
 #ingRes:empty { display: none; }
 .reslist.scroll { display: block; } .reslist.scroll > * { flex-shrink: 0; width: 100%; margin-bottom: 6px; }
+
+/* ---------- cosy dark: warm charcoal and lamplight, never cold black ---------- */
+html[data-theme="dark"] {
+  --room: #1C1815; --room-2: #27211C; --paper: #2F2822; --ink: #F2E8DA; --ink-soft: #BCAD9A; --line: #45392F;
+  --blue: #7B9DFF; --blue-soft: #283253; --red: #F0907B; --green: #6CC08F; color-scheme: dark;
+}
+html[data-theme="dark"] body { background: var(--room); }
+html[data-theme="dark"] input[type="text"], html[data-theme="dark"] input[type="search"], html[data-theme="dark"] input[type="time"], html[data-theme="dark"] input[type="date"], html[data-theme="dark"] textarea, html[data-theme="dark"] select, html[data-theme="dark"] .ingrow select { background: #241E19; border-color: var(--line); color: var(--ink); }
+html[data-theme="dark"] .light[aria-pressed="true"], html[data-theme="dark"] .field[aria-pressed="true"] { background: #241E19; }
+/* things drawn light-on-dark in the day become dark-on-light here */
+html[data-theme="dark"] .chip[aria-pressed="true"], html[data-theme="dark"] .seg button[aria-pressed="true"], html[data-theme="dark"] .exs button[aria-pressed="true"], html[data-theme="dark"] .unit span.on, html[data-theme="dark"] .fin, html[data-theme="dark"] .toast { color: #1C1815; }
+html[data-theme="dark"] .btn:not(.alt):not(.ghost):not(.danger), html[data-theme="dark"] .next, html[data-theme="dark"] .qty button[aria-pressed="true"], html[data-theme="dark"] .game .go, html[data-theme="dark"] .cal .d[aria-pressed="true"] { background: #3D66E0; border-color: #3D66E0; color: #fff; }
+html[data-theme="dark"] .room .floor { background: #352B23; }
+html[data-theme="dark"] .room .rug ellipse:first-child { fill: #2B3350; }
+html[data-theme="dark"] .room .rug ellipse:last-child { stroke: #4D5B8A; }
+html[data-theme="dark"] .room .note { color: #23262F; }
+html[data-theme="dark"] .lookback, html[data-theme="dark"] [style*="background:#FFF1C4"], html[data-theme="dark"] [style*="background:#DFF0DC"] { background: var(--paper) !important; border: 1px solid var(--line); color: var(--ink); }
+html[data-theme="dark"] .nudgecard { background: #3A2F1C; border-color: #6B5626; }
+html[data-theme="dark"] .trophy { background: #33291A; border-color: #6B5626; }
+html[data-theme="dark"] .game { background: linear-gradient(120deg, #23304F, #3A2E22); }
+html[data-theme="dark"] .hello { background: var(--room); }
+html[data-theme="dark"] .res i { color: #E9A36B; }
+html[data-theme="dark"] .sk-back, html[data-theme="dark"] .sk-over { background: rgba(47,40,34,.95); color: var(--ink); }
+html[data-theme="dark"] .sk-over p, html[data-theme="dark"] .sk-over .big { color: var(--ink); }
+html[data-theme="dark"] .screen-home.heavy { --room: #241B16; --room-2: #2E221B; --paper: #33271F; --line: #4A372B; }
+html[data-theme="dark"] body.heavy-day { background: linear-gradient(180deg, #261C16 0%, #1E1612 100%) fixed; }
+html[data-theme="dark"] .screen-home.heavy .room { background: radial-gradient(120% 90% at 30% 20%, #4A3222 0%, #33241A 55%, #271C15 100%); box-shadow: inset 0 0 60px rgba(255, 170, 90, .12); }
+html[data-theme="dark"] .screen-home.heavy .room .floor { background: #3A291E; }
+.seg3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.seg3 button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-weight: 800; font-size: 13px; color: var(--ink); }
+.seg3 button[aria-pressed="true"] { border: 2px solid var(--blue); background: var(--blue-soft); }
