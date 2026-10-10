@@ -4,7 +4,7 @@ import { get, save, addMoment, parseKey, removeById, today } from '../store.js';
 import { esc, nav, backLink, dateChip, logDate, toast, openSheet, closeSheet, reduceMotion, prettyDate } from '../ui.js';
 import { mulberry32, hashStr } from '../sky-model.js';
 
-export const JAR = 50; // stars in a full jar
+export const JAR = 20; // stars in a full jar
 const STORMY = ['Drizzle', 'Heavy rain', 'Thunderstorm', 'Fog', 'Snow / still', 'Heatwave'];
 const PAPER = ['#F7B7C8', '#FFE08A', '#A9C6FF', '#A8E6C8', '#FFC9A3', '#CDBBF5', '#FFF3C4'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -26,13 +26,13 @@ const star = (x, y, r, rot, fill) => {
 };
 // the jar as a drawing: n stars inside, the newest one can drop in
 export function jarSVG(n, opts = {}) {
-  const W = 240, H = 300, x0 = 34, x1 = 206, bottom = 278, top = 92, per = 8, rows = Math.ceil(JAR / per), rh = (bottom - top - 8) / rows;
+  const W = 240, H = 300, x0 = 34, x1 = 206, bottom = 278, top = 92, per = 5, rows = Math.ceil(JAR / per), rh = (bottom - top - 8) / rows;
   const r = mulberry32(opts.seed || 7);
   let stars = '';
   for (let i = 0; i < n; i++) {
     const row = Math.floor(i / per), col = i % per, off = row % 2 ? 0.5 : 0;
-    const x = x0 + 12 + (col + off) * ((x1 - x0 - 24) / per) + (r() - 0.5) * 8, y = bottom - 12 - row * rh + (r() - 0.5) * 6;
-    const s = star(x, y, 11 + r() * 3, r() * 1.3, PAPER[Math.floor(r() * PAPER.length)]);
+    const x = 60 + (col + off) * 28 + (r() - 0.5) * 8, y = bottom - 24 - row * 40 + (r() - 0.5) * 8;
+    const s = star(x, y, (opts.small ? 17 : 16) + r() * 4, r() * 1.3, PAPER[Math.floor(r() * PAPER.length)]);
     stars += i === n - 1 && opts.drop ? '<g class="drop">' + s + '</g>' : s;
   }
   const body = 'M70 66 Q70 58 78 58 L162 58 Q170 58 170 66 L170 74 Q214 86 214 128 L214 266 Q214 290 190 290 L50 290 Q26 290 26 266 L26 128 Q26 86 70 74 Z';
@@ -54,7 +54,7 @@ let slip = null, dropNext = false;
 
 export function mount(root) {
   const st = get(), w = allWins();
-  st.jarsSeen = st.jarsSeen == null ? Math.floor(w.length / JAR) : st.jarsSeen; save(); // don't celebrate old jars all at once
+  if (st.jarsSeen == null || st.jarSize !== JAR) { st.jarsSeen = Math.floor(w.length / JAR); st.jarSize = JAR; save(); } // don't celebrate old jars all at once
   slip = null;
   render(root);
   root.addEventListener('click', e => {
@@ -84,6 +84,21 @@ export function mount(root) {
     if ((b = t.closest('[data-jar]'))) { shelfSheet(+b.dataset.jar); }
   });
   root.addEventListener('keydown', e => { if (e.target.id === 'ownWin' && e.key === 'Enter') { e.preventDefault(); root.querySelector('[data-write]').click(); } });
+}
+
+// what the shaken-out slip says: a little stat about doing it again and again, or the day for one-offs
+function slipText(m) {
+  const st = get(), w = allWins().filter(x => x.text === m.text), now = new Date();
+  const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const month = w.filter(x => x.date.startsWith(ym)).length, hard = w.filter(x => x.bright || st.heavy[x.date]).length;
+  const act = m.text.charAt(0).toLowerCase() + m.text.slice(1);
+  const since = words(w[0].date), mon = MONTHS[now.getMonth()];
+  const options = [];
+  if (month >= 2) options.push([mon + ' so far', 'You ' + act + ' ' + month + ' times this month.']);
+  if (w.length >= 2 && w.length > month) options.push(['Since ' + since, 'You ' + act + ' ' + w.length + ' times since ' + since + '.']);
+  if (hard >= 2) options.push(['Even on hard days', 'On ' + hard + ' hard days, you still ' + act + '.']);
+  if (!options.length) options.push([words(m.date) + (m.bright ? ' · on a hard day' : ''), 'On ' + words(m.date) + ', you ' + act + '.']);
+  return options[Math.floor(Math.random() * options.length)];
 }
 
 function takeOut(root, id) {
@@ -135,9 +150,9 @@ function render(root) {
     '<div class="jarhead"><h1>The jar</h1><p class="say">Every tiny win is a star. Tap the jar to shake one out.</p></div>' +
     '<button type="button" class="jarbox" data-shake aria-label="Shake the jar for a past win">' + jarSVG(inJar, { seed: (full + 1) * 31, drop }) + '</button>' +
     '<p class="jarcount">' + (inJar ? inJar + (inJar === 1 ? ' star' : ' stars') + ' in this jar · room for ' + (JAR - inJar) + ' more' : 'A fresh jar, ready for its first star.') + '</p>' +
-    (slip ? '<div class="slip big"><small>' + esc(words(slip.date)) + (slip.bright ? ' · on a hard day' : '') + '</small>' + esc(slip.text) + '</div>' : '') +
+    (slip ? (() => { const sl = slipText(slip); return '<div class="slip big"><small>' + esc(sl[0]) + '</small>' + esc(sl[1]) + '</div>'; })() : '') +
     '<div class="lbl">Add a tiny win</div>' +
-    '<div class="chips wins">' + st.settings.tinyWins.map(x => '<button type="button" class="chip" data-win="' + esc(x) + '" aria-pressed="' + doneToday.has(x) + '">' + esc(x) + '</button>').join('') + '</div>' +
+    '<div class="chips wins">' + st.settings.tinyWins.map(x => '<button type="button" class="chip" data-win="' + esc(x) + '" aria-pressed="' + doneToday.has(x) + '">' + (doneToday.has(x) ? '★ ' : '') + esc(x) + '</button>').join('') + '</div>' +
     '<div class="addrow"><label class="sr" for="ownWin">Write your own tiny win</label><input id="ownWin" type="text" placeholder="Or write your own…" autocomplete="off" enterkeyhint="done"><button type="button" class="btn" data-write>Add</button></div>' +
     (() => { const tw = w.filter(m => m.date === date); return tw.length ? '<div class="lbl">In the jar ' + (date === today() ? 'today' : 'on ' + esc(words(date))) + '</div><div class="card jartoday">' + tw.map(m => '<div class="jt"><span>' + esc(m.text) + '</span><button type="button" class="x" data-unwin="' + m.id + '" aria-label="Take ' + esc(m.text) + ' out of the jar">×</button></div>').join('') + '</div>' : ''; })() +
     '<a class="muted editlist" href="#/settings">Change the list of tiny wins in Settings</a>' +
