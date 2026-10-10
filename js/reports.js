@@ -110,7 +110,7 @@ export async function foodReport(from, to, label) {
   const logged = D.filter(d => per[d].list.length || per[d].old.length);
   const withNums = D.filter(d => per[d].S.counted);
   const doc = new Doc('My food', range(from, to));
-  cover(doc, 'FOOD REPORT · ' + label.toUpperCase(), /7 days/.test(label) ? 'My week in food' : 'My month in food', range(from, to), art.eating);
+  cover(doc, 'FOOD REPORT · ' + label.toUpperCase(), /7 days/.test(label) ? 'My week in food' : label.split(' ')[0] + ' in food', range(from, to), art.eating);
 
   // highlights (only counts above zero)
   const items = ms.length + old.length;
@@ -250,21 +250,34 @@ async function build(fn, what) {
   try { const file = await fn(); ready(file, null, what); }
   catch (err) { closeSheet(); toast('Something went wrong making the PDF.'); console.error(err); }
 }
+// every month that has something logged, newest first: [label, from, to]
+function monthsWith(dates) {
+  const t = today(), seen = new Set(dates.map(d => d.slice(0, 7))), out = [];
+  Array.from(seen).sort().reverse().forEach(ym => {
+    const [y, m] = ym.split('-').map(Number), from = dateKey(new Date(y, m - 1, 1)), end = dateKey(new Date(y, m, 0));
+    out.push([['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m - 1] + ' ' + y, from, end > t ? t : end]);
+  });
+  return out;
+}
+function rangeSheet(title, intro, opts, months, onPick) {
+  const optBtn = (o, i) => '<button type="button" class="opt" data-o="' + i + '">' + o[0] + '<small style="display:block;font-weight:700;opacity:.7">' + esc(range(o[1], o[2])) + '</small></button>';
+  openSheet('<h2>' + title + '</h2><p class="muted">' + intro + '</p>' + opts.map(optBtn).join('') +
+    (months.length ? '<div class="lbl">Or pick a month</div><div class="chips monthpick">' + months.map((m, i) => '<button type="button" class="chip small" data-m="' + i + '">' + m[0] + '</button>').join('') + '</div>' : '') +
+    '<button type="button" class="btn alt" data-close>Cancel</button>', e => {
+    let b;
+    if ((b = e.target.closest('[data-o]'))) { const o = opts[+b.dataset.o]; onPick(o[1], o[2], o[3]); return; }
+    if ((b = e.target.closest('[data-m]'))) { const m = months[+b.dataset.m]; onPick(m[1], m[2], m[0]); }
+  });
+}
 export function openSleepDiary() {
   const t = today(), st = get();
   const first = st.rests.length ? st.rests.reduce((m, r) => r.date < m ? r.date : m, t) : t;
   const opts = [['Last 2 weeks', addDays(t, -13), t], ['Last 4 weeks', addDays(t, -27), t], ['Everything', first, t]];
-  openSheet('<h2>Sleep diary</h2><p class="muted">A tidy PDF for you or your doctor. Which dates?</p>' + opts.map((o, i) => '<button type="button" class="opt" data-o="' + i + '">' + o[0] + '<small style="display:block;font-weight:700;opacity:.7">' + esc(range(o[1], o[2])) + '</small></button>').join('') + '<button type="button" class="btn alt" data-close>Cancel</button>', e => {
-    const b = e.target.closest('[data-o]'); if (!b) return; const o = opts[+b.dataset.o];
-    build(() => sleepDiary(o[1], o[2]), 'sleep diary');
-  });
+  rangeSheet('Sleep diary', 'A tidy PDF for you or your doctor. Which dates?', opts, monthsWith(st.rests.map(r => r.date)), (a, b) => build(() => sleepDiary(a, b), 'sleep diary'));
 }
 export function openFoodReport() {
-  const t = today(), now = parseKey(t), mStart = dateKey(new Date(now.getFullYear(), now.getMonth(), 1));
-  const lmEnd = addDays(mStart, -1), lmStart = dateKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
-  const opts = [['The last 7 days', addDays(t, -6), t, 'the last 7 days'], ['This month so far', mStart, t, 'this month'], ['Last month', lmStart, lmEnd, 'last month']];
-  openSheet('<h2>Food report</h2><p class="muted">Everything you ate, a typical day, and a few gentle ideas, as a PDF.</p>' + opts.map((o, i) => '<button type="button" class="opt" data-o="' + i + '">' + o[0] + '<small style="display:block;font-weight:700;opacity:.7">' + esc(range(o[1], o[2])) + '</small></button>').join('') + '<button type="button" class="btn alt" data-close>Cancel</button>', e => {
-    const b = e.target.closest('[data-o]'); if (!b) return; const o = opts[+b.dataset.o];
-    build(() => foodReport(o[1], o[2], o[3]), 'food report');
-  });
+  const t = today(), st = get();
+  const opts = [['The last 7 days', addDays(t, -6), t, 'the last 7 days']];
+  const months = monthsWith((st.meals || []).map(m => m.date).concat((st.foods || []).map(f => f.date)));
+  rangeSheet('Food report', 'Everything you ate, a typical day, and a few gentle ideas, as a PDF.', opts, months, (a, b, label) => build(() => foodReport(a, b, label), 'food report'));
 }

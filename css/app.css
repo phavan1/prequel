@@ -577,3 +577,7 @@ html[data-theme="dark"] .tabsrow button[aria-pressed="true"], html[data-theme="d
 
 .sheet .opt small { margin-top: 2px; }
 .sheet .opt:has(small) { padding-top: 10px; padding-bottom: 10px; }
+
+.amtlog { display: flex; gap: 6px; flex: none !important; }
+.amtlog input { width: 84px; min-height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 0 10px; font: 800 15px var(--font-body); }
+.amtlog button { min-width: 58px; background: var(--blue); color: #fff; border: 1px solid var(--blue); border-radius: 12px; font-weight: 900; }

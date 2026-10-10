@@ -192,10 +192,11 @@ function summary(tab, marked, monthName, y, mo) {
   if (tab === 'win') { const n = st.moments.filter(m => m.area === 'win' && inMonth(m.date)).length; return n ? n + (n === 1 ? ' tiny win' : ' tiny wins') + ' in ' + monthName + '.' : 'Tiny wins will show up here.'; }
   if (tab === 'weather') { const c = {}; st.weather.filter(w => inMonth(w.date)).forEach(w => w.types.forEach(x => { c[x] = (c[x] || 0) + 1; })); const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return top ? 'Most common weather in ' + monthName + ': ' + esc(top[0].toLowerCase()) + '.' : 'Your weather will show up here.'; }
   const g = (st.goals || []).find(x => 'g:' + x.id === tab); if (!g) return '';
-  const all = (st.goalLogs || []).filter(l => l.goalId === g.id), m = all.filter(l => inMonth(l.date)).length;
+  const all = (st.goalLogs || []).filter(l => l.goalId === g.id), m = Math.round(all.filter(l => inMonth(l.date)).reduce((n, l) => n + (l.amt || 1), 0) * 10) / 10;
   if (!all.length) return esc(g.name) + ' starts whenever you\'re ready. Tap a day, then "Add to this day".';
-  if (!m) return esc(g.name) + ': ' + all.length + ' so far, counting up to ' + g.target + '.';
-  return esc(g.name) + ': ' + m + ' in ' + monthName + ' · ' + all.length + ' of ' + g.target + ' so far';
+  const tot = Math.round(all.reduce((n, l) => n + (l.amt || 1), 0) * 10) / 10, u = g.unit && g.unit !== 'times' ? ' ' + esc(g.unit) : '';
+  if (!m) return esc(g.name) + ': ' + tot + u + ' so far, counting up to ' + g.target + '.';
+  return esc(g.name) + ': ' + m + u + ' in ' + monthName + ' · ' + tot + ' of ' + g.target + ' so far';
 }
 
 // the chosen day: one short line per thing, tap a line to see and change the details
@@ -229,7 +230,7 @@ function dayCard(d) {
   Object.keys(D.goals).forEach(gid => {
     const g = (st.goals || []).find(z => z.id === gid); const L = D.goals[gid];
     row('g:' + gid, 'goal', g ? esc(g.name) : 'A goal', L.length + (L.length === 1 ? ' time' : ' times'),
-      L.map(l => '<div class="ditem"><span>' + (g ? esc(g.name) : 'Goal') + '<small>' + timeOf(l.ts) + '</small></span>' + x('goalLogs:' + l.id, g ? g.name : 'this') + '</div>').join(''));
+      L.map(l => '<div class="ditem"><span>' + (g ? esc(g.name) : 'Goal') + (l.amt && g ? ' · ' + l.amt + ' ' + esc(g.unit || '') : '') + '<small>' + timeOf(l.ts) + '</small></span>' + x('goalLogs:' + l.id, g ? g.name : 'this') + '</div>').join(''));
   });
   return '<div class="daycard"><div class="top"><h2>' + esc(prettyDate(d, { weekday: 'long', day: 'numeric', month: 'long' })) + '</h2></div>' +
     (rows.length ? rows.join('') : '<p class="empty" style="margin:0">Nothing here yet. Add anything you remember; late logs count the same.</p>') +
