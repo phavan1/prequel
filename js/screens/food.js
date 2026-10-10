@@ -1,6 +1,7 @@
 // Food: log what you ate in a tap, see what it gave you. Nutrition is an estimate, never a score.
 import { get, save, uid, addMoment, removeById, today } from '../store.js';
 import { esc, nav, backLink, dateChip, logDate, him, timeOf, prettyDate, toast, openSheet, closeSheet } from '../ui.js';
+import { openFoodReport } from '../reports.js';
 import { NUTRIENTS, KINDS, loadDB, myFoods, meals, weights, fromDB, adoptDB, bestMeasure, logFood, totalOf, sumDay, qtyLabel, fmt, search, recipeTotals, ingredientSearch } from '../nutrition.js';
 
 const EMPTY = ['Eat away!', 'Snack o\'clock?', 'Feed the machine.', 'Bon appétit!', 'Tummy\'s calling.', 'Let\'s eat!', 'Fuel up, friend.'];
@@ -43,7 +44,7 @@ function render() {
       ? '<button type="button" class="entry" data-meal="' + x.m.id + '"><span class="t">' + timeOf(x.m.ts) + '</span><span class="nm">' + esc(x.m.name) + '<small>' + (x.m.sure ? '' : '~') + esc(qtyLabel(x.m)) + '</small></span><span class="kc">' + (x.m.n ? Math.round(totalOf(x.m)[0]) + ' cal' : '–') + '</span></button>'
       : '<div class="entry old"><span class="t">' + timeOf(x.old.ts) + '</span><span class="nm">' + esc(x.old.note || x.old.tags.join(', ')) + '<small>from before numbers</small></span><button type="button" class="x" data-delold="' + x.old.id + '" aria-label="Remove">×</button></div>').join('')
       : '<p class="empty">Nothing logged ' + (d === today() ? 'today' : 'this day') + ' yet. Type what you had, or tap a usual.</p>') + '</div>' +
-    '<button type="button" class="rowlink" data-weight style="width:100%"><span>Weight</span><b>' + (lastW ? lastW.kg + ' kg ›' : '+') + '</b></button>' +
+    '<div class="grid2"><button type="button" class="rowlink" data-weight><span>Weight</span><b>' + (lastW ? lastW.kg + ' kg ›' : '+') + '</b></button><button type="button" class="rowlink" data-reports><span>Reports</span><b>PDF ›</b></button></div>' +
     nav('home');
   if (query) drawResults();
 }
@@ -97,7 +98,8 @@ function onClick(e) {
   if (t.closest('[data-label]')) { labelSheet(); return; }
   if (t.closest('[data-recipe]')) { recipeSheet(); return; }
   if (t.closest('[data-manage]')) { manageSheet(); return; }
-  if (t.closest('[data-weight]')) { weightSheet(); }
+  if (t.closest('[data-weight]')) { weightSheet(); return; }
+  if (t.closest('[data-reports]')) { openFoodReport(); }
 }
 
 // a small bar that offers to change the portion for a few seconds, then goes away

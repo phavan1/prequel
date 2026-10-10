@@ -1,6 +1,7 @@
 import { get, save, uid, addMoment, removeById, dateKey, parseKey } from '../store.js';
 import { FEELS, NIGHT_THINGS } from '../data.js';
-import { esc, nav, backLink, dateChip, logDate, him, timeOf, hm, prettyDate, toast, openSheet, closeSheet, downloadFile } from '../ui.js';
+import { openSleepDiary } from '../reports.js';
+import { esc, nav, backLink, dateChip, logDate, him, timeOf, hm, prettyDate, toast, openSheet, closeSheet } from '../ui.js';
 
 export function mount(root) {
   render(root);
@@ -16,7 +17,7 @@ export function mount(root) {
     if (t.closest('[data-manual]')) { openManual(root, null); return; }
     if ((b = t.closest('[data-awake]'))) { addMoment('rest', 'Awake in the night: ' + b.dataset.awake.toLowerCase(), logDate()); toast('Noted. Night hours count too.'); render(root); return; }
     if ((b = t.closest('[data-del]'))) { removeById('rests', b.dataset.del); render(root); return; }
-    if (t.closest('[data-diary]')) { exportDiary(); }
+    if (t.closest('[data-diary]')) { openSleepDiary(); }
   });
 }
 
@@ -64,15 +65,6 @@ function openManual(root, endTs) {
   });
 }
 
-function exportDiary() {
-  const rows = [['Date woke', 'Fell asleep', 'Woke up', 'Hours', 'Felt']];
-  get().rests.slice().sort((a, b) => a.start - b.start).forEach(r => {
-    rows.push([r.date, new Date(r.start).toLocaleString('en-AU'), new Date(r.end).toLocaleString('en-AU'), ((r.end - r.start) / 3600000).toFixed(1), r.feel || '']);
-  });
-  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
-  downloadFile('sleep-diary.csv', csv, 'text/csv');
-}
-
 // a 24-hour clock ring with one arc per rest
 function ring(rests, date) {
   const R = 90, Cc = 2 * Math.PI * R;
@@ -106,6 +98,6 @@ function render(root) {
     '<a class="rowlink" href="#/quilt"><span>Your quilt · ' + new Set(st.rests.map(r => r.date)).size + ' patches</span><b>›</b></a>' +
     '<div class="lbl">Awake for a bit? What did you do</div>' +
     '<div class="chips">' + NIGHT_THINGS.map(n => '<button type="button" class="chip small" data-awake="' + esc(n) + '">' + esc(n) + '</button>').join('') + '</div>' +
-    '<div class="card"><div class="lbl">For your doctor</div><p class="muted" style="font-size:14px">Your rests as a sleep diary, ready to save or send. ' + st.rests.length + ' logged so far.</p><button type="button" class="btn alt" data-diary>Export sleep diary</button></div>' +
+    '<div class="card"><div class="lbl">For your doctor</div><p class="muted" style="font-size:14px">Your rests as a tidy PDF sleep diary, ready to save or send. ' + st.rests.length + ' logged so far.</p><button type="button" class="btn alt" data-diary>Make a sleep diary</button></div>' +
     nav('home');
 }

@@ -2,6 +2,7 @@
 // Nothing is uploaded by the app; the picture only goes where you send it.
 import { get } from '../store.js';
 import { esc, nav, backLink, toast } from '../ui.js';
+import { shareFile } from '../pdf.js';
 import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, milestones, shareCanvas, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS } from '../cards.js';
 
 const KINDS = {
@@ -32,7 +33,7 @@ export function mount(root, params = {}) {
     nav('me');
 
   const cv = root.querySelector('#card'), g = cv.getContext('2d');
-  let imgs = {}, ready = false;
+  let imgs = {}, ready = false, file = null, stamp = 0;
   const draw = () => {
     if (!ready) return;
     const look = KINDS[kind].looks[lookIx[kind]];
@@ -40,6 +41,9 @@ export function mount(root, params = {}) {
     if (kind === 'sky') drawSky(g, look, imgs);
     else if (kind === 'mile') drawMilestone(g, look, imgs, miles.find(m => m.id === mileId) || miles[0]);
     else drawMonth(g, look, imgs);
+    // get the picture ready now, so the share sheet opens straight from the tap
+    const my = ++stamp, name = 'prequel-' + KINDS[kind].name.toLowerCase().replace(/\s+/g, '-') + '.png'; file = null;
+    cv.toBlob(b => { if (my === stamp && b) file = new File([b], name, { type: 'image/png' }); }, 'image/png');
   };
   const ui = () => {
     root.querySelectorAll('[data-kind]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.kind === kind)));
@@ -65,8 +69,8 @@ export function mount(root, params = {}) {
     if ((b = t.closest('[data-step]'))) { step(Number(b.dataset.step)); return; }
     if (t.closest('[data-share]')) {
       if (!ready) return;
-      const name = 'prequel-' + KINDS[kind].name.toLowerCase().replace(/\s+/g, '-');
-      const r = await shareCanvas(cv, name);
+      if (!file) { toast('One moment, still drawing.'); return; }
+      const r = await shareFile(file);
       if (r === 'saved') toast('Saved. Look in your downloads or Files.');
     }
   });
