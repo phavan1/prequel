@@ -1,7 +1,7 @@
 // The jar: every tiny win is a little paper star dropped into a glass jar. Tap the jar to shake one back out.
 // When it's full, it's celebrated and set on the shelf, and a fresh jar begins. Nothing is ever lost.
-import { get, save, addMoment, parseKey } from '../store.js';
-import { esc, nav, backLink, dateChip, logDate, toast, openSheet, reduceMotion } from '../ui.js';
+import { get, save, addMoment, parseKey, removeById, today } from '../store.js';
+import { esc, nav, backLink, dateChip, logDate, toast, openSheet, closeSheet, reduceMotion, prettyDate } from '../ui.js';
 import { mulberry32, hashStr } from '../sky-model.js';
 
 export const JAR = 50; // stars in a full jar
@@ -59,7 +59,16 @@ export function mount(root) {
   render(root);
   root.addEventListener('click', e => {
     const t = e.target, st2 = get(), date = logDate(); let b;
-    if ((b = t.closest('[data-win]'))) { addWin(root, b.dataset.win, date); return; }
+    if ((b = t.closest('[data-win]'))) {
+      // each tiny win goes in once a day; tapping a lit one offers to take it back out
+      const had = allWins().find(m => m.date === date && m.text === b.dataset.win);
+      if (had) { askRemove(root, had); return; }
+      addWin(root, b.dataset.win, date); return;
+    }
+    if ((b = t.closest('[data-unwin]'))) {
+      if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Remove?'; b.classList.add('armed'); setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = '×'; b.classList.remove('armed'); } }, 3000); return; }
+      takeOut(root, b.dataset.unwin); return;
+    }
     if (t.closest('[data-write]')) {
       const el = root.querySelector('#ownWin'), v = (el.value || '').trim(); if (!v) { el.focus(); return; }
       addWin(root, v, date, true); return;
@@ -77,6 +86,18 @@ export function mount(root) {
   root.addEventListener('keydown', e => { if (e.target.id === 'ownWin' && e.key === 'Enter') { e.preventDefault(); root.querySelector('[data-write]').click(); } });
 }
 
+function takeOut(root, id) {
+  const st = get(); removeById('moments', id);
+  st.jarsSeen = Math.min(st.jarsSeen || 0, Math.floor(allWins().length / JAR)); save();
+  if (slip && slip.id === id) slip = null;
+  toast('Taken out of the jar.'); render(root);
+}
+function askRemove(root, m) {
+  openSheet('<h2>Take it out?</h2><p class="muted">“' + esc(m.text) + '” is already in the jar for ' + esc(prettyDate(m.date).toLowerCase() === 'today' ? 'today' : prettyDate(m.date)) + '. Each tiny win goes in once a day.</p>' +
+    '<button type="button" class="btn danger" data-yes>Take it out</button><button type="button" class="btn alt" data-close>Keep it in</button>', e => {
+    if (!e.target.closest('[data-yes]')) return; closeSheet(); takeOut(root, m.id);
+  });
+}
 function addWin(root, text, date, written) {
   const st = get();
   const stormy = st.heavy[date] || st.weather.some(w => w.date === date && w.types.some(x => STORMY.includes(x)));
@@ -118,6 +139,7 @@ function render(root) {
     '<div class="lbl">Add a tiny win</div>' +
     '<div class="chips wins">' + st.settings.tinyWins.map(x => '<button type="button" class="chip" data-win="' + esc(x) + '" aria-pressed="' + doneToday.has(x) + '">' + esc(x) + '</button>').join('') + '</div>' +
     '<div class="addrow"><label class="sr" for="ownWin">Write your own tiny win</label><input id="ownWin" type="text" placeholder="Or write your own…" autocomplete="off" enterkeyhint="done"><button type="button" class="btn" data-write>Add</button></div>' +
+    (() => { const tw = w.filter(m => m.date === date); return tw.length ? '<div class="lbl">In the jar ' + (date === today() ? 'today' : 'on ' + esc(words(date))) + '</div><div class="card jartoday">' + tw.map(m => '<div class="jt"><span>' + esc(m.text) + '</span><button type="button" class="x" data-unwin="' + m.id + '" aria-label="Take ' + esc(m.text) + ' out of the jar">×</button></div>').join('') + '</div>' : ''; })() +
     '<a class="muted editlist" href="#/settings">Change the list of tiny wins in Settings</a>' +
     (full ? '<div class="lbl">Full jars</div><div class="shelf">' + Array.from({ length: full }, (_, i) => { const k = i + 1, ws = w.slice(i * JAR, k * JAR); return '<button type="button" class="shelfjar" data-jar="' + k + '">' + jarSVG(JAR, { seed: k * 31, small: true, id: 's' + k, label: 'Jar ' + k }) + '<b>Jar ' + k + '</b><small>' + esc(words(ws[0].date)) + ' – ' + esc(words(ws[ws.length - 1].date)) + '</small></button>'; }).join('') + '</div>' : '') +
     nav('home');

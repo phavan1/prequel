@@ -611,3 +611,9 @@ html[data-theme="dark"] .tabsrow button[aria-pressed="true"], html[data-theme="d
 .fromjar em { display: block; font-style: normal; font-family: var(--font-body); font-size: 13px; font-weight: 700; color: #1F55D0; margin-top: 4px; }
 html[data-theme="dark"] { --jarglass: rgba(255,248,235,.10); --jarline: #E9DFCF; }
 html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
+
+.jartoday { padding: 4px 6px 4px 14px; display: flex; flex-direction: column; }
+.jartoday .jt { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; }
+.jartoday .jt:last-child { border-bottom: 0; }
+.jartoday .x { min-width: 44px; min-height: 36px; border: 0; background: none; color: var(--red); font-size: 20px; font-weight: 900; border-radius: 10px; }
+.jartoday .x.armed { font-size: 13px; background: #FBE3DD; padding: 0 10px; }
