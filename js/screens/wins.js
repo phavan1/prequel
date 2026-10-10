@@ -62,7 +62,7 @@ export function mount(root) {
     if ((b = t.closest('[data-win]'))) {
       // each tiny win goes in once a day; tapping a lit one offers to take it back out
       const had = allWins().find(m => m.date === date && m.text === b.dataset.win);
-      if (had) { askRemove(root, had); return; }
+      if (had) { toast('Already in the jar today.'); return; }
       addWin(root, b.dataset.win, date); return;
     }
     if ((b = t.closest('[data-unwin]'))) {
@@ -106,12 +106,6 @@ function takeOut(root, id) {
   st.jarsSeen = Math.min(st.jarsSeen || 0, Math.floor(allWins().length / JAR)); save();
   if (slip && slip.id === id) slip = null;
   toast('Taken out of the jar.'); render(root);
-}
-function askRemove(root, m) {
-  openSheet('<h2>Take it out?</h2><p class="muted">“' + esc(m.text) + '” is already in the jar for ' + esc(prettyDate(m.date).toLowerCase() === 'today' ? 'today' : prettyDate(m.date)) + '. Each tiny win goes in once a day.</p>' +
-    '<button type="button" class="btn danger" data-yes>Take it out</button><button type="button" class="btn alt" data-close>Keep it in</button>', e => {
-    if (!e.target.closest('[data-yes]')) return; closeSheet(); takeOut(root, m.id);
-  });
 }
 function addWin(root, text, date, written) {
   const st = get();

@@ -171,7 +171,7 @@ function render(root) {
       '<button type="button" data-addtab aria-label="Add a tab">' + svg('plus') + '</button></div>' +
     '<div class="cal2"><div class="monthbar"><button type="button" data-month="-1" aria-label="Previous month">‹</button><h2>' + first.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }) + '</h2><button type="button" data-month="1" aria-label="Next month"' + (nextDisabled ? ' disabled' : '') + '>›</button></div>' +
       '<div class="dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div><div class="grid">' + cells + '</div></div>' +
-    '<p class="calsum">' + summary(tab, marked, monthName, y, mo) + '</p>' +
+    (() => { const t = summary(tab, marked, monthName, y, mo); return t ? '<p class="calsum">' + t + '</p>' : ''; })() +
     dayCard(selected) +
     nav('days');
 }
@@ -181,7 +181,7 @@ function summary(tab, marked, monthName, y, mo) {
   // never a zero: an empty month gets an invitation instead of a count
   const st = get(), inMonth = d => { const p = parseKey(d); return p.getFullYear() === y && p.getMonth() === mo; };
   const days = n => n + (n === 1 ? ' day' : ' days');
-  if (tab === 'all') return marked ? 'Something logged on ' + days(marked) + ' in ' + monthName + '.' : 'A fresh page. Any day can be filled in, whenever.';
+  if (tab === 'all') return ''; // the rings already say it
   if (tab === 'move') { const n = st.sessions.length; return marked ? days(marked) + ' of movement in ' + monthName + ' · ' + n + (n === 1 ? ' session' : ' sessions') + ' all-time' : (n ? n + (n === 1 ? ' session' : ' sessions') + ' so far, all-time. The next one lands here.' : 'Your first session will light up a day here.'); }
   if (tab === 'food') {
     const c = {}; (st.meals || []).filter(m => inMonth(m.date)).forEach(m => { c[m.name] = (c[m.name] || 0) + 1; });
