@@ -2,7 +2,7 @@
 // Nothing is uploaded by the app; the picture only goes where you send it.
 import { get } from '../store.js';
 import { esc, nav, backLink, toast } from '../ui.js';
-import { W, H, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, milestones, shareCanvas, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS } from '../cards.js';
+import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, milestones, shareCanvas, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS } from '../cards.js';
 
 const KINDS = {
   sky: { name: 'My sky', looks: SKY_LOOKS },
@@ -53,8 +53,8 @@ export function mount(root, params = {}) {
   const step = d => { const n = KINDS[kind].looks.length; lookIx[kind] = (lookIx[kind] + d + n) % n; ui(); };
 
   ui();
-  Promise.all([fontsReady(), loadArt(['nightwatch', 'cheer', 'afternoon'])]).then(([, a]) => {
-    imgs = { nightwatch: a[0], cheer: a[1], afternoon: a[2] }; ready = true; draw();
+  Promise.all([fontsReady(), loadArt(POSES)]).then(([, a]) => {
+    POSES.forEach((n, i) => { imgs[n] = a[i]; }); ready = true; draw();
   });
 
   root.addEventListener('click', async e => {

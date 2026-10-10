@@ -44,6 +44,12 @@ function drawArt(g, img, cx, bottom, h, flip) {
   g.save(); if (flip) { g.translate(cx, 0); g.scale(-1, 1); g.translate(-cx, 0); }
   g.drawImage(img, cx - w / 2, bottom - h, w, h); g.restore();
 }
+// fit a picture inside a box, sitting on its bottom edge
+function drawFit(g, img, cx, bottom, maxW, maxH) {
+  if (!img) return; const k = Math.min(maxW / img.width, maxH / img.height), w = img.width * k, h = img.height * k;
+  g.drawImage(img, cx - w / 2, bottom - h, w, h);
+}
+export const POSES = ['cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve'];
 function footer(g, colour, sub) {
   text(g, 'prequel', W / 2, H - 120, '900 44px ' + BODY, colour, 'center');
   text(g, sub || 'the behind-the-scenes of everything I\'m becoming', W / 2, H - 70, '700 30px ' + HAND, colour, 'center');
@@ -80,9 +86,9 @@ function plotSky(g, D, box, look) {
   g.restore();
 }
 export const SKY_LOOKS = [
-  { id: 'midnight', name: 'Midnight', bg: ['#070B1F', '#1B2557', '#3B2E6B'], line: '#F4C430', core: '#FFF8E1', ink: '#F3EEDF', soft: '#B8C2E6', glow: true },
-  { id: 'dawn', name: 'Dawn', bg: ['#2B2F6B', '#B66C8E', '#F7B48A'], line: '#FFF1C4', core: '#FFFFFF', ink: '#FFF8EC', soft: '#FFE3D1', glow: true },
-  { id: 'paper', name: 'Polaroid', bg: ['#F6EEDB', '#F6EEDB', '#EFE3C6'], line: '#F4C430', core: '#FFF8E1', ink: '#23262F', soft: '#5E584B', polaroid: true }
+  { id: 'midnight', name: 'Midnight', bg: ['#070B1F', '#1B2557', '#3B2E6B'], line: '#F4C430', core: '#FFF8E1', ink: '#F3EEDF', soft: '#B8C2E6', glow: true, pose: 'cfloat' },
+  { id: 'dawn', name: 'Dawn', bg: ['#2B2F6B', '#B66C8E', '#F7B48A'], line: '#FFF1C4', core: '#FFFFFF', ink: '#FFF8EC', soft: '#FFE3D1', glow: true, pose: 'cwalk' },
+  { id: 'paper', name: 'Polaroid', bg: ['#F6EEDB', '#F6EEDB', '#EFE3C6'], line: '#F4C430', core: '#FFF8E1', ink: '#23262F', soft: '#5E584B', polaroid: true, pose: 'cfloat' }
 ];
 export function drawSky(g, look, imgs) {
   const D = skyData(), st = get();
@@ -120,9 +126,9 @@ export function drawSky(g, look, imgs) {
   text(g, sub, W / 2, 360, '800 36px ' + BODY, look.soft, 'center', W - 140);
   if (!look.polaroid && D.newest) {
     text(g, 'NEWEST CONSTELLATION', 80, 1500, '900 30px ' + BODY, look.soft);
-    text(g, D.newest.name, 80, 1590, '700 84px ' + HAND, look.ink, 'left', 620);
+    text(g, D.newest.name, 80, 1590, '700 84px ' + HAND, look.ink, 'left', 500);
   }
-  drawArt(g, imgs.nightwatch, look.polaroid ? 860 : 880, H - 190, look.polaroid ? 300 : 330);
+  if (look.polaroid) drawFit(g, imgs[look.pose], 850, H - 180, 340, 340); else drawFit(g, imgs[look.pose], 820, H - 175, 470, look.pose === 'cwalk' ? 540 : 450);
   grain(g, look.polaroid ? 0.05 : 0.06, 21);
   footer(g, look.soft);
 }
@@ -139,10 +145,10 @@ export function milestones() {
   return out;
 }
 export const MILE_LOOKS = [
-  { id: 'comic', name: 'Comic', bg: '#1F55D0', dots: 'rgba(255,255,255,.10)', burst: '#F4C430', burst2: '#FFF1C4', num: '#23262F', ink: '#FFFFFF', soft: '#DCE7FF' },
-  { id: 'sunny', name: 'Sunny', bg: '#F4C430', dots: 'rgba(35,38,47,.07)', burst: '#FFF8E1', burst2: '#FFFFFF', num: '#1F55D0', ink: '#23262F', soft: '#5E4A00' },
-  { id: 'cream', name: 'Cream', bg: '#FAF3DC', dots: 'rgba(31,85,208,.06)', burst: '#1F55D0', burst2: '#DCE7FF', num: '#FFFFFF', ink: '#23262F', soft: '#5E584B' },
-  { id: 'night', name: 'Night', bg: '#141A33', dots: 'rgba(255,255,255,.06)', burst: '#D6698C', burst2: '#F7B48A', rays: '#2C3768', num: '#FFFFFF', ink: '#F3EEDF', soft: '#B8C2E6' }
+  { id: 'comic', name: 'Comic', bg: '#1F55D0', dots: 'rgba(255,255,255,.10)', burst: '#F4C430', burst2: '#FFF1C4', num: '#23262F', ink: '#FFFFFF', soft: '#DCE7FF', pose: 'cflip' },
+  { id: 'sunny', name: 'Sunny', bg: '#F4C430', dots: 'rgba(35,38,47,.07)', burst: '#FFF8E1', burst2: '#FFFFFF', num: '#1F55D0', ink: '#23262F', soft: '#5E4A00', pose: 'cgrab' },
+  { id: 'cream', name: 'Cream', bg: '#FAF3DC', dots: 'rgba(31,85,208,.06)', burst: '#1F55D0', burst2: '#DCE7FF', num: '#FFFFFF', ink: '#23262F', soft: '#5E584B', pose: 'cflip' },
+  { id: 'night', name: 'Night', bg: '#141A33', dots: 'rgba(255,255,255,.06)', burst: '#D6698C', burst2: '#F7B48A', rays: '#2C3768', num: '#FFFFFF', ink: '#F3EEDF', soft: '#B8C2E6', pose: 'cgrab' }
 ];
 export function drawMilestone(g, look, imgs, m) {
   g.fillStyle = look.bg; g.fillRect(0, 0, W, H);
@@ -166,19 +172,19 @@ export function drawMilestone(g, look, imgs, m) {
   g.restore();
   text(g, m.kicker, W / 2, 200, '900 40px ' + BODY, look.soft, 'center');
   text(g, m.title, W / 2, 300, '700 104px ' + HAND, look.ink, 'center', W - 120);
-  text(g, m.line, W / 2, 1290, '700 58px ' + HAND, look.ink, 'center', W - 140);
+  text(g, m.line, W / 2, 1262, '700 58px ' + HAND, look.ink, 'center', W - 140);
   const sr = mulberry32(hashStr(m.id));
   [[150, 520], [930, 470], [880, 1020], [190, 1060], [990, 760], [90, 780]].forEach(([x, y]) => { g.fillStyle = sr() < 0.5 ? look.burst : look.burst2; star5(g, x, y, 22 + sr() * 26); g.fill(); g.lineWidth = 4; g.strokeStyle = '#23262F'; g.stroke(); });
-  drawArt(g, imgs.cheer, W / 2, H - 200, 420);
+  drawFit(g, imgs[look.pose], W / 2, H - 200, 640, 425);
   grain(g, 0.05, 33);
   footer(g, look.soft);
 }
 
 // ---------- 3. a month at a glance ----------
 export const MONTH_LOOKS = [
-  { id: 'journal', name: 'Journal', bg: '#FAF3DC', card: '#FFFDF6', line: '#E8DDC2', ink: '#23262F', soft: '#5E584B', accent: '#1F55D0' },
-  { id: 'cosy', name: 'Cosy dark', bg: '#1C1815', card: '#2F2822', line: '#45392F', ink: '#F2E8DA', soft: '#BCAD9A', accent: '#F4C430' },
-  { id: 'blue', name: 'Hoodie', bg: '#1F55D0', card: '#2E63DD', line: '#5B86E8', ink: '#FFFFFF', soft: '#DCE7FF', accent: '#F4C430' }
+  { id: 'journal', name: 'Journal', bg: '#FAF3DC', card: '#FFFDF6', line: '#E8DDC2', ink: '#23262F', soft: '#5E584B', accent: '#1F55D0', pose: 'cmanual' },
+  { id: 'cosy', name: 'Cosy dark', bg: '#1C1815', card: '#2F2822', line: '#45392F', ink: '#F2E8DA', soft: '#BCAD9A', accent: '#F4C430', pose: 'ccarve' },
+  { id: 'blue', name: 'Hoodie', bg: '#1F55D0', card: '#2E63DD', line: '#5B86E8', ink: '#FFFFFF', soft: '#DCE7FF', accent: '#F4C430', pose: 'cmanual' }
 ];
 function monthStats(y, mo) {
   const st = get(), inM = d => { const p = parseKey(d); return p.getFullYear() === y && p.getMonth() === mo; };
@@ -232,7 +238,7 @@ export function drawMonth(g, look, imgs) {
     top += s + 90;
   }
   if (!S.tiles.length && !S.wx.length) text(g, 'a quiet month, and that\'s okay', W / 2, 900, '700 64px ' + HAND, look.ink, 'center');
-  drawArt(g, imgs.afternoon, W - 260, H - 190, 380);
+  drawFit(g, imgs[look.pose], look.pose === 'ccarve' ? 790 : 830, H - 175, 470, 470);
   text(g, 'still here,', 80, H - 380, '700 64px ' + HAND, look.ink);
   text(g, 'still becoming.', 80, H - 310, '700 64px ' + HAND, look.ink);
   grain(g, 0.05, 44);
