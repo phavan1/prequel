@@ -3,7 +3,7 @@
 import { get, parseKey, dateKey, today } from './store.js';
 import { AREAS, weatherByName } from './data.js';
 import { updateSky, starPos, mulberry32, hashStr } from './sky-model.js';
-import { patches, PAT } from './screens/quilt.js';
+import { patches, PAT, byMonth, drawQuiltMonth, monthName as ymName, QCOLS } from './screens/quilt.js';
 import { count, unitOf, ensureGoals } from './goals.js';
 
 export const W = 1080, H = 1920;
@@ -49,7 +49,7 @@ function drawFit(g, img, cx, bottom, maxW, maxH) {
   if (!img) return; const k = Math.min(maxW / img.width, maxH / img.height), w = img.width * k, h = img.height * k;
   g.drawImage(img, cx - w / 2, bottom - h, w, h);
 }
-export const POSES = ['cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve'];
+export const POSES = ['cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve', 'sewing'];
 function footer(g, colour, sub) {
   text(g, 'prequel', W / 2, H - 120, '900 44px ' + BODY, colour, 'center');
   text(g, sub || 'the behind-the-scenes of everything I\'m becoming', W / 2, H - 70, '700 30px ' + HAND, colour, 'center');
@@ -242,6 +242,28 @@ export function drawMonth(g, look, imgs) {
   text(g, 'still here,', 80, H - 380, '700 64px ' + HAND, look.ink);
   text(g, 'still becoming.', 80, H - 310, '700 64px ' + HAND, look.ink);
   grain(g, 0.05, 44);
+  footer(g, look.soft);
+}
+
+// ---------- 4. a month's quilt ----------
+export const QUILT_LOOKS = [
+  { id: 'linen', name: 'Linen', bg: '#F6EEDB', ink: '#23262F', soft: '#6B6456', binding: '#1F55D0', backing: '#F4EAD2', dots: 'rgba(31,85,208,.06)' },
+  { id: 'night', name: 'Night', bg: '#141A33', ink: '#F3EEDF', soft: '#B8C2E6', binding: '#D6698C', backing: '#EFE6CF', stars: true },
+  { id: 'sunny', name: 'Sunny', bg: '#F4C430', ink: '#23262F', soft: '#5E4A00', binding: '#1F55D0', backing: '#FFF4CC', dots: 'rgba(35,38,47,.07)' }
+];
+export function quiltMonths() { const m = byMonth(); return Object.keys(m).sort().reverse().filter(k => m[k].length); }
+export function drawQuiltCard(g, look, imgs, ym) {
+  const list = byMonth()[ym] || [], n = list.length, now = new Date(), cur = ym === now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  g.fillStyle = look.bg; g.fillRect(0, 0, W, H);
+  if (look.dots) halftone(g, look.dots, 34, 4, 0, 0, W, H);
+  if (look.stars) { const r = mulberry32(19); for (let i = 0; i < 300; i++) { g.fillStyle = 'rgba(255,255,255,' + (0.15 + r() * 0.5) + ')'; const z = r() * 2.4; g.fillRect(r() * W, r() * H, z, z); } }
+  text(g, 'MY QUILT', W / 2, 170, '900 34px ' + BODY, look.soft, 'center');
+  text(g, ymName(ym), W / 2, 300, '700 150px ' + HAND, look.ink, 'center', W - 120);
+  text(g, n + (n === 1 ? ' night' : ' nights') + ' of rest, sewn in by hand', W / 2, 370, '800 38px ' + BODY, look.soft, 'center', W - 140);
+  const rows = Math.max(1, Math.ceil((n + (cur ? 1 : 0)) / QCOLS)), avail = 1110, wq = Math.min(860, (avail - 120) / rows * QCOLS + 60);
+  drawQuiltMonth(g, (W - wq) / 2, 420, wq, list, { current: cur, now: 1e15, dpr: 2, binding: look.binding, backing: look.backing, still: true, soft: new Set(Object.keys(get().heavy || {})) });
+  drawFit(g, imgs.sewing, W - 260, H - 165, 470, 390);
+  grain(g, 0.05, 55);
   footer(g, look.soft);
 }
 

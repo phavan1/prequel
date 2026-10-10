@@ -3,20 +3,24 @@
 import { get } from '../store.js';
 import { esc, nav, backLink, toast } from '../ui.js';
 import { shareFile } from '../pdf.js';
-import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, milestones, shareCanvas, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS } from '../cards.js';
+import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, drawQuiltCard, quiltMonths, milestones, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS, QUILT_LOOKS } from '../cards.js';
+import { monthLabel } from './quilt.js';
 
 const KINDS = {
   sky: { name: 'My sky', looks: SKY_LOOKS },
   mile: { name: 'Milestone', looks: MILE_LOOKS },
-  month: { name: 'My month', looks: MONTH_LOOKS }
+  month: { name: 'My month', looks: MONTH_LOOKS },
+  quilt: { name: 'My quilt', looks: QUILT_LOOKS }
 };
-let kind = null, lookIx = { sky: 0, mile: 0, month: 0 }, mileId = null;
+let kind = null, lookIx = { sky: 0, mile: 0, month: 0, quilt: 0 }, mileId = null, qym = null;
 
 export function mount(root, params = {}) {
-  const st = get(), miles = milestones();
-  const avail = Object.keys(KINDS).filter(k => k === 'month' || (k === 'sky' ? st.moments.length > 0 : miles.length > 0));
+  const st = get(), miles = milestones(), qms = quiltMonths();
+  const avail = Object.keys(KINDS).filter(k => k === 'month' || (k === 'sky' ? st.moments.length > 0 : k === 'quilt' ? qms.length > 0 : miles.length > 0));
+  if (params.t === 'quilt' && params.m && qms.includes(params.m)) qym = params.m;
+  if (!qym || !qms.includes(qym)) qym = qms[0];
   if (params.t && avail.includes(params.t)) kind = params.t;
-  if (params.m && miles.some(m => m.id === params.m)) mileId = params.m;
+  if (params.t !== 'quilt' && params.m && miles.some(m => m.id === params.m)) mileId = params.m;
   if (!kind || !avail.includes(kind)) kind = avail[0];
   if (!mileId || !miles.some(m => m.id === mileId)) mileId = miles[0] && miles[0].id;
 
@@ -40,6 +44,7 @@ export function mount(root, params = {}) {
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
     if (kind === 'sky') drawSky(g, look, imgs);
     else if (kind === 'mile') drawMilestone(g, look, imgs, miles.find(m => m.id === mileId) || miles[0]);
+    else if (kind === 'quilt') drawQuiltCard(g, look, imgs, qym);
     else drawMonth(g, look, imgs);
     // get the picture ready now, so the share sheet opens straight from the tap
     const my = ++stamp, name = 'prequel-' + KINDS[kind].name.toLowerCase().replace(/\s+/g, '-') + '.png'; file = null;
@@ -48,7 +53,8 @@ export function mount(root, params = {}) {
   const ui = () => {
     root.querySelectorAll('[data-kind]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.kind === kind)));
     const mp = root.querySelector('.milepick');
-    mp.hidden = kind !== 'mile';
+    mp.hidden = kind !== 'mile' && kind !== 'quilt';
+    if (kind === 'quilt') mp.innerHTML = '<div class="chips">' + qms.map(m => '<button type="button" class="chip small" data-qm="' + m + '" aria-pressed="' + (m === qym) + '">' + esc(monthLabel(m)) + '</button>').join('') + '</div>';
     if (kind === 'mile') mp.innerHTML = '<div class="chips">' + miles.map(m => '<button type="button" class="chip small" data-mile="' + m.id + '" aria-pressed="' + (m.id === mileId) + '">' + esc(m.title) + ' · ' + m.n + '</button>').join('') + '</div>';
     const looks = KINDS[kind].looks;
     root.querySelector('.lookdots').innerHTML = looks.map((l, i) => '<button type="button" data-look-i="' + i + '" aria-pressed="' + (i === lookIx[kind]) + '"><i></i><span>' + esc(l.name) + '</span></button>').join('');
@@ -65,6 +71,7 @@ export function mount(root, params = {}) {
     const t = e.target; let b;
     if ((b = t.closest('[data-kind]'))) { kind = b.dataset.kind; ui(); return; }
     if ((b = t.closest('[data-mile]'))) { mileId = b.dataset.mile; ui(); return; }
+    if ((b = t.closest('[data-qm]'))) { qym = b.dataset.qm; ui(); return; }
     if ((b = t.closest('[data-look-i]'))) { lookIx[kind] = Number(b.dataset.lookI); ui(); return; }
     if ((b = t.closest('[data-step]'))) { step(Number(b.dataset.step)); return; }
     if (t.closest('[data-share]')) {
