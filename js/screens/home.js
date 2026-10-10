@@ -3,6 +3,7 @@ import { mulberry32 } from '../sky-model.js';
 import { patches, PAT } from './quilt.js';
 import { ensureGoals, checkFinished, openLog } from '../goals.js';
 import { AREAS, weatherByName } from '../data.js';
+import { fromJar } from './wins.js';
 import { esc, him, nav, pop, pick, setLogDate, toast } from '../ui.js';
 
 const ICONS = {
@@ -11,7 +12,7 @@ const ICONS = {
   rest: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
   goal: '<path d="M12 21V4M12 4l7 3-7 3"/><path d="M8 21h8"/>',
   mug: '<path d="M4 10h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M16 12h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3c-.7 1 .7 2 0 3M12 3c-.7 1 .7 2 0 3"/>',
-  win: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'
+  win: '<path d="M8 3h8v3H8z"/><path d="M8 6c-3 1.5-4 3.5-4 6v6a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-6c0-2.5-1-4.5-4-6"/><path d="M12 11.5l1.1 2.2 2.4.3-1.8 1.6.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.6 2.4-.3z"/>'
 };
 const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
 
@@ -74,6 +75,7 @@ function render() {
     '</div>' +
     (soft
       ? '<a class="game" href="#/skate"><span><b>Skate home</b><small>' + ((st.games && st.games.skate && st.games.skate.best) ? 'Your best: ' + st.games.skate.best + ' m' : 'Jump the bumps, grab the stars') + '</small></span><b class="go">Play ›</b></a>' +
+        (() => { const m = fromJar(true); return m ? '<a class="fromjar" href="#/wins"><small>From your jar · ' + esc(new Date(m.ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })) + '</small>' + esc(m.text) + '<em>You did this. You can again.</em></a>' : ''; })() +
         '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'A letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
         '<button type="button" class="btn ghost wide" data-unheavy>Back to a regular day</button>'
       : (st.active ? '<a class="rowlink" href="#/move" style="border-color:var(--blue)"><span>' + esc(st.active.n) + ' is still open</span><b>›</b></a>' : '') +
@@ -81,7 +83,7 @@ function render() {
         '<div class="quick">' +
           '<a href="#/food">' + svg(ICONS.food) + 'Food</a>' +
           '<a href="#/rest">' + svg(ICONS.rest) + 'Rest</a>' +
-          '<a href="#/wins">' + svg(ICONS.win) + 'Tiny win</a>' +
+          '<a href="#/wins">' + svg(ICONS.win) + 'Jar</a>' +
           '<a href="#/home" data-goals>' + svg(ICONS.goal) + 'Goals</a>' +
         '</div>' +
         (backupDue() ? '<a class="rowlink" href="#/settings" style="background:#FFF1C4"><span>Time for a little backup? It keeps everything safe.</span><b>›</b></a>' : '') +
