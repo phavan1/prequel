@@ -612,8 +612,8 @@ html[data-theme="dark"] .tabsrow button[aria-pressed="true"], html[data-theme="d
 html[data-theme="dark"] { --jarglass: rgba(255,248,235,.10); --jarline: #E9DFCF; }
 html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 
-.jartoday { padding: 4px 6px 4px 14px; display: flex; flex-direction: column; }
-.jartoday .jt { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; }
-.jartoday .jt:last-child { border-bottom: 0; }
-.jartoday .x { min-width: 44px; min-height: 36px; border: 0; background: none; color: var(--red); font-size: 20px; font-weight: 900; border-radius: 10px; }
-.jartoday .x.armed { font-size: 13px; background: #FBE3DD; padding: 0 10px; }
+.jartoday { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.jartoday .jtl { width: 100%; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.jpill { display: inline-flex; align-items: center; gap: 2px; min-height: 38px; padding: 0 2px 0 14px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-weight: 800; font-size: 13px; }
+.jpill .x { min-width: 36px; min-height: 34px; border: 0; background: none; color: var(--red); font-size: 18px; font-weight: 900; border-radius: 999px; }
+.jpill .x.armed { font-size: 12px; background: #FBE3DD; padding: 0 10px; margin-left: 6px; }

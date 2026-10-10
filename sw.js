@@ -1,5 +1,5 @@
 // Offline support: the app opens even with no signal. Change VERSION when you publish an update.
-const VERSION = 'prequel-v28';
+const VERSION = 'prequel-v29';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/store.js', 'js/data.js', 'js/ui.js', 'js/sky-model.js', 'js/goals.js', 'js/charts.js', 'js/nutrition.js', 'data/foods.json',

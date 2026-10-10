@@ -149,12 +149,13 @@ function render(root) {
     '<div class="top">' + backLink() + dateChip() + '</div>' +
     '<div class="jarhead"><h1>The jar</h1><p class="say">Every tiny win is a star. Tap the jar to shake one out.</p></div>' +
     '<button type="button" class="jarbox" data-shake aria-label="Shake the jar for a past win">' + jarSVG(inJar, { seed: (full + 1) * 31, drop }) + '</button>' +
-    '<p class="jarcount">' + (inJar ? inJar + (inJar === 1 ? ' star' : ' stars') + ' in this jar · room for ' + (JAR - inJar) + ' more' : 'A fresh jar, ready for its first star.') + '</p>' +
+    '<p class="jarcount">' + (inJar ? 'Filling up, one star at a time.' : 'A fresh jar, ready for its first star.') + '</p>' +
+    // what went in on this day, right under the jar, each with a way to take it back out
+    (() => { const tw = w.filter(m => m.date === date); return tw.length ? '<div class="jartoday"><span class="jtl">In the jar ' + (date === today() ? 'today' : 'on ' + esc(words(date))) + '</span>' + tw.map(m => '<span class="jpill">' + esc(m.text) + '<button type="button" class="x" data-unwin="' + m.id + '" aria-label="Take ' + esc(m.text) + ' out of the jar">×</button></span>').join('') + '</div>' : ''; })() +
     (slip ? (() => { const sl = slipText(slip); return '<div class="slip big"><small>' + esc(sl[0]) + '</small>' + esc(sl[1]) + '</div>'; })() : '') +
     '<div class="lbl">Add a tiny win</div>' +
     '<div class="chips wins">' + st.settings.tinyWins.map(x => '<button type="button" class="chip" data-win="' + esc(x) + '" aria-pressed="' + doneToday.has(x) + '">' + (doneToday.has(x) ? '★ ' : '') + esc(x) + '</button>').join('') + '</div>' +
     '<div class="addrow"><label class="sr" for="ownWin">Write your own tiny win</label><input id="ownWin" type="text" placeholder="Or write your own…" autocomplete="off" enterkeyhint="done"><button type="button" class="btn" data-write>Add</button></div>' +
-    (() => { const tw = w.filter(m => m.date === date); return tw.length ? '<div class="lbl">In the jar ' + (date === today() ? 'today' : 'on ' + esc(words(date))) + '</div><div class="card jartoday">' + tw.map(m => '<div class="jt"><span>' + esc(m.text) + '</span><button type="button" class="x" data-unwin="' + m.id + '" aria-label="Take ' + esc(m.text) + ' out of the jar">×</button></div>').join('') + '</div>' : ''; })() +
     '<a class="muted editlist" href="#/settings">Change the list of tiny wins in Settings</a>' +
     (full ? '<div class="lbl">Full jars</div><div class="shelf">' + Array.from({ length: full }, (_, i) => { const k = i + 1, ws = w.slice(i * JAR, k * JAR); return '<button type="button" class="shelfjar" data-jar="' + k + '">' + jarSVG(JAR, { seed: k * 31, small: true, id: 's' + k, label: 'Jar ' + k }) + '<b>Jar ' + k + '</b><small>' + esc(words(ws[0].date)) + ' – ' + esc(words(ws[ws.length - 1].date)) + '</small></button>'; }).join('') + '</div>' : '') +
     nav('home');
