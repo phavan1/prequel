@@ -39,7 +39,8 @@ function render() {
       '<em>' + (S.counted ? '~' + Math.round(S.t[0]).toLocaleString() + ' cal · ' + Math.round(S.t[1]) + ' g protein ›' : 'Anything counts. A banana counts.') + '</em></span></button>' +
     '<div class="fsearch"><label class="sr" for="fq">What did you have?</label><input id="fq" type="search" placeholder="What did you have?" autocomplete="off" enterkeyhint="go" value="' + esc(query) + '"></div>' +
     '<div id="res"></div>' +
-    (usuals.length ? '<div class="top"><div class="lbl">Your usuals</div><button type="button" class="btn ghost" data-manage style="min-height:34px;padding:0 4px">Edit</button></div><div class="chips usuals">' + usuals.map(f => '<button type="button" class="chip" data-usual="' + f.id + '">' + esc(f.name) + '</button>').join('') + '</div>' : '') +
+    (usuals.length ? '<div class="top usualshead"><div class="lbl">Your usuals · tap to log</div><button type="button" class="btn ghost" data-manage style="min-height:34px;padding:0 4px">Edit</button></div><div class="chips usuals">' + usuals.map(f => '<button type="button" class="chip" data-usual="' + f.id + '">' + esc(f.name) + '</button>').join('') + '</div>' : '') +
+    '<div class="lbl dayhead">' + (d === today() ? 'What you ate today' : 'What you ate · ' + esc(prettyDate(d))) + '</div>' +
     '<div class="card daylist">' + (list.length ? list.map(x => x.m
       ? '<button type="button" class="entry" data-meal="' + x.m.id + '"><span class="t">' + timeOf(x.m.ts) + '</span><span class="nm">' + esc(x.m.name) + '<small>' + (x.m.sure ? '' : '~') + esc(qtyLabel(x.m)) + '</small></span><span class="kc">' + (x.m.n ? Math.round(totalOf(x.m)[0]) + ' cal' : '–') + '</span></button>'
       : '<div class="entry old"><span class="t">' + timeOf(x.old.ts) + '</span><span class="nm">' + esc(x.old.note || x.old.tags.join(', ')) + '<small>from before numbers</small></span><button type="button" class="x" data-delold="' + x.old.id + '" aria-label="Remove">×</button></div>').join('')
@@ -150,10 +151,10 @@ function foodSheet(id) {
     return '<h2>Make it yours</h2>' +
       '<label class="field-label" for="fName">NAME</label><input id="fName" type="text" value="' + esc(draft.name) + '" autocomplete="off">' +
       '<div class="lbl">Where it\'s from</div><div class="chips">' + KINDS.map(k => '<button type="button" class="chip small" data-kind="' + k[0] + '" aria-pressed="' + (draft.kind === k[0]) + '">' + k[1] + '</button>').join('') + '</div>' +
-      (f.per100 ? '<div class="lbl">Your usual portion</div><div class="chips">' + (f.measures || []).map((ms, i) => '<button type="button" class="chip small" data-ms="' + i + '" aria-pressed="' + (draft.unit === ms[0]) + '">' + esc(ms[0]) + ' (' + ms[1] + ' g)</button>').join('') + '</div>' +
+      (f.per100 ? '<div class="lbl">Your usual portion</div><div class="chips">' + (f.measures || []).map((ms, i) => '<button type="button" class="chip small" data-ms="' + i + '" aria-pressed="' + (draft.unit === ms[0]) + '">' + esc(ms[0]) + (/\(\s*[\d.]+\s*g\s*\)/.test(ms[0]) ? '' : ' (' + ms[1] + ' g)') + '</button>').join('') + '</div>' +
         '<div class="addrow"><label class="sr" for="uG">Grams</label><input id="uG" type="text" inputmode="decimal" placeholder="or your own portion in grams" value="' + (draft.unit && /^\d+ g$/.test(draft.unit) ? draft.unitG : '') + '"><button type="button" class="btn alt" data-ug>Set</button></div>' : '') +
       '<p class="muted" style="font-size:13px;margin:0">One portion (' + esc(draft.unit) + '): ' + (n ? '~' + fmt(n[0], 0) + ' cal · ' + fmt(n[1], 1) + ' g protein · ' + fmt(n[2], 2) + ' g carbs · ' + fmt(n[3], 3) + ' g fat' : 'no numbers') + '</p>' +
-      (f.recipe ? '<button type="button" class="btn alt" data-o="recipe">Change ingredients</button>' : '') +
+      (f.recipe ? '<button type="button" class="btn alt" data-o="recipe">Change ingredients</button>' : (f.n || f.per100 ? '<button type="button" class="btn alt" data-o="nums">Edit the numbers</button>' : '')) +
       '<button type="button" class="btn" data-o="save">Save</button><button type="button" class="btn danger" data-o="del">Take off my usuals</button><button type="button" class="btn ghost" data-close>Cancel</button>';
   };
   const redraw = () => { draft.name = document.getElementById('fName').value; const sh = document.querySelector('#sheet .sheet'); sh.innerHTML = draw(); };
@@ -164,11 +165,49 @@ function foodSheet(id) {
     if (t.closest('[data-ug]')) { const g = parseFloat(document.getElementById('uG').value); if (g > 0) { draft.unit = g + ' g'; draft.unitG = g; } redraw(); return; }
     const o = t.closest('[data-o]'); if (!o) return;
     if (o.dataset.o === 'recipe') { recipeSheet(id); return; }
+    if (o.dataset.o === 'nums') { numbersSheet(id); return; }
     if (o.dataset.o === 'del') { get().myFoods = myFoods().filter(x => x.id !== id); save(); closeSheet(); render(); toast('Off your usuals. Past logs stay.'); return; }
     draft.name = document.getElementById('fName').value.trim() || f.name;
     Object.assign(f, { name: draft.name, kind: draft.kind, unit: draft.unit, unitG: draft.unitG });
     if (f.per100 && draft.unitG) f.n = f.per100.map(v => v == null ? null : v * draft.unitG / 100);
     save(); closeSheet(); render(); toast('Saved. It\'s yours now.');
+  });
+}
+
+// fix a food's nutrition, and (if you like) every time you've already logged it
+function numbersSheet(id) {
+  const f = myFoods().find(x => x.id === id); if (!f) return;
+  const per100 = !!(f.per100 && f.unitG);
+  const base = per100 ? f.per100 : f.n || new Array(12).fill(null);
+  const val = v => v == null ? '' : String(Math.round(v * 100) / 100);
+  const field = i => '<label for="en' + i + '"><span>' + (i === 0 ? 'Energy' : NUTRIENTS[i][1]) + '</span><input id="en' + i + '" type="text" inputmode="decimal" placeholder="' + (i === 0 ? 'Cal' : NUTRIENTS[i][2]) + '" value="' + val(base[i]) + '"></label>';
+  const logged = meals().filter(m => m.foodId === id).length;
+  let kj = false, warned = false, fix = true;
+  openSheet('<h2>Edit the numbers</h2><p class="muted" style="margin:0">' + esc(f.name) + ' · ' + (per100 ? 'per 100 g, like the label' : 'for one portion: ' + esc(f.unit)) + '. Leave a box empty if you don\'t know it.</p>' +
+    (per100 ? '<label class="field-label" for="eServe">SERVING SIZE (GRAMS)</label><input id="eServe" type="text" inputmode="decimal" value="' + val(f.unitG) + '">' : '') +
+    '<div class="seg" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" data-kj="0" aria-pressed="true">Energy in Cal</button><button type="button" data-kj="1" aria-pressed="false">Energy in kJ</button></div>' +
+    '<div class="labelgrid">' + [0, 1, 3, 4, 2, 6, 7, 5].map(field).join('') + '</div>' +
+    '<details class="more"' + ([8, 9, 10, 11].some(i => base[i] != null) ? ' open' : '') + '><summary>Iron, calcium, B12, vitamin D</summary><div class="labelgrid">' + [8, 9, 10, 11].map(field).join('') + '</div></details>' +
+    (logged ? '<button type="button" class="chip small" data-fix aria-pressed="true" style="align-self:flex-start">★ Also fix the ' + (logged === 1 ? 'time' : logged + ' times') + ' I\'ve already logged it</button>' : '') +
+    '<div class="err" id="eErr"></div><button type="button" class="btn" data-o="save">Save the numbers</button><button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
+    const t = ev.target; let b;
+    const err = msg => { const e = document.getElementById('eErr'); e.textContent = msg; e.scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+    if ((b = t.closest('[data-kj]'))) { const was = kj; kj = b.dataset.kj === '1'; document.querySelectorAll('#sheet [data-kj]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); const e0 = document.getElementById('en0'); e0.placeholder = kj ? 'kJ' : 'Cal'; const v = parseFloat(e0.value); if (!isNaN(v) && was !== kj) e0.value = String(Math.round(kj ? v * 4.184 : v / 4.184)); return; }
+    if ((b = t.closest('[data-fix]'))) { fix = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(fix)); b.textContent = (fix ? '★ ' : '') + 'Also fix the ' + (logged === 1 ? 'time' : logged + ' times') + ' I\'ve already logged it'; return; }
+    if (!t.closest('[data-o]')) return;
+    const num = el => { const v = parseFloat(String(document.getElementById(el).value).replace(',', '.')); return isNaN(v) ? null : v; };
+    const raw = NUTRIENTS.map((x, i) => num('en' + i));
+    if (raw[0] == null) { err('Energy at least, so it can count.'); return; }
+    if (kj) raw[0] = Math.round(raw[0] / 4.184);
+    const est = 4 * (raw[1] || 0) + 4 * (raw[2] || 0) + 9 * (raw[3] || 0);
+    if (!warned && est > raw[0] * 1.6 + 20) { warned = true; err('Those numbers hold about ' + Math.round(est) + ' Cal, but energy says ' + raw[0] + '. A decimal point may be missing (3.3, not 33). Check, or tap save again to keep them.'); return; }
+    if (per100) {
+      const g = num('eServe'); if (g > 0 && g !== f.unitG) { f.unit = f.unit.replace(/\(\s*[\d.]+\s*g\s*\)/, '(' + g + ' g)'); if ((f.measures || [])[0]) f.measures[0] = [f.unit, g]; f.unitG = g; }
+      f.per100 = raw; f.n = raw.map(v => v == null ? null : v * f.unitG / 100);
+    } else f.n = raw;
+    let fixed = 0;
+    if (fix) meals().forEach(m => { if (m.foodId !== id) return; m.n = f.per100 && m.unitG ? f.per100.map(v => v == null ? null : v * m.unitG / 100) : f.n.slice(); fixed++; });
+    save(); closeSheet(); render(); toast(fixed ? 'Fixed, here and in ' + fixed + (fixed === 1 ? ' past log.' : ' past logs.') : 'Numbers saved.');
   });
 }
 

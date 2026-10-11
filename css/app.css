@@ -648,3 +648,5 @@ html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 .carelabel dl { margin: 0; display: grid; gap: 8px; }
 .carelabel dt { font-weight: 900; font-size: 14px; }
 .carelabel dd { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+.dayhead { margin-top: 10px; padding-top: 14px; border-top: 1px dashed var(--line); }
