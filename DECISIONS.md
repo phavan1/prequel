@@ -1,0 +1,161 @@
+# Prequel: decisions
+
+_Written on 12 October 2026, at version **v36**. This file says **why** Prequel is the way it is. Read it before changing anything you see here._
+
+**What the labels mean:**
+- **Confirmed**: Phavan asked for it or approved it, and it's built (or he made a clear call).
+- **Proposal (not approved)**: Claude suggested it. Phavan hasn't said yes. **Don't build it without asking.**
+- [verified], [from history] and [unverified] have the same meanings as in `HANDOVER.md`.
+
+---
+
+## A. Confirmed product principles [from history: the planning doc "Companion App — What We've Decided", 6 Oct 2026, plus later conversations]
+
+1. **Kindness only.** Every word is gentle. Nothing scolds, nags or grades. Missed days are never mentioned.
+2. **Count up, never reset.** Totals only grow. **No streaks.**
+3. **No comparison.** No week-against-week, no "better or worse than last time", no other people.
+4. **Life isn't linear.** Hard days are expected and get their own space: the soft day. They aren't treated as failures.
+5. **Small wins count big.** Getting out of bed counts. That's what the jar is for.
+6. **Nothing imposed.** Goals are his own and optional. Starter suggestions can be removed. Optional tabs stay off until he switches them on.
+7. **Surprise lives only in rewards.** Slips from the jar, constellation names, the welcome screen. Never in anything he has to do.
+8. **No zeros on screen.** Show counts above zero only, "–" instead of 0 for unknown nutrients, and "Ready when you are" for a goal at zero.
+9. **Dates are written in words** on screen and in reports, never `10/10/2026`. In the reports he asked for "October 10" order. [from history] (Home and some lists still use "Saturday 10 October"; see HANDOVER issue 7.)
+10. **Colour is never the only signal.** Icons, patterns, labels or rings go with it. This affects calendar badges, quilt patterns and chart line styles.
+11. **Offline always.** He has no signal for much of the day. Every feature, including PDFs and share cards, must work offline.
+12. **Private by design.** Data stays on the phone. No accounts, no analytics, no servers. Share cards and PDFs only leave through the share sheet when he sends them.
+
+## B. Features deliberately left out (confirmed)
+
+| Left out | Why | Status |
+|---|---|---|
+| Streaks | Break on bad days and punish | **Never** without a conversation |
+| Weekly targets, percentages, progress bars to a deadline | Pressure, grading | **Never** without a conversation |
+| Week-vs-week or me-vs-others comparison | Principle 3 | **Never** without a conversation |
+| A counted "people" or social section | Not what the app is for | Left out |
+| LLM or AI chat inside the app | Privacy, offline, cost | Left out |
+| Apple Health, widgets | A web app can't do them well | Left out |
+| **Calorie counting** | In the original plan | **Reversed.** He asked for food numbers (kcal, protein and so on) and they're built. Keep them **gentle**: no daily calorie target, no red over-limit warnings. [from history] |
+
+## C. Specific design calls (confirmed) [from history]
+
+**Wording**
+- The word **"heavy"** is never shown. The state is called a **soft day**. (`heavy` survives only as an internal data key.)
+- The jar is called **"The jar"**, not Tiny Wins. Its route is still `#/wins`.
+- Weather check-in question: **"How's the weather inside?"**
+
+**Home and soft day**
+- The room has a window, a rug, a quilt hoop and him. **No shelf, pinboard or bed in the room** (all tried and rejected).
+- The soft day shows Skate home, a note from the jar, and a letter. **The comfort meal and the tiny-win prompt were removed from soft days.**
+- The soft day restyles **Home only**, for **that date only**. (A whole-app soft look was offered; no answer.)
+- The soft-day prompt icon is 🍵. Blanket and mug icons were rejected.
+
+**The jar**
+- **20 stars** fill a jar. 50 was rejected as too slow.
+- **No numbers** under the jar.
+- Each chip counts **once per day**. Written wins have no limit.
+- Stars can be removed **only** from "In the jar today". The remove-by-chip idea was rejected.
+- Full jars go onto a shelf. **A separate look-back screen was shelved.** The shelf jars are the look-back.
+
+**Days (calendar)**
+- Month view only. **The year grid was rejected.**
+- **Mind is not on the calendar.**
+- No plain coloured dots: rings and icon badges instead.
+- **The All tab has no summary line.**
+
+**Quilt**
+- One quilt per month. A **finished month must look whole**, with no empty patches. Some patches go double-wide to fill it.
+- The fabric colour comes from hours slept and the pattern from how he felt. A split patch means a two-part night; a button means a nap.
+
+**Share cards**
+- Cool skate poses on cards (the six `c*` poses). **The cheer pose was rejected** for cards.
+- **No Skate best-score card.**
+- One "Share or save" button. The picture is pre-built so the iOS share sheet opens straight from the tap.
+
+**Reports and export**
+- Exports are PDF, with dates in words. **CSV export was rejected.**
+- Sleep diary periods: 2 weeks, 4 weeks, everything, or a picked month.
+- Food reports: last 7 days, or a picked month that has food.
+- The food report's "gentle ideas" are suggestions, never verdicts. Some nutrients (B12, vitamin D, iron, fibre and others) were chosen for **personal health reasons he shared**. The details stay out of these docs.
+
+**Food**
+- For grains and pulses, **cooked versions come first** in search. Raw grains in a meal show an "uncooked: about 3× once cooked" note (v34).
+- Label entry: blanks stay **unknown, never zero**. A **missing-decimal check** warns when the numbers don't add up (v32).
+- A saved meal can be a **one-off** ("Keep it in my foods" switched off).
+- Editing a food's numbers can also fix past logs, but **only if he ticks the box**.
+
+**Navigation**
+- **Back buttons go back to where you came from**, using `?from=` (v35). The `FROM` map in `ui.js` holds the labels. Any new link into a sub-page must pass `from`.
+- Bottom tab bar: Home, Days, Move, Mind, Me. Settings is reached from the gear on Me.
+
+**Goals**
+- A goal can **rest** ("Rest it for now") and be **picked back up**. Never "failed" or "abandoned".
+- Own goals have units (times, sessions, laps, pages, days, hours, minutes, km, or custom). Amount units ask "how many".
+- Goals can be created from the calendar's ＋.
+
+## D. Character art requirements (confirmed) [from history]
+
+- **The same character everywhere:** messy black hair, round glasses, bright **cobalt-blue oversized hoodie**, black joggers with white side stripes, white and blue chunky sneakers.
+- **Style:** hand-drawn manga or comic, clean black ink lines, soft flat colour, **plain white background** (so `clean_art.py` can cut it out), full body, no text, no props cut off at the edges.
+- **Canonical prompt:** the exact wording of the prompt used with ChatGPT was **not saved** in any file. **[unverified]** Rebuild it from the description above, and ask Phavan for his saved prompt if he has one.
+- **Processing:** each image goes through `clean_art.py`, then `defringe2/3.py` if a light halo or trapped background remains. Check it on both cream and dark backgrounds. Then 640 px webp in `art/`, and **add it to `SHELL`**.
+- **Rejected:** the **puppet rig** (an animated, jointed character). It was prototyped and dropped in favour of single pictures for each mood or time.
+- Poses should look **cool and natural**. He rejected stiff or cheesy poses for share cards.
+
+## E. Architecture decisions (confirmed) [verified in code; reasons from history]
+
+| Decision | Why |
+|---|---|
+| Plain HTML, CSS and JS with no framework and no build step | One person, no tooling to break, easy to host on GitHub Pages, files can be edited and checked one at a time |
+| A PWA from Safari, not an App Store app | Free, no Apple developer account, updates by git push |
+| IndexedDB with one state object, plus JSON backup | Survives better than localStorage on iOS. One object keeps import and export simple. |
+| Everything cached by the service worker, including fonts and `foods.json` | Offline is essential (principle 11) |
+| Fonts bundled, not from Google Fonts | Offline and privacy |
+| Food DB is INDB (Indian recipes) plus USDA SR27, converted once into `data/foods.json` | He eats mostly Indian food. USDA covers ingredients. Offline. |
+| PDFs drawn on canvas as page pictures, with no library | Works offline, uses the app's own fonts and art, no dependency. Downside: text can't be selected. |
+| Share cards drawn on canvas | Same reasons; story size (1080×1920) |
+| No backend | Privacy, cost, offline. Stage 3 (Canvas calendar) may need a small Cloudflare Worker; that's a **future** decision. |
+
+**How `foods.json` was built** [from history; script lost; details unverified]: INDB recipes and USDA SR27 foods were read in. The 12 nutrients were normalised to **per 100 g**, with serving sizes kept where the source had them. Each entry is tagged with its source, and everything was written as one JSON file. To rebuild it, a new script would be needed. Check the result against the current file before replacing it.
+
+## F. How Phavan likes to work (confirmed) [from history]
+
+- **Discuss first.** Ideas, options and a recommendation, then he decides. Big features get a plan before any code.
+- **Show screenshots** of changes before pushing.
+- **Plain, non-technical language.** Short explanations, with the reasoning.
+- **He commits and syncs himself** in VS Code from the commit message Claude gives. Claude never commits, pushes or deploys.
+- Every release bumps `VERSION` in `sw.js`. After an update he closes and reopens the app on his iPhone.
+- He tests on his **iPhone** (Safari, added to Home Screen). Claude tests in desktop Chromium and says so.
+- He writes the character prompts in ChatGPT and sends the images back; Claude cuts them out.
+
+## G. Never reverse without discussion
+
+- No streaks, targets, percentages, comparisons, or zeros on screen.
+- Kind wording; "soft day", never "heavy".
+- Offline for everything; no backend; data stays on the phone.
+- Dates in words; colour never alone.
+- A jar of 20, no numbers under it, once per chip per day.
+- Back buttons follow `?from=`.
+- Finished quilts are whole.
+- Food: blanks are unknown not zero, cooked grains first, and past logs only change when he ticks the box.
+- The character's look.
+
+---
+
+## H. Proposals NOT approved (don't build without asking)
+
+| Proposal | Where it came from | State |
+|---|---|---|
+| Night chips: replace with one night-only "I'm awake for a bit / Back to sleep" button (Claude's pick), remove them, or show them only 10pm–6am | After v36 | **Waiting for his choice** |
+| A weather row in the sleep diary under "Hours each day" | After v36 | Offered |
+| A richer goal celebration: count-up and confetti, gold shooting star, trophy on the shelf, note to future you, share card, optional chime | Earlier conversation | Offered; "loud or quiet?" never answered |
+| Mind page redesign | His own idea ("keep it in mind") | **Not designed yet** |
+| Recognise Indian rice names (seeraga samba, sona masoori, ponni) in food search | v34 conversation | Offered |
+| A whole-app soft-day look | Earlier | Offered, no answer |
+| A one-time "You've already filled N jars!" moment | Jar work | Offered |
+| Light motion lines on dark share cards | v23 | Offered |
+| Fix the bottom tab bar so it highlights the section you came from | Found during this handover | Not discussed yet |
+| Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
+| Refresh `README.md` | Found during this handover | Not discussed yet |
+| Save the dev tools (art scripts, a few test scripts, fake test data) into the repo | This handover | **Waiting for his OK** (HANDOVER section 10) |
+
+**Future stages (his ideas, not yet planned in detail):** Stage 3, a uni planner from his Canvas calendar feed as a comic-style planner. Stage 4, a printable A4 monthly showcase. Cloud sync with a login (leaning Firebase). A cookbook with photos.

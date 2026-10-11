@@ -1,0 +1,352 @@
+# Prequel: development handover
+
+_Written on 12 October 2026, at version **v36**. Read this first, then `DECISIONS.md`, then `TEST_CHECKLIST.md`._
+
+**How sure each fact is:**
+- **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
+- **[from history]**: recovered from the conversation transcript, its summary or the planning documents.
+- **[unverified]**: could not be confirmed. Check it before relying on it.
+
+---
+
+## 1. What Prequel is
+
+Prequel is Phavan's personal iPhone web app. Its tagline is *"the behind-the-scenes of everything I'm becoming"*. It's a **kind lifestyle companion**: a gentle place to log moving, eating, resting, how the day feels inside, and small wins. It's built for hard days as much as good ones, so it never pressures, grades, compares or shows zeros. Over time the logs turn into keepsakes: a night sky of stars, a patchwork quilt, a jar of paper stars, share cards and PDF reports.
+
+- **Who it's for:** one person (Phavan), on his iPhone. There are no accounts and no other users. A friend could install it and get their own separate copy, because data never leaves the phone.
+- **Where it runs:** installed from Safari with "Add to Home Screen", at https://phavan1.github.io/prequel/. **[from history]**
+- **Offline is essential.** He has no signal for much of the day, so everything must work offline, and it does. **[verified: service worker and bundled fonts and data]**
+- **What it deliberately isn't** (see `DECISIONS.md`): no streaks, targets, percentages, week-against-week comparisons, social features, AI chat, Apple Health, or widgets.
+
+## 2. Architecture and technology [verified]
+
+| Part | What it uses |
+|---|---|
+| Language | Plain HTML, CSS and JavaScript (ES modules). **No framework, no build step, no npm dependencies at runtime.** |
+| Routing | Hash router in `js/app.js`. `#/name/args?query`; `params` (including `params.from`, `params.d`, `params.t`, `params.m`) are passed to `screen.mount(root, params)`. Each route gets a fresh `<main id="app">` so old listeners don't leak. |
+| Storage | **IndexedDB** (database `prequel`, store `kv`, key `state`) holding one JSON state object, with a localStorage fallback. Saves are debounced by 150 ms. It asks for `navigator.storage.persist()`. |
+| Backup | JSON export and import in Settings, with a monthly gentle nudge (`backupDue()`). |
+| Offline | `sw.js`: cache name is `VERSION` (now `prequel-v36`). `SHELL` lists **every** file (code, fonts, icons, art, `data/foods.json`). Page loads try the network first and fall back to the cache; other files come from the cache and refresh in the background. |
+| Fonts | Bundled in `fonts/`: Nunito 500/700/800/900 and Gaegu 700 (woff2), loaded with `@font-face` in `app.css`. No Google Fonts. |
+| Food data | `data/foods.json`: 9,105 foods, 12 nutrients per 100 g, and serving sizes. Sources: INDB (Indian Nutrient Databank, about 1,014 recipes; licence never confirmed, so credit it) and USDA SR27 (public domain). Fields: kcal, protein, carbs, fat, satfat, fibre, sugar, sodium, iron, calcium, b12, vitd. |
+| PDFs | `js/pdf.js`: each A4 page (1240×1754, 150 dpi) is drawn on a canvas with the app's fonts, saved as JPEG and packed into a hand-written PDF. No library. Text in the PDF can't be selected. |
+| Share cards | `js/cards.js`: 1080×1920 story-sized canvas drawings, shared with the Web Share API. The picture file is prepared before the tap so iOS allows the share sheet to open. |
+| Hosting | GitHub Pages from repo `phavan1/prequel`, branch `main`, root folder. **[from history]** |
+| Backend | **None.** No servers, no API keys, no analytics. |
+
+## 3. Project structure [verified on the laptop, 12 Oct 2026]
+
+Local folder: `C:\Users\Phava\Documents\companion-app` (a git repo; `HEAD` points to `main`).
+
+```
+index.html             loads css/app.css and js/app.js (module)
+manifest.webmanifest   name "Prequel", standalone, portrait, cream #FAF3DC
+sw.js                  offline cache (VERSION + SHELL)
+README.md              STALE: written at Stage 1 (see Known issues)
+css/app.css            all styles: :root tokens, dark mode block, one section per screen
+data/foods.json        offline food database (about 1.4 MB)
+fonts/                 Nunito + Gaegu woff2
+icons/                 icon-192, icon-512, apple-touch-icon
+art/*.webp             24 character pictures (see section 7)
+js/
+  app.js        router, ROUTES, theme (applyTheme), welcome screen (hello), visibilitychange
+  store.js      state, IndexedDB, fresh(), save(), addMoment, removeById, export/import, reset, backupDue
+  ui.js         esc, him() art helper, sheets (openSheet with iPhone keyboard fix), toast, nav, backLink, FROM, date chip
+  data.js       AREAS, EXERCISES, WORKOUTS (Project Athletic playbook), WEATHERS (13), FOOD_TAGS, FEELS, NIGHT_THINGS
+  sky-model.js  seeded random, star clusters, constellation names
+  goals.js      linked and own goals, units, count(), logging sheet, edit/rest/remove, checkFinished
+  charts.js     hill, weather ribbon, rest clock, "noticing" line
+  nutrition.js  NUTRIENTS, food DB load/search, synonyms (SYN), GRAIN rule, myFoods/meals/weights, sums
+  cards.js      share-card drawings: sky, milestone, month, quilt + looks + POSES
+  pdf.js        Doc class (pages, headings, tables, tiles), makePDF, shareFile, date formatters
+  reports.js    sleep diary PDF, food report PDF, date-range and month pickers
+  screens/
+    home.js     the room (window sky, quilt hoop, him by time of day), quick buttons, soft day
+    weather.js  "How's the weather inside?" check-in
+    move.js     gym logging from the playbook (keypad, Same again, swaps, add/new workout)
+    food.js     search, usuals, portions/grams, labels, Make a meal, edit numbers, weight, reports
+    rest.js     going to sleep / woke up, 24-hour ring, add by hand, night chips, sleep diary
+    wins.js     THE JAR (route is still #/wins)
+    mind.js     things on my mind + reminders, lanterns
+    letters.js  letters from good-day you
+    days.js     calendar with tabs, day card, add to any day
+    me.js       goals, resting goals, finished shelf, counts, charts, share link, gear → settings
+    sky.js      the night sky of stars and constellations
+    quilt.js    the monthly quilts (also exports PAT, patches, drawQuiltMonth, fullLayout)
+    skate.js    Skate home game
+    settings.js name, kind words, tiny-win list, Look, backup/restore, Start fresh
+    share.js    Share your story (card type, looks, month/milestone picker)
+```
+
+Routes (`ROUTES` in `app.js`): `home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, settings, share`.
+Bottom tab bar (`NAV` in `ui.js`): Home, Days, Move, Mind, Me.
+
+## 4. Data model [verified from code]
+
+Everything lives in one state object (`store.js`, `fresh()`), plus fields that screens add later. Dates are `YYYY-MM-DD` keys **inside the data only**; on screen they're always written in words.
+
+| Key | Shape | Notes |
+|---|---|---|
+| `moments` | `{id, date, ts, area, text, bright, ref?, written?}` | Every star in the sky. `area` is one of `move, food, rest, win, mind, goal`. `ref` links to the source record. **Tiny wins are moments with `area:'win'`.** `written:1` means a win he wrote himself. |
+| `weather` | `{id, date, ts, types:[name], strength}` | Uses the names in `WEATHERS`. |
+| `sessions` | `{id, date, ts, workoutId, workoutName, light, exercises:[{key,name,swap,sets:[{a,b}]}]}` | Gym. |
+| `rests` | `{id, date, start, end, feel}` | `date` is **the day you woke up**. `feel` is `rested`, `okay` or `groggy`. |
+| `pendingSleep` | timestamp or null | "Going to sleep" pressed, waiting for "Woke up". |
+| `mind` | `{id, text, remindOn, created, letGo}` | Notes and lanterns. |
+| `letters` | `{id, text, ts, weather, opened}` | |
+| `foods` | `{id, date, ts, tags:[], note}` | **Old** food moments from before numbers. Still shown and counted. |
+| `myFoods` | `{id, name, from, n[12] per portion, per100?, unit, unitG, measures?, kind, uses, last, created, recipe?, portions?, once?}` | His saved foods. `from` is `'label'`, `'recipe'`, or `'<src>:<name>'` from the DB. `once` means a one-off meal, hidden from usuals and search. |
+| `meals` | `{id, date, ts, name, foodId, n, unit, unitG, qty, sure, kind}` | Each logged food. `n` is a **copy** of the numbers when logged; editing a food can "also fix past logs". `sure:false` shows as "~". |
+| `weights` | `{id, date, ts, kg, where}` | |
+| `goals` | `{id, kind:'linked'|'own', source, name, target, from, created, finished, paused?, unit?, amount?, again?}` | `unit` and `amount` only apply to own goals (v25). |
+| `goalLogs` | `{id, goalId, date, ts, amt?}` | `amt` is used by amount units (km, hours, minutes). |
+| `heavy` | `{date: true}` | Soft days. The name `heavy` is internal only and is never shown. |
+| `settings` | `{name, tinyWins[], kindLines[], theme:'light'|'dark'|'auto', dayTabs[]}` | |
+| `games.skate` | `{best, runs}` | |
+| `sky` | cluster and constellation model | Built by `sky-model.js`. |
+| Other flags | `jarsSeen`, `jarSize`, `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
+
+**Rules that matter when changing data:**
+- `removeById(list, id)` also removes moments whose `ref` is that id, which takes the star out of the sky.
+- Never delete or rename fields without migrating them. Old backups go through `importJSON`, which merges onto `fresh()`.
+
+## 5. Implemented features (through v36) [verified in code unless marked]
+
+### Home (`home.js`)
+- A room with a real-looking window:
+  - daytime sky (dawn, blue or golden, with sun and clouds) from 6am to 7pm, stars after that
+  - shows "N stars" and opens the sky
+- An embroidery hoop on the wall showing a mini quilt; it opens the quilt.
+- His picture changes with the hour: `sitting` (6–12), `afternoon` (12–19), `nightwatch` (19–6). Tapping him changes his speech bubble.
+- "How's the weather inside?" row.
+- Quick buttons: **Food, Rest, Jar, Goals**.
+- Backup nudge row.
+- The soft-day prompt: 🍵 plus a rotating line ("Wanna slow down?" and others).
+- **Soft day:**
+  - warm peach (dark amber in dark mode), him `asleep`, no rug
+  - **Skate home** game card
+  - a "From your jar" note: a past win, preferring ones from hard days
+  - a letter from good-day you
+  - "Back to a regular day"
+  - It only lasts for that date and only restyles Home.
+- **Welcome screen** on the first open after 5am, or after 4+ hours away. Tap to skip. (`app.js` `hello()`)
+
+### Weather (`weather.js`)
+- 13 weathers, from Clear sun to Clear night. Mixing several is allowed, and there's a strength setting.
+- Each check-in adds a star (area `mind`) and tints the sky.
+- Feeds: Home row, Me ribbon and noticing line, the jar's hard-day check, letter stamps, Days weather tab, My month card.
+- **Not yet** in the sleep diary or food report.
+
+### Move (`move.js`) [from history; not re-tested in this handover]
+- The Project Athletic playbook's 12 workouts.
+- Custom keypad, "Same again", machine-busy swaps, kg or plate number, add or new workouts, light sessions.
+- The `legday` and `cheer` pictures.
+
+### Food (`food.js`, `nutrition.js`)
+- **Search:** your foods first ("yours"), then Indian recipes, then USDA.
+  - Spelling-friendly synonyms (chana/channa, dal/dhal, yoghurt/yogurt, curd, dahi, paneer, aloo, palak…).
+  - For grains and pulses, **cooked versions come first**.
+- **"Just log it"** without numbers, to fill in later.
+- **Usuals** chips ("Your usuals · tap to log"). Edit opens Your foods.
+- **"What you ate today"** list, separated from usuals by a dashed divider.
+- **Portion sheet:** stepper, quick chips (½…10), or type **grams**. Portions logged by grams show as "80 g".
+- **From a label** (v32):
+  - copy the label **per 100 g** (or per serving) and the **serving size** in grams
+  - energy in kJ or Cal
+  - blanks stay unknown, never zero
+  - **missing-decimal check**: it warns if protein, carbs and fat hold far more energy than the label says
+  - then "How much did you have?" (grams), or **Just save it (to use in meals)**
+- **Make a meal or recipe:**
+  - search your own foods and DB ingredients, counted in cups, tbsp, pieces or grams
+  - **raw grains show a red "uncooked: about 3× this once cooked" note**
+  - portions and portion name
+  - **Log it as one meal**, with "Keep it in my foods for next time" (off makes it a one-off)
+  - Editing a recipe updates the times it's already been logged (v34).
+- **Make it yours:** rename, where it's from (Home-cooked, Eating out, Packaged), usual portion. **Edit the numbers** (v33), with "Also fix the times I've already logged it".
+- **Day totals sheet:** 12 nutrients; "from X of Y foods" when partial; "–" instead of 0.
+- **Weight log** with a little line chart.
+- **Reports (PDF):** the last 7 days or any month that has food.
+  - highlights, a typical day, a day-by-day chart (gym days solid, rest days light, labelled in words)
+  - gym days against rest days, where food came from, regulars, protein sources, weight
+  - gentle ideas: protein per kg, fibre, saturated fat, B12, vitamin D, sodium
+  - everything eaten, day by day
+
+### Rest (`rest.js`, `reports.js`)
+- Going to sleep / Woke up. A 24-hour ring for the day. Add a rest by hand. How you felt.
+- Night chips: "Awake for a bit? What did you do" (`NIGHT_THINGS`). **Their future is undecided.**
+- Link to the quilt (`?from=rest`).
+- **Sleep diary (PDF):** last 2 weeks, last 4 weeks, everything, or any month.
+  - At a glance: days logged, typical sleep, usually asleep and up around (medians)
+  - **Hours each day** chart (v36): solid night, striped daytime, dashed typical line
+  - Sleep chart, 6pm to 6pm
+  - **Every rest**, with a **Total for the day** row (v36) and night notes
+
+### The jar (`wins.js`, route `#/wins`; v26–v30)
+- A drawn glass jar fills with paper stars, one per tiny win. **20 stars fill a jar.**
+- No numbers are shown: "Filling up, one star at a time."
+- Tap the jar to shake out a slip with a little stat, for example:
+  - "You got out of bed 9 times this month."
+  - "Since August 10…"
+  - "On 3 hard days, you still…"
+  - Falls back to the date when something has only happened once.
+- **Each chip goes in once per day.** A done chip turns dark and gets ★. Tapping it again just says "Already in the jar today."
+- "Or write your own…" wins have no daily limit.
+- **In the jar today** pills under the jar, with × then "Remove?". This is the **only** way to remove a star.
+- A full jar gets a celebration sheet, then goes onto the **Full jars** shelf. Tap a shelf jar for its dates and three slips.
+- If the jar size changes, old full jars are shelved quietly.
+
+### Mind (`mind.js`) and Letters (`letters.js`)
+- Things on my mind with gentle reminders (tomorrow, the weekend, next week, or a picked date). Let go as lanterns.
+- Letters from good-day you, sealed and opened on soft days.
+- **The Mind page redesign is pending.**
+
+### Days (`days.js`)
+- Tabs: All, Move, Food, Rest, plus one tab per own goal.
+- ＋ opens "Add to your calendar": create a goal, pick a resting goal back up, or switch on the optional Tiny wins and Weather tabs.
+- Round-day calendar with rings and icon badges, not colour alone.
+- Summary line under each tab, never zero. The All tab has **no** summary line (v30).
+- Day card: collapsible rows, × delete, edit sets, **Add to this day** for any date.
+
+### Goals (`goals.js`) and Me (`me.js`)
+- **Linked goals** (counted by the app): gym sessions, home-cooked meals, new foods, breakfasts, days of rest, tiny wins, letters, lanterns, or any single tiny win. Optionally count from now.
+- **Own goals**, with **units** (v25):
+  - counting units add 1: times, sessions, laps, pages, days
+  - amount units ask "how many": hours, minutes, km
+  - or a custom unit
+- Edit goal: rename, target, unit, **Rest it for now / Pick it back up**, Remove. The sheet was broken from v25 to v34 and fixed in v35.
+- Me shows: goal cards (or "Ready when you are · counting up to N" at zero), Resting for now, the finished shelf, counts above zero only, Your sky and Your quilt links (`?from=me`), **Share your story**, the hill, weather ribbon, rest clock, noticing line and look-backs. The gear opens Settings.
+- A goal reaching its target shows a simple "You did it." sheet with `cheer`. **A richer celebration is pending.**
+
+### Sky (`sky.js`) and Quilt (`quilt.js`)
+- **Sky:** every moment is a star. Constellations form with generated names. Tap a star for its day. The back button depends on `from`.
+- **Quilt** (v31, v35):
+  - **one quilt per month**, hanging from a wooden rod with loops, a blanket-stitch binding, puffy linen patches and a drape shadow
+  - the current month shows a needle at the next spot; **finished months are always whole** (some patches double-wide)
+  - tap a patch to flip it to a handwritten label
+  - care label explaining the colours and patterns; soft-day sparkle; finished-quilt shelf; swipe or ‹ › between months; Share this quilt
+  - patch fabric: colour family from hours slept, pattern family from how you felt, a split patch for a two-part night, a button for a nap
+
+### Share your story (`share.js`, `cards.js`)
+- **My sky:** Midnight, Dawn, Polaroid.
+- **Milestone:** Comic, Sunny, Cream, Night. Works for any goal or app count above zero, and uses the unit.
+- **My month:** Journal, Cosy dark, Hoodie.
+- **My quilt:** Linen, Night, Sunny, with a month picker.
+- Swipe through looks, then one "Share or save" button.
+
+### Settings (`settings.js`) and everywhere
+- Name, kind lines and tiny-win list. Look: Light, Cosy dark or Match my phone. Backup and restore. Start fresh (a Reset card that asks twice and offers a backup first).
+- Dark mode via `html[data-theme="dark"]`.
+- Any past date can be logged on most screens with the date chip.
+- **Back buttons return to where you came from**, using `?from=` (v35).
+
+## 6. Deployment and versioning workflow [verified + from history]
+
+1. Claude edits files in a working copy and tests them in desktop Chromium (Playwright) with screenshots, **before** pushing.
+2. **Every release bumps** `const VERSION = 'prequel-vN'` in `sw.js`. Any **new file must be added to `SHELL`**, or it won't work offline.
+3. Claude writes the changed files to the laptop folder, then reads them back and compares byte for byte (images pixel by pixel) to confirm.
+4. Claude gives a commit message in the form `vN: short description`.
+5. **Phavan commits and syncs in VS Code** (Source Control, then Commit and Sync). GitHub Pages redeploys.
+6. On the iPhone: open Prequel, **close it fully and reopen**, sometimes twice, to pick up the new version.
+7. **Claude never commits, pushes or deploys.** Phavan does.
+
+**Git history:** `.git/logs/HEAD` shows local commits from the Stage 2 commit (7 Oct 2026) through `v36` (12 Oct 2026, 01:26 Sydney time). **[verified]** Whether each commit reached GitHub (synced) can't be seen locally. **[unverified]**
+
+## 7. Character art [verified file list; descriptions from history]
+
+**The character:** messy black hair, round glasses, bright cobalt-blue oversized hoodie, black joggers with white side stripes, white and blue chunky sneakers. Hand-drawn manga style, clean black ink lines, soft flat colour.
+
+All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts (section 10), 640 px webp in `art/`.
+
+| File | Shows | Used in |
+|---|---|---|
+| sitting | morning, juice, waving | Home 6–12, welcome screen |
+| afternoon | headphones, iced coffee | Home 12–19, welcome screen |
+| nightwatch | lamp and cuppa | Home 19–6, Rest at night, welcome screen, reports, weather data |
+| asleep | under a blanket | Home soft day, Rest by day, weather data |
+| eating | at a café table | Food header, food report |
+| cooking | apron, pot | Food report |
+| sewing | sewing his quilt (v31) | Quilt header, My quilt card |
+| skate | skating | Me header, data |
+| skatego | skating, determined | Skate home game |
+| legday, cheer | leg press; jumping for joy | Move; goal reached and some weather moods |
+| standing, umbrella, sunny | weather moods | Weather screen (`WEATHERS`) |
+| letter | with a letter | Letters, Me |
+| cwalk, cgrab, cflip, cfloat, cmanual, ccarve | six cool skate poses (v23) | Share cards: sky (cfloat, cwalk), milestone (cflip, cgrab), month (cmanual, ccarve) |
+| waving, lying, stickynote | | **Not used** by any screen right now (still cached) |
+
+## 8. Known issues and limitations
+
+| # | Issue | Status |
+|---|---|---|
+| 1 | "Save and log" on the packet-label sheet did nothing on iPhone. Couldn't reproduce in Chromium; v32 added a keyboard-close repaint fix in `openSheet`. | **Not confirmed on iPhone** |
+| 2 | The bottom tab bar highlights **Home** on Quilt (and other sub-pages) even when you came from Me. | Open |
+| 3 | PDF text can't be selected or searched, because pages are pictures. | By design for now |
+| 4 | INDB recipes have **no B12** values, so reports read low. Licence unconfirmed; keep the credit. | Open |
+| 5 | Data lives only on the phone (IndexedDB). If iOS clears website data or the phone is lost, only a backup file saves it. | Mitigated by backup nudge |
+| 6 | `README.md` is out of date (Stage 1: says backup lives in Me, lists 10 screens, example `prequel-v2`). | Open (docs only) |
+| 7 | Home's date line and `prettyDate` use the Australian order ("Saturday 10 October", "Fri 9 Oct"). They're in words, but not the "October 10" order he asked for in reports. | Open, ask him |
+| 8 | `comfort` (comfort menu) is stored but has no screen any more. `waving`, `lying` and `stickynote` art are unused. | Harmless |
+| 9 | All testing has been desktop Chromium. iPhone-only behaviour (keyboard, share sheet, Add to Home Screen updates, storage) needs his phone. | Ongoing |
+| 10 | A long single file (`food.js` ~38 KB) and string-built HTML make edits risky. **Always re-test edited sheets.** In v25 a text replacement silently broke the goal sheet until v35. | Process risk |
+| 11 | Food search ranking is heuristic. Some names (seeraga samba, sona masoori, ponni) aren't recognised. | Open, offered |
+
+## 9. Pending work and decisions waiting on Phavan
+
+**Waiting for his decision (don't build until he chooses):**
+1. **Night chips on Rest** ("Awake for a bit?"). Options: remove; one night-only "I'm awake for a bit / Back to sleep" button that logs the time and length (Claude's pick); or keep but show only 10pm–6am.
+2. **Weather in the sleep diary:** a weather row under "Hours each day". Offered.
+3. **Goal-completion celebration:** count-up and confetti screen, gold shooting star in the sky, trophy landing on the shelf, optional note to future you, "Share this" milestone card, optional chime. Also: loud or quiet and warm? Never answered.
+4. **Mind page redesign:** he asked to keep it in mind; not started.
+5. **Indian rice names in food search:** offered.
+6. **Saving the dev tools into the repo:** see section 10.
+
+**Backlog:**
+- Rest page review.
+- Light motion lines on dark share cards (offered in v23).
+- Soft-day look across the whole app (offered, no answer).
+- A one-time "You've already filled N jars!" moment (offered).
+- Optional art: jump pose, sitting variants, a watercolour room.
+- **Stage 3:** uni planner from his Canvas calendar feed, through a small Cloudflare Worker, as a comic-style planner.
+- **Stage 4:** printable A4 monthly showcase (`pdf.js` already exists).
+- Cloud sync with login (leaning Firebase; a separate stage; check the free limits).
+- Cookbook with photos.
+
+## 10. Development resources outside the repo (at risk)
+
+These live only in Claude's temporary workspace (`scratchpad/`), **not** in the project:
+
+| Resource | What it does | Keep? |
+|---|---|---|
+| `tools/clean_art.py` | Cuts the white background off a ChatGPT image (flood fill from the border), crops, 640 px webp | **Yes** |
+| `tools/defringe2.py`, `defringe3.py` | Removes light halos and punches out trapped background gaps (seeded or automatic) | **Yes** |
+| `tools/holes.py` | Finds and highlights trapped light areas so they can be checked | **Yes** |
+| `defringe.py`, `holes_c.py`, `holes_s.py` | Earlier versions or copies of the above | No |
+| `tools/*.js` (about 40 Playwright scripts) | Automated screen tests and screenshots, one per feature | **A few as templates** (`share.js`, `reports.js`, `jar.js`, `q2.js`, `meal.js`, `units.js`) |
+| `sample-backup.json` | Test data: about two months of fake logs | **Yes** (fake data only) |
+| Original ChatGPT images (`charart/`, `cool_in/`, `sew_in/`, `newart_in/`) | Full-size art before cutting | Optional (large); he may already have them |
+| `data/indb`, `data/usda` | Raw sources for `foods.json` | No (re-downloadable). **The script that built `foods.json` was never saved** (see `DECISIONS.md` for the method). |
+| `proto/`, `puppet/`, `wf/`, `push-vN/` folders | Early prototypes, the dropped puppet rig, wireframes, per-version copies | No (history only; git has the versions) |
+| Personal uploads (health documents, screenshots) | | **Never copy into the repo** |
+
+## 11. Status right now
+
+- **Last completed:** v36, sleep diary daily totals and the "Hours each day" chart. Committed locally on 12 Oct 01:26.
+- **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
+- **Now:** this handover. No app changes in progress.
+- **Next:** he reviews these docs and confirms which tools to keep, then starts a fresh conversation in the same Claude Project.
+
+## 12. Instructions for a new Claude conversation
+
+1. **Read in this order:**
+   1. this file
+   2. `DECISIONS.md`
+   3. `TEST_CHECKLIST.md`
+   4. the Project doc `claude/prequel-build-status.md`
+   5. then the actual code: `js/store.js`, `js/app.js`, `sw.js` and the screen you're touching
+2. **The code on the laptop is the source of truth.** Re-read a file before editing it. Don't trust these docs over the code.
+3. **Talk first.** Phavan wants ideas discussed, options compared and screenshots shown **before** anything is pushed. Explain things in plain, non-technical language.
+4. **Respect the principles** in `DECISIONS.md`: no zeros, no streaks or percentages, colour never alone, dates in words, kind wording, offline always.
+5. **Every release:** bump `VERSION`, update `SHELL` for new files, test in a browser (`node --input-type=module --check` for syntax, then Playwright), write to the laptop, read back and compare, then give a `vN: …` commit message. **Never commit or push yourself.**
+6. **After any text-replacement edit,** confirm the change actually happened (assert the old string existed) and click through the affected sheet. A silent bad replace broke goals in v25.
+7. **Say clearly what was tested where:** "tested in a browser here" versus "please check on your phone".
+8. **Keep personal details out of the repo** (health information, private notes). The app's own data never leaves his phone.
