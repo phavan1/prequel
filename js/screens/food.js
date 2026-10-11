@@ -2,7 +2,7 @@
 import { get, save, uid, addMoment, removeById, today } from '../store.js';
 import { esc, nav, backLink, dateChip, logDate, him, timeOf, prettyDate, toast, openSheet, closeSheet } from '../ui.js';
 import { openFoodReport } from '../reports.js';
-import { wordHit, NUTRIENTS, KINDS, loadDB, myFoods, meals, weights, fromDB, adoptDB, bestMeasure, logFood, totalOf, sumDay, qtyLabel, fmt, search, recipeTotals, ingredientSearch } from '../nutrition.js';
+import { GRAIN, wordHit, NUTRIENTS, KINDS, loadDB, myFoods, meals, weights, fromDB, adoptDB, bestMeasure, logFood, totalOf, sumDay, qtyLabel, fmt, search, recipeTotals, ingredientSearch } from '../nutrition.js';
 
 const EMPTY = ['Eat away!', 'Snack o\'clock?', 'Feed the machine.', 'Bon appétit!', 'Tummy\'s calling.', 'Let\'s eat!', 'Fuel up, friend.'];
 let root = null, query = '', linkTo = null, snackTimer = null, dbReady = false;
@@ -265,7 +265,8 @@ function labelSheet() {
 // ---------- your own recipe: what goes in the pot ----------
 // Count things the way you cook: 2 medium onions, 3 tomatoes, 1 tbsp oil. Grams only if you want them.
 // Only the parts that change are redrawn, so typing never fights the keyboard.
-const pickUnit = ms => { let i = ms.findIndex(m => /medium/i.test(m[0])); if (i < 0) i = ms.findIndex(m => !/\b(cup|oz|lb|g)\b/i.test(m[0])); return i; };
+const isDryGrain = n => GRAIN.test(n.toLowerCase()) && /\b(raw|dry|uncooked|mature seeds)\b/i.test(n);
+const pickUnit = ms => { let i = ms.findIndex(m => /medium/i.test(m[0])); if (i < 0) i = ms.findIndex(m => !/\b(cup|oz|lb|g)\b/i.test(m[0])); if (i < 0) i = ms.findIndex(m => /\b(cup|tbsp|tsp)\b/i.test(m[0])); return i; };
 const gramsOf = it => it.mi >= 0 && it.measures[it.mi] ? it.count * it.measures[it.mi][1] : it.count;
 function recipeSheet(editId) {
   const old = editId ? myFoods().find(f => f.id === editId) : null;
@@ -274,7 +275,7 @@ function recipeSheet(editId) {
     : { name: query.trim(), items: [], portions: 1, unit: '1 plate' };
   const per = () => recipeTotals(R.items.map(it => ({ per100: it.per100, grams: gramsOf(it) }))).map(v => v == null ? null : v / R.portions);
   const perText = () => { if (!R.items.length) return ''; const p = per(); return 'Each portion: ~' + fmt(p[0], 0) + ' cal · ' + fmt(p[1], 1) + ' g protein · ' + fmt(p[2], 2) + ' g carbs · ' + fmt(p[3], 3) + ' g fat'; };
-  const rowHtml = (it, i) => '<div class="ingrow"><span>' + esc(it.name) + '<small>≈ ' + Math.round(gramsOf(it)) + ' g</small></span>' +
+  const rowHtml = (it, i) => '<div class="ingrow"><span>' + esc(it.name) + '<small>≈ ' + Math.round(gramsOf(it)) + ' g' + (isDryGrain(it.name) ? ' · <em class="dry">uncooked: about 3× this once cooked</em>' : '') + '</small></span>' +
     '<input type="text" inputmode="decimal" data-ic="' + i + '" value="' + (Math.round(it.count * 100) / 100) + '" aria-label="How many">' +
     '<select data-iu="' + i + '" aria-label="Unit">' + it.measures.map((m, j) => '<option value="' + j + '"' + (j === it.mi ? ' selected' : '') + '>' + esc(m[0].replace(/^[\d.]+\s+/, '').replace(/\s*\(.*?\)/g, '').replace(/,.*$/, '')) + '</option>').join('') + '<option value="-1"' + (it.mi < 0 ? ' selected' : '') + '>grams</option></select>' +
     '<button type="button" data-irm="' + i + '" aria-label="Remove ' + esc(it.name) + '">×</button></div>';
@@ -307,7 +308,7 @@ function recipeSheet(editId) {
     Object.assign(food, { name: R.name.trim(), recipe: items, portions: R.portions, n: per(), unit: R.unit.trim() || '1 portion', unitG: Math.round(totalG / R.portions), per100: null });
     if (!old) { const k = sheet.querySelector('[data-keep]'); if (k && k.getAttribute('aria-pressed') !== 'true') food.once = true; myFoods().push(food); }
     save(); closeSheet();
-    if (old) { render(); toast('Recipe saved. New logs use the new numbers.'); return; }
+    if (old) { let k = 0; meals().forEach(m => { if (m.foodId === food.id) { m.n = food.n.slice(); m.unitG = food.unitG; m.unit = food.unit; k++; } }); save(); render(); toast(k ? 'Saved, and fixed in ' + k + (k === 1 ? ' past log.' : ' past logs.') : 'Recipe saved.'); return; }
     const m = logFood(food, logDate()); finishLog(m, food);
   });
   function drawList() {
@@ -327,7 +328,7 @@ function recipeSheet(editId) {
     if (el.id === 'iq') { clearTimeout(timer); timer = setTimeout(() => drawRes(el.value), 180); return; }
     if (el.dataset.ic != null) {
       const it = R.items[Number(el.dataset.ic)], v = parseFloat(el.value); if (v > 0) it.count = v;
-      el.closest('.ingrow').querySelector('small').textContent = '≈ ' + Math.round(gramsOf(it)) + ' g';
+      el.closest('.ingrow').querySelector('small').innerHTML = '≈ ' + Math.round(gramsOf(it)) + ' g' + (isDryGrain(it.name) ? ' · <em class="dry">uncooked: about 3× this once cooked</em>' : '');
       sheet.querySelector('#rPer').textContent = perText();
     }
   });
@@ -344,7 +345,7 @@ function recipeSheet(editId) {
 function totalsSheet() {
   const list = dayList(), S = sumDay(list.filter(x => x.m).map(x => x.m));
   openSheet('<h2>' + esc(prettyDate(logDate(), { weekday: 'long', day: 'numeric', month: 'long' })) + '</h2>' +
-    '<div class="nutable">' + NUTRIENTS.map((n, i) => '<div><span>' + n[1] + (S.has[i] && S.cnt[i] < S.counted ? '<small>from ' + S.cnt[i] + ' of ' + S.counted + ' foods</small>' : '') + '</span><b>' + (S.has[i] ? fmt(S.t[i], i) + ' ' + n[2] : '–') + '</b></div>').join('') + '</div>' +
+    '<div class="nutable">' + NUTRIENTS.map((n, i) => '<div><span>' + n[1] + (S.has[i] && S.cnt[i] < S.counted ? '<small>from ' + S.cnt[i] + ' of ' + S.counted + ' foods</small>' : '') + '</span><b>' + (S.has[i] && Math.round(S.t[i] * 10) > 0 ? fmt(S.t[i], i) + ' ' + n[2] : '–') + '</b></div>').join('') + '</div>' +
     '<p class="muted" style="font-size:13px;margin:0">Good estimates, not exact. ' + (S.blank ? S.blank + (S.blank === 1 ? ' thing has' : ' things have') + ' no numbers yet; tap it in the list to fill them in. ' : '') + 'Not every food in the lists has B12 or vitamin D, so those read low.</p>' +
     '<button type="button" class="btn ghost" data-close>Close</button>', null);
 }

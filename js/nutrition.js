@@ -69,6 +69,8 @@ export const fmt = (v, i) => v == null ? '–' : (NUTRIENTS[i][3] ? (Math.round(
 
 // spellings people actually type: chana or channa, dhal or dal, yoghurt or yogurt
 const SYN = { chana: ['channa', 'chickpea', 'bengal gram'], channa: ['chana', 'chickpea'], chole: ['channa', 'chickpea'], dhal: ['dal'], daal: ['dal'], dahl: ['dal'], yoghurt: ['yogurt'], yogurt: ['yoghurt'], curd: ['yogurt', 'curd'], dahi: ['curd', 'yogurt'], chilli: ['chili', 'pepper'], chili: ['chilli', 'pepper'], brinjal: ['eggplant'], aubergine: ['eggplant'], capsicum: ['pepper'], coriander: ['cilantro', 'coriander'], prawn: ['shrimp'], prawns: ['shrimp'], mince: ['ground'], rajma: ['kidney bean', 'rajma'], paneer: ['paneer', 'cottage cheese'], atta: ['whole wheat', 'atta'], maida: ['wheat flour', 'maida'], besan: ['gram flour', 'besan'], jeera: ['cumin'], haldi: ['turmeric'], aloo: ['potato', 'aloo'], gobi: ['cauliflower', 'gobi'], palak: ['spinach', 'palak'], bhindi: ['okra', 'bhindi'] };
+// grains and pulses: people almost always measure them cooked
+export const GRAIN = /\b(rice|pasta|spaghetti|macaroni|noodles?|quinoa|oats?|barley|millet|couscous|lentils?|dal|gram|beans?|chickpeas?|channa|chana|rajma|semolina|bulgur|poha)\b/;
 export const wordHit = (s, w) => s.includes(w) || (SYN[w] || []).some(x => s.includes(x));
 // ---------- search: your foods first, then Indian recipes, then everything else ----------
 export function search(q, limit = 12) {
@@ -93,12 +95,14 @@ export function recipeTotals(items) {
 }
 export function ingredientSearch(q, limit = 8) {
   q = q.trim().toLowerCase(); if (!q || !DB) return [];
-  const words = q.split(/\s+/);
+  const words = q.split(/\s+/), grainQ = GRAIN.test(q) && !/\b(raw|dry|uncooked)\b/.test(q);
   // plain ingredients first: raw foods from the USDA list, then simple Indian staples
   return DB.filter(f => words.every(w => wordHit(f.key, w))).map(f => {
-    let s = f.name.length / 4; if (f.key.startsWith(words[0])) s -= 20; if (/\braw\b/.test(f.key)) s -= 15; if (f.src === 'i') s += 10;
+    let s = f.name.length / 4; if (f.key.startsWith(words[0])) s -= 20; if (f.src === 'i') s += 10;
+    if (grainQ) { if (/\b(raw|dry|uncooked|mature seeds)\b/.test(f.key)) s += 22; if (/\b(cooked|boiled)\b/.test(f.key)) s -= 15; }
+    else if (/\braw\b/.test(f.key)) s -= 15;
     if (/\b(industrial|skin|commercial|frozen|canned)\b/.test(f.key)) s += 8;
-    const extra = f.key.match(/\b(noodles?|flour|bran|cakes?|crackers?|pudding|vermicelli|syrup|puffed|flakes)\b/); if (extra && !q.includes(extra[1].replace(/s$/, ''))) s += 12;
+    const extra = f.key.match(/\b(noodles?|flour|bran|cakes?|crackers?|pudding|vermicelli|syrup|puffed|flakes|glutinous)\b/); if (extra && !q.includes(extra[1].replace(/s$/, ''))) s += 12;
     return [s, f];
   }).sort((a, b) => a[0] - b[0]).slice(0, limit).map(x => x[1]);
 }
