@@ -53,6 +53,31 @@ export async function sleepDiary(from, to) {
   doc.tiles(tiles, { big: 48 });
   if (naps) doc.para('Daytime rests (between 9 am and 6 pm): ' + naps + '.', '700 22px ' + BODY, SOFT);
 
+  // hours each day: night sleep and daytime rest stacked, with the typical day as a dashed line
+  if (dKeys.length) {
+    const all = days(dKeys[0], dKeys[dKeys.length - 1]), isDay = r => { const h = new Date(r.start).getHours(); return h >= 9 && h < 18; };
+    const val = all.map(d => { const l = byDay[d] || []; const n = l.filter(r => !isDay(r)).reduce((a, r) => a + (r.end - r.start) / 3600000, 0), dd = l.filter(isDay).reduce((a, r) => a + (r.end - r.start) / 3600000, 0); return { d, n, dd, t: n + dd }; });
+    const mx = Math.max(10, Math.ceil(Math.max(...val.map(v => v.t)) / 2) * 2);
+    doc.heading('Hours each day', 'night sleep plus any daytime rest', 460);
+    const ch = 330, g = doc.need(ch + 120), x0 = M + 60, x1 = PW - M - 10, top = doc.y + 10, bw = (x1 - x0) / all.length, Y = h => top + ch - h / mx * ch;
+    g.fillStyle = CARD; rr(g, M, doc.y, PW - 2 * M, ch + 92, 22); g.fill();
+    for (let h = 0; h <= mx; h += 2) { g.fillStyle = LINE; g.fillRect(x0, Y(h), x1 - x0, 1.5); txt(g, h + ' h', x0 - 12, Y(h) + 7, '700 17px ' + BODY, SOFT, 'right'); }
+    const hatch = (() => { const c = document.createElement('canvas'); c.width = c.height = 12; const cg = c.getContext('2d'); cg.fillStyle = '#B9CCF6'; cg.fillRect(0, 0, 12, 12); cg.strokeStyle = BLUE; cg.lineWidth = 2; cg.beginPath(); cg.moveTo(-3, 15); cg.lineTo(15, -3); cg.stroke(); return g.createPattern(c, 'repeat'); })();
+    val.forEach((v, i) => {
+      const x = x0 + i * bw + bw * 0.16, w = bw * 0.68;
+      if (v.n) { g.fillStyle = BLUE; g.fillRect(x, Y(v.n), w, Y(0) - Y(v.n)); }
+      if (v.dd) { g.fillStyle = hatch; g.fillRect(x, Y(v.t), w, Y(v.n) - Y(v.t)); g.strokeStyle = BLUE; g.lineWidth = 1.5; g.strokeRect(x, Y(v.t), w, Y(v.n) - Y(v.t)); }
+      if (v.t && bw > 30) txt(g, (Math.round(v.t * 10) / 10) + '', x + w / 2, Y(v.t) - 8, '800 16px ' + BODY, INK, 'center');
+      const dd = parseKey(v.d); if (bw > 26 || dd.getDate() % 3 === 1) txt(g, String(dd.getDate()), x + w / 2, top + ch + 26, '800 16px ' + BODY, INK, 'center');
+      if (bw > 40) txt(g, ['S', 'M', 'T', 'W', 'T', 'F', 'S'][dd.getDay()], x + w / 2, top + ch + 46, '700 14px ' + BODY, SOFT, 'center');
+    });
+    const typ = median(val.filter(v => v.t).map(v => v.t));
+    if (typ) { g.save(); g.setLineDash([10, 8]); g.strokeStyle = SUN; g.lineWidth = 3; g.beginPath(); g.moveTo(x0, Y(typ)); g.lineTo(x1, Y(typ)); g.stroke(); g.restore(); }
+    doc.y = top + ch + 92;
+    let cx = M; cx += chip(g, cx, doc.y, 'Solid: night sleep', BLUE, '#FFFFFF') + 10; cx += chip(g, cx, doc.y, 'Striped: daytime rest', '#B9CCF6', INK) + 10; if (typ) chip(g, cx, doc.y, 'Dashed line: typical, ' + dur(typ * 60), '#FFF1C4', INK);
+    doc.y += 56;
+  }
+
   // the sleep chart: one row per day, from 6 pm the evening before to 6 pm that day
   if (dKeys.length) {
     doc.heading('Sleep chart', 'each row runs from 6 pm the evening before to 6 pm that day', 200);
@@ -90,6 +115,7 @@ export async function sleepDiary(from, to) {
     rows.push({ shade: !par, cells: [first ? dayDate(r.date) : '', clock(r.start), clock(r.end), dur((r.end - r.start) / 60000), r.feel ? r.feel[0].toUpperCase() + r.feel.slice(1) : ''] });
     const isLast = rests.filter(x => x.date === r.date).pop() === r;
     if (isLast && notes[r.date]) rows.push({ cells: ['', 'Awake in the night: ' + notes[r.date].join(', ').toLowerCase(), '', '', ''], soft: [0, 1], shade: !par });
+    if (isLast) { const ds = byDay[r.date], tot = ds.reduce((n, x) => n + (x.end - x.start) / 60000, 0); rows.push({ total: true, cells: ['', 'Total for the day', '', dur(tot), ds.length > 1 ? ds.length + ' rests' : ''] }); }
   });
   if (rows.length) doc.table(cols, rows, { boldFirst: true, byShade: true });
   else doc.para('Nothing logged in these dates yet.');
