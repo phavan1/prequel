@@ -7,10 +7,12 @@ _Written on 12 October 2026, at version **v36**. Run the relevant parts before e
 - **[iPhone]**: needs Phavan's iPhone, with Prequel installed from Safari to the Home Screen.
 - **[Both]**: Claude checks the logic first, then Phavan confirms the feel on his phone.
 
+**Ready-made scripts:** `tools/tests/` (see `tools/README.md`). Use the matching one: `backup.js` §2, `meal.js` §3, `reports.js` §4, `units.js` §5, `jar.js` and `quilt.js` §6, `share.js` §7.
+
 **How Claude sets up a test:**
 - Syntax check every changed module: `node --input-type=module --check < js/file.js`
 - Serve the app: `(cd app && python3 -m http.server 8765 &)`
-- Run Playwright with `NODE_PATH=$(npm root -g)` at a phone viewport (390×844), loading `sample-backup.json` through Settings → Restore
+- Run Playwright with `NODE_PATH=$(npm root -g)` at a phone viewport (390×844), loading `tools/tests/sample-backup.json` (made-up data) through Settings → Restore, always in a throwaway browser profile
 - Use `page.clock.install()` to test times of day
 - Take screenshots and look at them, then read the console for errors
 
@@ -33,14 +35,29 @@ _Written on 12 October 2026, at version **v36**. Run the relevant parts before e
 - [ ] [Claude] The Me gear opens Settings, and its back goes to Me.
 - [ ] [iPhone] Swiping back with the iPhone gesture behaves sensibly.
 
-## 2. Data persistence and backup
-- [ ] [Claude] Log something, reload, and it's still there (IndexedDB).
-- [ ] [Claude] Export backup, Start fresh, then restore the backup: everything returns (moments, meals, myFoods, goals, rests, jar, quilt).
-- [ ] [Claude] An **old** backup (missing newer fields such as `unit`, `jarSize`, `once`) imports without errors.
+## 2. Data persistence, backup and restore
+_Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.js`, or a new state field. Last run: 12 Oct 2026, v36, 21/21 passed._
+- [ ] [Claude] Log something, reload, and it's still there (IndexedDB). Same with IndexedDB blocked (localStorage fallback).
+- [ ] [Claude] Full round trip: every state field (moments, sessions, active, custom workouts, meals, myFoods with per100/recipe/once, weights, rests, pendingSleep, weather, mind, letters, goals with units/paused, goalLogs with amt, heavy, jar, sky, quilt, settings, games, unknown fields) comes back **identical** in an empty app, and after a reload.
+- [ ] [Claude] **A new state field** added in a release appears in the export and survives restore (it should, automatically; check it).
+- [ ] [Claude] Restoring the same file twice makes no duplicates.
+- [ ] [Claude] Decimals, nulls, emoji, line breaks and links between records (meal→food, log→goal, recipe→ingredient) survive.
+- [ ] [Claude] **Old backup** (`sample-backup.json`, first-week format) restores, and every screen opens without errors.
+- [ ] [Claude] **Bad files** (not JSON, empty, an array, no `moments`, `moments` not a list) are refused and current data stays untouched.
+- [ ] [Claude] Known gap B1: a file with `moments` but broken other parts is accepted. Re-check this if B1 gets fixed.
 - [ ] [Claude] Deleting a record also removes its star (`ref`).
 - [ ] [Claude] Start fresh asks twice and offers a backup first.
-- [ ] [iPhone] Data survives closing the app, restarting the phone, and an app update.
-- [ ] [iPhone] The backup file can be saved to Files and restored from Files.
+- [ ] [iPhone] **Save a backup** opens the share sheet. "Save to Files" works, and the file name has today's date.
+- [ ] [iPhone] **Restore** from Files: the warning shows, data comes back, and it's still there after closing the app fully and reopening.
+- [ ] [iPhone] Data survives restarting the phone and an app update.
+- [ ] [iPhone] Before a phone change: save a backup, then restore it on the new phone (or after deleting and re-adding the app). **Only do this with a fresh backup in Files first.**
+- [ ] [iPhone] Cancelling the share sheet: note whether "Last backup" still updates (known issue B3).
+
+## 2b. Offline and updates
+- [ ] [Claude] Every file the app uses is in `SHELL` (compare `SHELL` against the folder; `tools/` must **not** be in it).
+- [ ] [Claude] With the network off after one visit, every route, food search, a PDF and a share card still work.
+- [ ] [iPhone] Airplane mode: open from the Home Screen, and everything works (see §8).
+- [ ] [iPhone] After a release: close fully and reopen (maybe twice). The new version shows and data is unchanged.
 
 ## 3. Food maths
 - [ ] [Claude] Search for "chana", "dal", "curd" or "rice" puts **yours** first, and **cooked** grains first.
@@ -122,5 +139,6 @@ _Written on 12 October 2026, at version **v36**. Run the relevant parts before e
 | Finished month quilt had empty patches | v35 | [Claude] §6 quilt |
 | Couldn't pick a resting goal back up | around v35 (not named in the commit message; unverified) | [Claude] §5 |
 | Back buttons always went to one place | v35 | [Claude] §1 |
+| Restore of a bad file must not touch data | audit, 12 Oct | [Claude] §2 (`backup.js`) |
 
 _Fix versions come from the git commit messages on the laptop, except where marked unverified._

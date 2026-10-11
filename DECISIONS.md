@@ -97,7 +97,7 @@ _Written on 12 October 2026, at version **v36**. This file says **why** Prequel 
 - **The same character everywhere:** messy black hair, round glasses, bright **cobalt-blue oversized hoodie**, black joggers with white side stripes, white and blue chunky sneakers.
 - **Style:** hand-drawn manga or comic, clean black ink lines, soft flat colour, **plain white background** (so `clean_art.py` can cut it out), full body, no text, no props cut off at the edges.
 - **Canonical prompt:** the exact wording of the prompt used with ChatGPT was **not saved** in any file. **[unverified]** Rebuild it from the description above, and ask Phavan for his saved prompt if he has one.
-- **Processing:** each image goes through `clean_art.py`, then `defringe2/3.py` if a light halo or trapped background remains. Check it on both cream and dark backgrounds. Then 640 px webp in `art/`, and **add it to `SHELL`**.
+- **Processing:** each image goes through `tools/art/clean_art.py`, then `tools/art/defringe.py`, then a check with `tools/art/holes.py` (see `tools/README.md`). Check it on both cream and dark backgrounds. Then 640 px webp in `art/`, and **add it to `SHELL`**.
 - **Rejected:** the **puppet rig** (an animated, jointed character). It was prototyped and dropped in favour of single pictures for each mood or time.
 - Poses should look **cool and natural**. He rejected stiff or cheesy poses for share cards.
 
@@ -125,7 +125,9 @@ _Written on 12 October 2026, at version **v36**. This file says **why** Prequel 
 - **He commits and syncs himself** in VS Code from the commit message Claude gives. Claude never commits, pushes or deploys.
 - Every release bumps `VERSION` in `sw.js`. After an update he closes and reopens the app on his iPhone.
 - He tests on his **iPhone** (Safari, added to Home Screen). Claude tests in desktop Chromium and says so.
-- He writes the character prompts in ChatGPT and sends the images back; Claude cuts them out.
+- He writes the character prompts in ChatGPT and sends the images back; Claude cuts them out with `tools/art/`.
+- **`tools/` is development only:** never add it to `sw.js` `SHELL` and never link it from the app. Test scripts use made-up data only, and real backups never go in the repo.
+- **Audits and handovers don't change app code.** Bugs found are written down and fixed only after he approves.
 
 ## G. Never reverse without discussion
 
@@ -155,7 +157,12 @@ _Written on 12 October 2026, at version **v36**. This file says **why** Prequel 
 | Light motion lines on dark share cards | v23 | Offered |
 | Fix the bottom tab bar so it highlights the section you came from | Found during this handover | Not discussed yet |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
-| Refresh `README.md` | Found during this handover | Not discussed yet |
-| Save the dev tools (art scripts, a few test scripts, fake test data) into the repo | This handover | **Waiting for his OK** (HANDOVER section 10) |
+| Backup restore safety: stricter file check and a "save what's here first" option (B1); kind error message (B2); record "Last backup" only after it really saved (B3); prefer the newer copy on load (B4); save immediately after restore (B5) | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Not approved.** Recommended: B1, B2 |
 
-**Future stages (his ideas, not yet planned in detail):** Stage 3, a uni planner from his Canvas calendar feed as a comic-style planner. Stage 4, a printable A4 monthly showcase. Cloud sync with a login (leaning Firebase). A cookbook with photos.
+### Done during the handover (approved by Phavan, 12 Oct 2026)
+- `README.md` rewritten as a short entry point.
+- Dev tools saved in `tools/` (art scripts, seven test scripts, fictional sample data).
+
+## I. Future ideas (his, not yet planned in detail)
+
+ Stage 3, a uni planner from his Canvas calendar feed as a comic-style planner. Stage 4, a printable A4 monthly showcase. Cloud sync with a login (leaning Firebase). A cookbook with photos.

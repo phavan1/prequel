@@ -1,0 +1,6 @@
+{
+  "name": "prequel-dev-tests",
+  "private": true,
+  "description": "Browser tests for Prequel. Development only; not part of the app.",
+  "devDependencies": { "playwright": "1.56.0" }
+}

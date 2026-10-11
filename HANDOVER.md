@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**. Read this first, then `DECISIONS.md`, then `TEST_CHECKLIST.md`._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation. Start with `START_HERE.md`, then this file, then `DECISIONS.md` and `TEST_CHECKLIST.md`._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -25,7 +25,7 @@ Prequel is Phavan's personal iPhone web app. Its tagline is *"the behind-the-sce
 | Language | Plain HTML, CSS and JavaScript (ES modules). **No framework, no build step, no npm dependencies at runtime.** |
 | Routing | Hash router in `js/app.js`. `#/name/args?query`; `params` (including `params.from`, `params.d`, `params.t`, `params.m`) are passed to `screen.mount(root, params)`. Each route gets a fresh `<main id="app">` so old listeners don't leak. |
 | Storage | **IndexedDB** (database `prequel`, store `kv`, key `state`) holding one JSON state object, with a localStorage fallback. Saves are debounced by 150 ms. It asks for `navigator.storage.persist()`. |
-| Backup | JSON export and import in Settings, with a monthly gentle nudge (`backupDue()`). |
+| Backup | JSON export and import in Settings, with a monthly gentle nudge (`backupDue()`). Audited on 12 Oct 2026: see section 5b. |
 | Offline | `sw.js`: cache name is `VERSION` (now `prequel-v36`). `SHELL` lists **every** file (code, fonts, icons, art, `data/foods.json`). Page loads try the network first and fall back to the cache; other files come from the cache and refresh in the background. |
 | Fonts | Bundled in `fonts/`: Nunito 500/700/800/900 and Gaegu 700 (woff2), loaded with `@font-face` in `app.css`. No Google Fonts. |
 | Food data | `data/foods.json`: 9,105 foods, 12 nutrients per 100 g, and serving sizes. Sources: INDB (Indian Nutrient Databank, about 1,014 recipes; licence never confirmed, so credit it) and USDA SR27 (public domain). Fields: kcal, protein, carbs, fat, satfat, fibre, sugar, sodium, iron, calcium, b12, vitd. |
@@ -42,7 +42,15 @@ Local folder: `C:\Users\Phava\Documents\companion-app` (a git repo; `HEAD` point
 index.html             loads css/app.css and js/app.js (module)
 manifest.webmanifest   name "Prequel", standalone, portrait, cream #FAF3DC
 sw.js                  offline cache (VERSION + SHELL)
-README.md              STALE: written at Stage 1 (see Known issues)
+README.md              short entry point (rewritten 12 Oct 2026)
+START_HERE.md          first file for a new Claude conversation
+HANDOVER.md            this file
+DECISIONS.md           why things are the way they are
+TEST_CHECKLIST.md      what to test, and where
+tools/                 development only, never cached or shipped as a feature (see section 10)
+  README.md            how to use the tools
+  art/                 clean_art.py, defringe.py, holes.py, requirements.txt
+  tests/               Playwright scripts, sample-backup.json (fictional), package.json, .gitignore (shots/)
 css/app.css            all styles: :root tokens, dark mode block, one section per screen
 data/foods.json        offline food database (about 1.4 MB)
 fonts/                 Nunito + Gaegu woff2
@@ -239,6 +247,52 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 - Any past date can be logged on most screens with the date chip.
 - **Back buttons return to where you came from**, using `?from=` (v35).
 
+## 5b. Backup and restore (audited 12 Oct 2026)
+
+**How it works** [verified in `store.js` and `screens/settings.js`]:
+- **Save a backup** writes the **whole state object** as JSON (`exportJSON`), plus an `exported` timestamp, and hands it to the iPhone share sheet (or a download on desktop). File name: `prequel-backup-YYYY-MM-DD.json`.
+- **Restore** reads the file, checks it's JSON with a `moments` list, then **replaces everything** (not a merge). The sheet warns: "Everything in the app now will be replaced with what's in <file>." Missing top-level fields are filled from `fresh()`, and `settings` is merged with defaults. Unknown fields are kept.
+- **No user data is stored anywhere except that one state object.** No other localStorage, IndexedDB, cookies or caches hold user data (checked with a code search). So the export covers every category by construction, including fields added after v36.
+- **Not in the backup, on purpose:** the static app itself (`foods.json`, the workout playbook in `data.js`, art, fonts). Saved foods and logged meals keep **their own copy of the numbers**, so restoring doesn't depend on the food database. Nothing is regenerated on restore: sky layout, quilt "seen" months and jar counts are stored fields and come back exactly.
+
+**Automated test results** (`tools/tests/backup.js`, fictional data, throwaway browser profiles, desktop Chromium; **21 of 21 passed**):
+- A full round trip into an empty app returned identical data. It still matched after a reload (IndexedDB), and also when IndexedDB was blocked (localStorage fallback).
+- Restoring the same file twice made no duplicates.
+- Decimals (7.92, 1.5, 5.2), nulls, nested arrays, emoji and line breaks survived. Links held: meal → food, goal log → goal, recipe → ingredient.
+- The first-week `sample-backup.json` (old format) restored and every screen opened without errors.
+- Not JSON, empty, a JSON array, no `moments`, and `moments` not a list were all **refused, and the current data was left untouched**.
+
+| Data | In backup? | Restored correctly? | How it was checked |
+|---|---|---|---|
+| Moments (stars), incl. tiny wins, written wins, night-waking notes (`area:'rest'`, "Awake in the night: …") | Yes | Yes | Automated |
+| Gym sessions and sets, `active` session, `lifts`, `units`, custom exercises and workouts, `workoutAdds`, `subsAdded` | Yes | Yes | Automated |
+| Meals, `myFoods` (label `per100`, `measures`, recipes, `portions`, `once`), old `foods` | Yes | Yes | Automated |
+| Weights | Yes | Yes | Automated |
+| Rests, `pendingSleep` | Yes | Yes | Automated |
+| Weather check-ins | Yes | Yes | Automated |
+| Mind notes and reminders, letters (incl. `opened`) | Yes | Yes | Automated |
+| Goals (units, `amount`, `paused`, `finished`), goal logs (`amt`) | Yes | Yes | Automated |
+| Jar (`jarsSeen`, `jarSize`), sky (`sky`), quilt (`quiltSeen`) | Yes | Yes | Automated (created by visiting the screens) |
+| Soft days (`heavy`) | Yes | Yes | Automated |
+| Settings (name, kind lines, tiny-win list, theme, `dayTabs`), `comfort` | Yes | Yes | Automated |
+| Skate (`games.skate`) | Yes | Yes | Automated |
+| `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `created`, `v` | Yes | Yes (`lastHello`/`lastSeen` change on the next open, as designed) | Automated |
+| Character art choice | Not stored: pictures follow the time of day and soft day | n/a | Code inspection |
+| Saving to Files from the share sheet, picking a file to restore, data surviving an iPhone restart | | | **iPhone only.** Phavan reports Save and Restore worked on his phone; not independently verified |
+
+**Issues found (none fixed; all need Phavan's OK):**
+
+| # | Issue | Seriousness | Suggested fix |
+|---|---|---|---|
+| B1 | Validation is thin: any JSON with a `moments` list is accepted. A damaged or wrong file (e.g. `{"moments":[],"goals":"abc"}`, tested) **replaces all current data**. | **Medium** | Check the main lists are the right types before replacing. Offer "Save a backup of what's here first" in the Restore sheet, like Start fresh does. |
+| B2 | A bad file shows a raw technical message (e.g. "Unexpected token 'h' …"). | Low | Show a kind message: "That file couldn't be read. Nothing was changed." |
+| B3 | "Last backup" is recorded the moment Save a backup is tapped, even if the share sheet is cancelled. | Low | Only record it after the share or download succeeds. |
+| B4 | If an IndexedDB write ever fails, the newer copy goes to localStorage, but the next start reads the older IndexedDB copy first. | Low (rare) | On load, prefer whichever copy is newer. |
+| B5 | Saving is delayed 150 ms, so closing the app in that instant after a restore could lose it. | Very low | Save immediately after a restore. |
+| B6 | Backups are plain JSON with personal food, sleep and weight logs. | Note | Keep them in private places (Files or iCloud Drive). Never put a real backup in the repo. |
+
+**Conclusion:** a backup file realistically **can** recover all personal data after the phone's storage is lost, because it's a complete copy. The main risk is B1: restoring the wrong file.
+
 ## 6. Deployment and versioning workflow [verified + from history]
 
 1. Claude edits files in a working copy and tests them in desktop Chromium (Playwright) with screenshots, **before** pushing.
@@ -249,7 +303,9 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 6. On the iPhone: open Prequel, **close it fully and reopen**, sometimes twice, to pick up the new version.
 7. **Claude never commits, pushes or deploys.** Phavan does.
 
-**Git history:** `.git/logs/HEAD` shows local commits from the Stage 2 commit (7 Oct 2026) through `v36` (12 Oct 2026, 01:26 Sydney time). **[verified]** Whether each commit reached GitHub (synced) can't be seen locally. **[unverified]**
+**Git history:** `.git/logs/HEAD` shows commits from the Stage 2 commit (7 Oct 2026) through `v36` (12 Oct, 01:26 Sydney time), then "Handover documents created and updated" (12 Oct, 07:01). **[verified]**
+**GitHub sync, verified 12 Oct 2026 ~08:00 Sydney:** `git ls-remote` on `https://github.com/phavan1/prequel.git` returned `main` = `9199dae…`, the same as local `main`. The working folder matched the git index exactly (no uncommitted changes) before the tools and docs below were added.
+**How to check yourself:** in VS Code, the Source Control view shows no ↑/↓ numbers when in sync. Or on github.com/phavan1/prequel, the latest commit message should match the last one in VS Code.
 
 ## 7. Character art [verified file list; descriptions from history]
 
@@ -283,12 +339,14 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | 3 | PDF text can't be selected or searched, because pages are pictures. | By design for now |
 | 4 | INDB recipes have **no B12** values, so reports read low. Licence unconfirmed; keep the credit. | Open |
 | 5 | Data lives only on the phone (IndexedDB). If iOS clears website data or the phone is lost, only a backup file saves it. | Mitigated by backup nudge |
-| 6 | `README.md` is out of date (Stage 1: says backup lives in Me, lists 10 screens, example `prequel-v2`). | Open (docs only) |
+| 6 | `README.md` was out of date (Stage 1). | **Rewritten 12 Oct 2026** |
 | 7 | Home's date line and `prettyDate` use the Australian order ("Saturday 10 October", "Fri 9 Oct"). They're in words, but not the "October 10" order he asked for in reports. | Open, ask him |
 | 8 | `comfort` (comfort menu) is stored but has no screen any more. `waving`, `lying` and `stickynote` art are unused. | Harmless |
 | 9 | All testing has been desktop Chromium. iPhone-only behaviour (keyboard, share sheet, Add to Home Screen updates, storage) needs his phone. | Ongoing |
 | 10 | A long single file (`food.js` ~38 KB) and string-built HTML make edits risky. **Always re-test edited sheets.** In v25 a text replacement silently broke the goal sheet until v35. | Process risk |
 | 11 | Food search ranking is heuristic. Some names (seeraga samba, sona masoori, ponni) aren't recognised. | Open, offered |
+| 12 | Backup restore issues B1–B5 (section 5b). | Open, needs approval |
+| 13 | The script that built `data/foods.json` was never saved. | Can't be recovered; method in `DECISIONS.md` |
 
 ## 9. Pending work and decisions waiting on Phavan
 
@@ -298,7 +356,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 3. **Goal-completion celebration:** count-up and confetti screen, gold shooting star in the sky, trophy landing on the shelf, optional note to future you, "Share this" milestone card, optional chime. Also: loud or quiet and warm? Never answered.
 4. **Mind page redesign:** he asked to keep it in mind; not started.
 5. **Indian rice names in food search:** offered.
-6. **Saving the dev tools into the repo:** see section 10.
+6. **Backup restore improvements** B1–B5 (section 5b). Recommended: B1 and B2.
 
 **Backlog:**
 - Rest page review.
@@ -311,33 +369,35 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 - Cloud sync with login (leaning Firebase; a separate stage; check the free limits).
 - Cookbook with photos.
 
-## 10. Development resources outside the repo (at risk)
+## 10. Development tools (preserved in `tools/` on 12 Oct 2026)
 
-These live only in Claude's temporary workspace (`scratchpad/`), **not** in the project:
+Everything in `tools/` is **development only**. It isn't in `sw.js` `SHELL`, isn't loaded by the app, and was added without bumping `VERSION`. How to use it: `tools/README.md`.
 
-| Resource | What it does | Keep? |
-|---|---|---|
-| `tools/clean_art.py` | Cuts the white background off a ChatGPT image (flood fill from the border), crops, 640 px webp | **Yes** |
-| `tools/defringe2.py`, `defringe3.py` | Removes light halos and punches out trapped background gaps (seeded or automatic) | **Yes** |
-| `tools/holes.py` | Finds and highlights trapped light areas so they can be checked | **Yes** |
-| `defringe.py`, `holes_c.py`, `holes_s.py` | Earlier versions or copies of the above | No |
-| `tools/*.js` (about 40 Playwright scripts) | Automated screen tests and screenshots, one per feature | **A few as templates** (`share.js`, `reports.js`, `jar.js`, `q2.js`, `meal.js`, `units.js`) |
-| `sample-backup.json` | Test data: about two months of fake logs | **Yes** (fake data only) |
-| Original ChatGPT images (`charart/`, `cool_in/`, `sew_in/`, `newart_in/`) | Full-size art before cutting | Optional (large); he may already have them |
-| `data/indb`, `data/usda` | Raw sources for `foods.json` | No (re-downloadable). **The script that built `foods.json` was never saved** (see `DECISIONS.md` for the method). |
-| `proto/`, `puppet/`, `wf/`, `push-vN/` folders | Early prototypes, the dropped puppet rig, wireframes, per-version copies | No (history only; git has the versions) |
-| Personal uploads (health documents, screenshots) | | **Never copy into the repo** |
+| Saved as | Came from | Changes made when saving | Checked |
+|---|---|---|---|
+| `tools/art/clean_art.py` | session `tools/clean_art.py` | Header comment. A file name without an `NN-` prefix keeps its whole name (it used to crash). | Ran on an original image |
+| `tools/art/defringe.py` | session `tools/defringe3.py` | Header comment only. `defringe2.py` was the same minus the automatic step, so it wasn't kept. | Ran; output was **pixel-identical** to the shipped `art/cgrab.webp` |
+| `tools/art/holes.py` | session `tools/holes.py` | Takes an image path and output path instead of fixed `app/art` and `shots` folders. | Ran |
+| `tools/tests/{share,reports,jar,quilt,meal,units}.js` | session `share.js`, `reports.js`, `jar4.js`, `q2.js`, `meal.js`, `units.js` | Server address, sample file and screenshot folder made configurable. A test name `'Phavan'` changed to `'Sam'`. Steps unchanged. | All ran against v36 with no page errors |
+| `tools/tests/backup.js` | written 12 Oct 2026 for the audit | New | 21/21 passed |
+| `tools/tests/sample-backup.json` | session `sample-backup.json` | `settings.name` changed to `'Sam'`; everything else was already made up | Checked: no real personal data |
+| `tools/art/requirements.txt`, `tools/tests/package.json`, `tools/tests/.gitignore` | new | Dependencies: Python OpenCV, NumPy, Pillow; Node Playwright 1.56.0. Screenshots are ignored. | |
+
+**Not preserved (on purpose):** about 34 older or one-off test scripts; the session's first `defringe.py`, plus `defringe2.py`, `holes_c.py` and `holes_s.py` (earlier versions); prototypes (`proto/`, `puppet/`, `wf/`); per-version copies (`push-vN/`, already in git); raw food sources (`data/indb`, `data/usda`, which can be downloaded again); and every personal upload. **The original full-size ChatGPT pictures** (`charart/`, `cool_in/`, `sew_in/`, `newart_in/`) were not copied because of their size. If Phavan doesn't still have them, they're lost when this conversation's workspace ends. The shipped `art/*.webp` files are unaffected.
+**Lost before this handover:** the script that built `data/foods.json`.
+The project has no root `.gitignore`. Nothing important is excluded from git; only `tools/tests/shots/` and `node_modules/` are ignored.
 
 ## 11. Status right now
 
 - **Last completed:** v36, sleep diary daily totals and the "Hours each day" chart. Committed locally on 12 Oct 01:26.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
-- **Now:** this handover. No app changes in progress.
-- **Next:** he reviews these docs and confirms which tools to keep, then starts a fresh conversation in the same Claude Project.
+- **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. These are **not yet committed**; Phavan commits them.
+- **Next:** Phavan commits and syncs, then starts a fresh conversation in the same Claude Project with the prompt in `START_HERE.md`.
 
 ## 12. Instructions for a new Claude conversation
 
 1. **Read in this order:**
+   0. `START_HERE.md`
    1. this file
    2. `DECISIONS.md`
    3. `TEST_CHECKLIST.md`
@@ -346,7 +406,7 @@ These live only in Claude's temporary workspace (`scratchpad/`), **not** in the 
 2. **The code on the laptop is the source of truth.** Re-read a file before editing it. Don't trust these docs over the code.
 3. **Talk first.** Phavan wants ideas discussed, options compared and screenshots shown **before** anything is pushed. Explain things in plain, non-technical language.
 4. **Respect the principles** in `DECISIONS.md`: no zeros, no streaks or percentages, colour never alone, dates in words, kind wording, offline always.
-5. **Every release:** bump `VERSION`, update `SHELL` for new files, test in a browser (`node --input-type=module --check` for syntax, then Playwright), write to the laptop, read back and compare, then give a `vN: …` commit message. **Never commit or push yourself.**
+5. **Every release:** bump `VERSION`, update `SHELL` for new files, test in a browser (`node --input-type=module --check` for syntax, then the scripts in `tools/tests/`), write to the laptop, read back and compare, then give a `vN: …` commit message. **Never commit or push yourself.**
 6. **After any text-replacement edit,** confirm the change actually happened (assert the old string existed) and click through the affected sheet. A silent bad replace broke goals in v25.
 7. **Say clearly what was tested where:** "tested in a browser here" versus "please check on your phone".
 8. **Keep personal details out of the repo** (health information, private notes). The app's own data never leaves his phone.

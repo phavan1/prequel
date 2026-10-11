@@ -1,40 +1,40 @@
 # Prequel
 
-The behind-the-scenes of everything you're becoming: a gentle companion for moving, eating, resting and getting through the days. It's a web app (PWA) you install on your iPhone from Safari. All your data stays on your phone.
+*The behind-the-scenes of everything I'm becoming.*
 
-## What's in here
+A gentle, private lifestyle companion for one person's iPhone. You can log moving, eating, resting, the weather inside, and small wins, and they slowly turn into a night sky, monthly quilts, a jar of paper stars, share cards and PDF reports. There are no streaks, scores or zeros. It works fully offline, and data never leaves the phone.
 
-| Path | What it is |
-|---|---|
-| `index.html` | The page that loads the app |
-| `css/app.css` | All the styling (colours, layout) |
-| `js/app.js` | Starts the app and switches screens |
-| `js/store.js` | Where your data is saved, plus backup export/import |
-| `js/data.js` | Your playbook workouts, the 13 weathers, food tags |
-| `js/ui.js` | Shared helpers (the character, sheets, the date chip) |
-| `js/screens/*.js` | One file per screen: home, weather, move, food, rest, wins, mind, letters, days, me |
-| `art/*.webp` | The character poses |
-| `icons/` | Home-screen icons |
-| `manifest.webmanifest`, `sw.js` | What makes it installable and work offline |
+**Live:** https://phavan1.github.io/prequel/ (open in Safari → Share → Add to Home Screen)
+**Current version:** see `VERSION` in `sw.js` (v36 on 12 October 2026).
 
-## Try it on your laptop
+## Built with
+- Plain HTML, CSS and JavaScript modules. No framework, no build step, no backend.
+- IndexedDB on the phone (localStorage fallback), with JSON backup and restore in Settings.
+- A service worker (`sw.js`) caches every file for offline use. Fonts and the food database (`data/foods.json`, INDB + USDA SR27) are bundled.
+- PDFs and share cards are drawn on canvas, offline.
 
-In VS Code, install the **Live Server** extension, right-click `index.html` → **Open with Live Server**.
-(Opening the file directly by double-clicking won't work, because the app uses modules.)
+## Folders
+```
+index.html, manifest.webmanifest, sw.js   the app shell and offline cache
+css/app.css                               all styles (light and cosy dark)
+js/                                       app.js (router), store.js (data), ui.js, reports, cards, pdf…
+js/screens/                               one file per screen
+art/  fonts/  icons/  data/               pictures, fonts, icons, food database
+tools/                                    development only: art clean-up scripts and browser tests
+```
 
-## Put it on your iPhone (free, with GitHub Pages)
+## Run it locally
+```
+python -m http.server 8765
+```
+Then open http://localhost:8765/. Any static file server works. Use a private window, or clear site data, to start clean. Never test with a real backup.
 
-1. On github.com, create a new **public** repository called `prequel`.
-2. Upload everything in this folder to it: on the repo page click **Add file → Upload files**, drag the folder's contents in, then **Commit changes**.
-   (Or with Git: `git init`, `git add .`, `git commit -m "First version"`, then follow GitHub's "push an existing repository" steps.)
-3. In the repo: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, branch **main**, folder **/ (root)**, **Save**.
-4. After a minute your app is at `https://<your-username>.github.io/prequel/`.
-5. On your iPhone, open that link in **Safari** → **Share** → **Add to Home Screen**.
+## Deploy
+GitHub Pages serves the `main` branch root. To release: bump `VERSION` in `sw.js` (and add any new file to `SHELL`), commit and sync in VS Code, then close and reopen the app on the iPhone.
 
-## Updating it later
-
-Change the files, upload them again (or `git push`), and bump `VERSION` at the top of `sw.js` (e.g. `prequel-v2`) so phones fetch the new version. Close and reopen the app on your phone twice to see it.
-
-## Your data
-
-Everything is stored on the phone itself, never on a server. Use **Me → Save a backup** now and then, and keep the file in Files or iCloud Drive. **Restore** brings it back on any phone.
+## Documentation
+- [START_HERE.md](START_HERE.md): read first (also for a new Claude conversation)
+- [HANDOVER.md](HANDOVER.md): architecture, data, features, backup audit, known issues
+- [DECISIONS.md](DECISIONS.md): principles, confirmed decisions, rejected ideas, proposals
+- [TEST_CHECKLIST.md](TEST_CHECKLIST.md): what to test, in a browser or on the iPhone
+- [tools/README.md](tools/README.md): art scripts and browser tests
