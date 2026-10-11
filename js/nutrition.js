@@ -61,17 +61,21 @@ export function sumDay(list) {
 export function qtyLabel(m) {
   const q = m.qty || 1, u = m.unit || '1 serving';
   if (q === 1) return u;
+  if (m.unitG && Math.abs(q * 2 - Math.round(q * 2)) > 0.01) return Math.round(q * m.unitG) + ' g'; // typed in grams
   const frac = q === 0.5 ? '½' : q === 1.5 ? '1½' : String(Math.round(q * 100) / 100);
   return frac + ' × ' + u.replace(/^1\s+/, '');
 }
 export const fmt = (v, i) => v == null ? '–' : (NUTRIENTS[i][3] ? (Math.round(v * 10) / 10).toLocaleString() : Math.round(v).toLocaleString());
 
+// spellings people actually type: chana or channa, dhal or dal, yoghurt or yogurt
+const SYN = { chana: ['channa', 'chickpea', 'bengal gram'], channa: ['chana', 'chickpea'], chole: ['channa', 'chickpea'], dhal: ['dal'], daal: ['dal'], dahl: ['dal'], yoghurt: ['yogurt'], yogurt: ['yoghurt'], curd: ['yogurt', 'curd'], dahi: ['curd', 'yogurt'], chilli: ['chili', 'pepper'], chili: ['chilli', 'pepper'], brinjal: ['eggplant'], aubergine: ['eggplant'], capsicum: ['pepper'], coriander: ['cilantro', 'coriander'], prawn: ['shrimp'], prawns: ['shrimp'], mince: ['ground'], rajma: ['kidney bean', 'rajma'], paneer: ['paneer', 'cottage cheese'], atta: ['whole wheat', 'atta'], maida: ['wheat flour', 'maida'], besan: ['gram flour', 'besan'], jeera: ['cumin'], haldi: ['turmeric'], aloo: ['potato', 'aloo'], gobi: ['cauliflower', 'gobi'], palak: ['spinach', 'palak'], bhindi: ['okra', 'bhindi'] };
+export const wordHit = (s, w) => s.includes(w) || (SYN[w] || []).some(x => s.includes(x));
 // ---------- search: your foods first, then Indian recipes, then everything else ----------
 export function search(q, limit = 12) {
   q = q.trim().toLowerCase(); if (!q) return { mine: [], db: [] };
   const words = q.split(/\s+/);
-  const hit = s => words.every(w => s.includes(w));
-  const mine = myFoods().filter(f => hit(f.name.toLowerCase())).sort((a, b) => (b.uses || 0) - (a.uses || 0)).slice(0, 6);
+  const hit = s => words.every(w => wordHit(s, w));
+  const mine = myFoods().filter(f => !f.once && hit(f.name.toLowerCase())).sort((a, b) => (b.uses || 0) - (a.uses || 0)).slice(0, 6);
   const mineFrom = new Set(myFoods().map(f => f.from));
   const db = (DB || []).filter(f => hit(f.key) && !mineFrom.has(f.src + ':' + f.name)).map(f => {
     let s = 0; if (f.key.startsWith(words[0])) s -= 30; if (f.src === 'i') s -= 40; s += f.name.length / 4;
@@ -91,9 +95,10 @@ export function ingredientSearch(q, limit = 8) {
   q = q.trim().toLowerCase(); if (!q || !DB) return [];
   const words = q.split(/\s+/);
   // plain ingredients first: raw foods from the USDA list, then simple Indian staples
-  return DB.filter(f => words.every(w => f.key.includes(w))).map(f => {
+  return DB.filter(f => words.every(w => wordHit(f.key, w))).map(f => {
     let s = f.name.length / 4; if (f.key.startsWith(words[0])) s -= 20; if (/\braw\b/.test(f.key)) s -= 15; if (f.src === 'i') s += 10;
     if (/\b(industrial|skin|commercial|frozen|canned)\b/.test(f.key)) s += 8;
+    const extra = f.key.match(/\b(noodles?|flour|bran|cakes?|crackers?|pudding|vermicelli|syrup|puffed|flakes)\b/); if (extra && !q.includes(extra[1].replace(/s$/, ''))) s += 12;
     return [s, f];
   }).sort((a, b) => a[0] - b[0]).slice(0, limit).map(x => x[1]);
 }

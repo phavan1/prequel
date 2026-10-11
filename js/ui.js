@@ -50,6 +50,11 @@ export function openSheet(html, onClick) {
     if (onClick) onClick(e, wrap);
   });
   document.body.appendChild(wrap);
+  // iPhone: after the keyboard closes, taps can land in the wrong place until the page reflows. Nudge it.
+  wrap.addEventListener('focusout', () => setTimeout(() => {
+    const a = document.activeElement; if (a && wrap.contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+    window.scrollTo(window.scrollX, window.scrollY); const sh = wrap.querySelector('.sheet'); if (sh) { sh.style.transform = 'translateZ(0)'; requestAnimationFrame(() => { sh.style.transform = ''; }); }
+  }, 60));
   const first = wrap.querySelector('input[type="text"], textarea'); if (first && first.dataset.autofocus !== undefined) first.focus();
   return wrap;
 }
