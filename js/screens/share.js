@@ -24,7 +24,7 @@ export function mount(root, params = {}) {
   if (!kind || !avail.includes(kind)) kind = avail[0];
   if (!mileId || !miles.some(m => m.id === mileId)) mileId = miles[0] && miles[0].id;
 
-  root.innerHTML = backLink('#/me', 'Me') +
+  root.innerHTML = (params.from === 'quilt' ? backLink('#/quilt?m=' + (params.m || '') + '&from=' + (params.qf || 'rest'), 'Quilt') : backLink('#/me', 'Me')) +
     '<h1 class="sharetitle">Share a little of your story</h1>' +
     '<div class="chips sharekinds" role="tablist">' + avail.map(k => '<button type="button" class="chip" role="tab" data-kind="' + k + '">' + KINDS[k].name + '</button>').join('') + '</div>' +
     '<div class="milepick" hidden></div>' +

@@ -1,5 +1,5 @@
 import { get, save, parseKey } from '../store.js';
-import { esc, nav, backLink, him, hm, timeOf, reduceMotion, openSheet } from '../ui.js';
+import { esc, nav, backLink, him, hm, timeOf, reduceMotion, openSheet, FROM } from '../ui.js';
 import { mulberry32, hashStr } from '../sky-model.js';
 
 // ---------- fabrics: palette from how long you rested, pattern family from how it felt ----------
@@ -71,39 +71,59 @@ const run = (g, path, colour, w, dash) => { g.save(); g.setLineDash(dash || [3.5
 
 // fabric tile, cached
 const tiles = new Map();
-export function tileFor(f, size, dpr) {
-  const key = f.seed + '|' + f.pat + '|' + f.a + '|' + Math.round(size * dpr); if (tiles.has(key)) return tiles.get(key);
+export function tileFor(f, size, dpr, scale) {
+  const key = f.seed + '|' + f.pat + '|' + f.a + '|' + Math.round(size * dpr) + '|' + (scale || 1); if (tiles.has(key)) return tiles.get(key);
   const c = document.createElement('canvas'); c.width = c.height = Math.ceil(size * dpr);
-  const k = Math.max(1, size / 64), g = c.getContext('2d'); g.scale(dpr * k, dpr * k); PAT[f.pat](g, size / k, f.a, f.b, mulberry32(f.seed)); // same pattern scale at any size
+  const k = scale || 1, g = c.getContext('2d'); g.scale(dpr * k, dpr * k); PAT[f.pat](g, size / k, f.a, f.b, mulberry32(f.seed)); // same pattern scale at any size
   if (tiles.size > 400) tiles.clear(); tiles.set(key, c); return c;
 }
 
 // draw one patch at x,y,S (front side)
 export function drawPatch(g, d, x, y, S, dpr, opts = {}) {
-  const t0 = tileFor(d.fabrics[0], S, dpr);
-  g.fillStyle = 'rgba(35,30,25,0.35)'; g.fillRect(x, y, S, S);
-  x += 0.75; y += 0.75; S -= 1.5;
-  g.save(); rrect(g, x, y, S, S, 3); g.clip();
-  if (d.parts === 1) g.drawImage(t0, x, y, S, S);
+  let w = opts.w || S, h = S; // a patch can be wider than tall when a quilt needs it to fit
+  const big = Math.max(w, h), sc = opts.scale || 1, t0 = tileFor(d.fabrics[0], big, dpr, sc);
+  g.fillStyle = 'rgba(35,30,25,0.35)'; g.fillRect(x, y, w, h);
+  x += 0.75; y += 0.75; w -= 1.5; h -= 1.5;
+  g.save(); rrect(g, x, y, w, h, 3); g.clip();
+  if (d.parts === 1) g.drawImage(t0, x, y, big, big);
   else {
-    const t1 = tileFor(d.fabrics[1], S, dpr);
-    g.save(); g.beginPath(); if (d.split === 'diag') { g.moveTo(x, y); g.lineTo(x + S, y); g.lineTo(x, y + S); } else g.rect(x, y, S / 2, S); g.clip(); g.drawImage(t0, x, y, S, S); g.restore();
-    g.save(); g.beginPath(); if (d.split === 'diag') { g.moveTo(x + S, y); g.lineTo(x + S, y + S); g.lineTo(x, y + S); } else g.rect(x + S / 2, y, S / 2, S); g.clip(); g.drawImage(t1, x, y, S, S); g.restore();
+    const t1 = tileFor(d.fabrics[1], big, dpr, sc);
+    g.save(); g.beginPath(); if (d.split === 'diag') { g.moveTo(x, y); g.lineTo(x + w, y); g.lineTo(x, y + h); } else g.rect(x, y, w / 2, h); g.clip(); g.drawImage(t0, x, y, big, big); g.restore();
+    g.save(); g.beginPath(); if (d.split === 'diag') { g.moveTo(x + w, y); g.lineTo(x + w, y + h); g.lineTo(x, y + h); } else g.rect(x + w / 2, y, w / 2, h); g.clip(); g.drawImage(t1, x, y, big, big); g.restore();
   }
   // linen weave + a soft puffy light, like a stuffed square
-  g.globalAlpha = 0.7; g.fillStyle = g.createPattern(linenTex(), 'repeat'); g.fillRect(x, y, S, S); g.globalAlpha = 1;
-  const puff = g.createRadialGradient(x + S * 0.38, y + S * 0.34, S * 0.08, x + S / 2, y + S / 2, S * 0.78);
+  g.globalAlpha = 0.7; g.fillStyle = g.createPattern(linenTex(), 'repeat'); g.fillRect(x, y, w, h); g.globalAlpha = 1;
+  const puff = g.createRadialGradient(x + w * 0.38, y + h * 0.34, Math.min(w, h) * 0.08, x + w / 2, y + h / 2, Math.max(w, h) * 0.78);
   puff.addColorStop(0, 'rgba(255,255,255,0.12)'); puff.addColorStop(0.55, 'rgba(255,255,255,0)'); puff.addColorStop(1, 'rgba(40,30,20,0.26)');
-  g.fillStyle = puff; g.fillRect(x, y, S, S);
+  g.fillStyle = puff; g.fillRect(x, y, w, h);
   g.restore();
-  if (d.parts === 2) { const seam = opts.seam == null ? 1 : opts.seam; run(g, () => { g.beginPath(); if (d.split === 'diag') { g.moveTo(x + S, y); g.lineTo(x + S - S * seam, y + S * seam); } else { g.moveTo(x + S / 2, y); g.lineTo(x + S / 2, y + S * seam); } }, 'rgba(255,255,255,0.95)', 1.6); }
-  run(g, () => { g.beginPath(); g.rect(x + 4, y + 4, S - 8, S - 8); }, 'rgba(255,255,255,0.8)', 1.2, [3, 3]);
+  if (d.parts === 2) { const seam = opts.seam == null ? 1 : opts.seam; run(g, () => { g.beginPath(); if (d.split === 'diag') { g.moveTo(x + w, y); g.lineTo(x + w - w * seam, y + h * seam); } else { g.moveTo(x + w / 2, y); g.lineTo(x + w / 2, y + h * seam); } }, 'rgba(255,255,255,0.95)', 1.6); }
+  run(g, () => { g.beginPath(); g.rect(x + 4, y + 4, w - 8, h - 8); }, 'rgba(255,255,255,0.8)', 1.2, [3, 3]);
   if (d.naps.length) { // a little sewn-on button
-    const bx = x + S - 11, by = y + S - 11, br = Math.max(4.5, S * 0.08);
+    const br = Math.max(4.5, Math.min(w, h) * 0.08), bx = x + w - 7 - br, by = y + h - 7 - br;
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.arc(bx + 1, by + 1.5, br, 0, 7); g.fill();
     g.fillStyle = d.button; g.beginPath(); g.arc(bx, by, br, 0, 7); g.fill();
     g.fillStyle = 'rgba(255,255,255,0.9)'; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { g.beginPath(); g.arc(bx + a * br * 0.32, by + b * br * 0.32, br * 0.16, 0, 7); g.fill(); });
   }
+}
+// a finished month is always a whole quilt: pick a grid that fits, and let a few patches be double-wide to close any gaps
+export function fullLayout(n) {
+  if (n <= 0) return { cols: 1, rows: 1, cells: [] };
+  let best = null;
+  for (let C = 1; C <= 5; C++) {
+    const R = Math.ceil(n / C), L = R * C - n;
+    if (C > n || (L > R * Math.floor(C / 2))) continue;
+    const score = L * 2 + Math.abs(R - C) * 1.5 + (C < 3 && n > 4 ? 4 : 0) + (C === 1 && n > 1 ? 5 : 0);
+    if (!best || score < best.score) best = { C, R, L, score };
+  }
+  const { C, R, L } = best, dbl = new Array(R).fill(0);
+  for (let k = 0; k < L; k++) { let r = Math.floor((k + 0.5) * R / L) % R; while (dbl[r] >= Math.floor(C / 2)) r = (r + 1) % R; dbl[r]++; }
+  const cells = [];
+  for (let r = 0; r < R; r++) {
+    const m = C - dbl[r], wide = new Set(); for (let t = 0; t < dbl[r]; t++) wide.add((Math.floor((t + 0.5) * m / dbl[r]) + r) % m);
+    let col = 0; for (let k = 0; k < m; k++) { const span = wide.has(k) ? 2 : 1; cells.push({ col, row: r, span }); col += span; }
+  }
+  return { cols: C, rows: R, cells };
 }
 function needle(g, cx, cy, S) {
   g.save(); g.translate(cx, cy); g.rotate(-0.7);
@@ -116,7 +136,8 @@ function needle(g, cx, cy, S) {
 
 // the whole hanging quilt for one month. Returns where each patch sits.
 export function drawQuiltMonth(g, x, y, w, list, o = {}) {
-  const cols = o.cols || QCOLS, rows = Math.max(1, Math.ceil((list.length + (o.current ? 1 : 0)) / cols));
+  const full = !o.current && list.length ? fullLayout(list.length) : null;
+  const cols = full ? full.cols : (o.cols || QCOLS), rows = full ? full.rows : Math.max(1, Math.ceil((list.length + (o.current ? 1 : 0)) / cols));
   const B = Math.max(10, w * 0.035), rodY = y + 14, top = y + 34, S = (w - B * 2) / cols, H = rows * S + B * 2, dpr = o.dpr || 1, now = o.now || 0;
   // the drape shadow
   g.save(); g.fillStyle = 'rgba(30,20,10,0.18)'; g.filter = 'blur(10px)'; rrect(g, x + 8, top + 14, w - 6, H, 14); g.fill(); g.restore();
@@ -127,7 +148,7 @@ export function drawQuiltMonth(g, x, y, w, list, o = {}) {
   // backing fabric where patches are still to come
   g.fillStyle = o.backing || '#F4EAD2'; g.fillRect(x + B, top + B, w - B * 2, rows * S);
   g.save(); g.globalAlpha = 0.5; g.fillStyle = g.createPattern(linenTex(), 'repeat'); g.fillRect(x + B, top + B, w - B * 2, rows * S); g.restore();
-  for (let i = list.length; i < rows * cols; i++) { const px = x + B + (i % cols) * S, py = top + B + Math.floor(i / cols) * S; run(g, () => { g.beginPath(); g.rect(px + 5, py + 5, S - 10, S - 10); }, 'rgba(120,100,70,0.22)', 1, [2, 4]); }
+  if (!full) for (let i = list.length; i < rows * cols; i++) { const px = x + B + (i % cols) * S, py = top + B + Math.floor(i / cols) * S; run(g, () => { g.beginPath(); g.rect(px + 5, py + 5, S - 10, S - 10); }, 'rgba(120,100,70,0.22)', 1, [2, 4]); }
   // blanket stitch around the edge
   g.save(); g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1.2; g.lineCap = 'round';
   const per = 15, ix = x + B * 0.45, iy = top + B * 0.45, iw = w - B * 0.9, ih = H - B * 0.9;
@@ -139,18 +160,19 @@ export function drawQuiltMonth(g, x, y, w, list, o = {}) {
   const spots = [];
   let busy = false;
   list.forEach((d, i) => {
-    const px = x + B + (i % cols) * S, py = top + B + Math.floor(i / cols) * S, age = now - (d.born == null ? -1e9 : d.born);
-    spots.push({ d, x: px, y: py, S });
+    const cell = full ? full.cells[i] : { col: i % cols, row: Math.floor(i / cols), span: 1 };
+    const px = x + B + cell.col * S, py = top + B + cell.row * S, pw = S * cell.span, age = now - (d.born == null ? -1e9 : d.born);
+    spots.push({ d, x: px, y: py, S, w: pw });
     if (o.hide === d.date) return;
     g.save();
     if (age < 0) { busy = true; g.restore(); return; }
     const t = Math.min(1, age / 700), e = 1 - Math.pow(1 - t, 3); if (age < 2400) busy = true;
-    if (t < 1) { g.globalAlpha = e; g.translate(px + S / 2, py + S / 2); g.scale(0.6 + 0.4 * e, 0.6 + 0.4 * e); g.translate(-(px + S / 2), -(py + S / 2)); }
-    drawPatch(g, d, px, py, S, dpr, { seam: age < 2200 ? Math.max(0, Math.min(1, (age - 600) / 1200)) : 1 });
+    if (t < 1) { g.globalAlpha = e; g.translate(px + pw / 2, py + S / 2); g.scale(0.6 + 0.4 * e, 0.6 + 0.4 * e); g.translate(-(px + pw / 2), -(py + S / 2)); }
+    drawPatch(g, d, px, py, S, dpr, { w: pw, scale: Math.max(1, w / 340), seam: age < 2200 ? Math.max(0, Math.min(1, (age - 600) / 1200)) : 1 });
     if (o.soft && o.soft.has(d.date)) { // a gentle shimmer on soft days
       busy = busy || !o.still;
       const tw = o.still ? 0.8 : 0.5 + 0.5 * Math.sin(now / 600 + i);
-      [[0.25, 0.3, 1], [0.72, 0.62, 0.7], [0.4, 0.78, 0.55]].forEach(([a, b, k]) => { const sx = px + S * a, sy = py + S * b, R = S * 0.07 * k * (0.6 + tw * 0.6); g.fillStyle = 'rgba(255,255,255,' + (0.55 + 0.45 * tw) + ')'; g.beginPath(); for (let q = 0; q < 8; q++) { const rr2 = q % 2 ? R * 0.28 : R, an = q * Math.PI / 4; g.lineTo(sx + Math.cos(an) * rr2, sy + Math.sin(an) * rr2); } g.closePath(); g.fill(); });
+      [[0.25, 0.3, 1], [0.72, 0.62, 0.7], [0.4, 0.78, 0.55]].forEach(([a, b, k]) => { const sx = px + pw * a, sy = py + S * b, R = S * 0.07 * k * (0.6 + tw * 0.6); g.fillStyle = 'rgba(255,255,255,' + (0.55 + 0.45 * tw) + ')'; g.beginPath(); for (let q = 0; q < 8; q++) { const rr2 = q % 2 ? R * 0.28 : R, an = q * Math.PI / 4; g.lineTo(sx + Math.cos(an) * rr2, sy + Math.sin(an) * rr2); } g.closePath(); g.fill(); });
     }
     g.restore();
   });
@@ -198,14 +220,14 @@ export function mount(root, params = {}) {
     const line = n ? (isCur ? n + (n === 1 ? ' night' : ' nights') + ' sewn into ' + monthName(view) + '.' : monthName(view) + ': ' + n + (n === 1 ? ' night' : ' nights') + ', all sewn in.') : monthName(view) + '\'s quilt is waiting for its first patch.';
     const past = keys.filter(k => k !== cur && months[k] && months[k].length).reverse();
     root.innerHTML =
-      '<div class="top">' + backLink('#/rest', 'Rest') + '</div>' +
+      '<div class="top">' + backLink.apply(null, FROM[params.from] || FROM.rest) + '</div>' +
       '<div class="hero qhero">' + him('sewing', 'breathe', 'Your character sewing a patch onto his quilt') + '<div class="txt"><h1>Your quilt</h1><p class="say">Every rest is a patch, sewn in by hand.</p></div></div>' +
       '<div class="qnav"><button type="button" data-mstep="-1" aria-label="Earlier month"' + (i <= 0 ? ' disabled' : '') + '>‹</button><b>' + esc(monthLabel(view)) + '</b><button type="button" data-mstep="1" aria-label="Later month"' + (i >= keys.length - 1 ? ' disabled' : '') + '>›</button></div>' +
       '<p class="qline">' + esc(line) + '</p>' +
       '<div class="qwrap"><canvas id="quilt" aria-label="Your quilt for ' + esc(monthLabel(view)) + '. Each patch is a day of rest. Tap one to read its label."></canvas>' +
         '<button type="button" class="care" data-care aria-label="How to read your quilt"><span>care<br>label</span></button><div class="flip" id="flip" hidden></div></div>' +
       (past.length ? '<div class="lbl">Finished quilts</div><div class="qshelf">' + past.map(k => '<button type="button" class="folded' + (k === view ? ' on' : '') + '" data-month="' + k + '"><canvas width="180" height="96" data-fold="' + k + '"></canvas><b>' + esc(monthName(k)) + '</b><small>' + months[k].length + (months[k].length === 1 ? ' night' : ' nights') + '</small></button>').join('') + '</div>' : '') +
-      '<a class="sharecta" href="#/share?t=quilt&m=' + view + '"><span><b>Share this quilt</b><small>A story-sized picture of ' + esc(monthName(view)) + '</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></a>' +
+      '<a class="sharecta" href="#/share?t=quilt&m=' + view + '&from=quilt&qf=' + (params.from || 'rest') + '"><span><b>Share this quilt</b><small>A story-sized picture of ' + esc(monthName(view)) + '</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></a>' +
       nav('home');
     root.querySelectorAll('[data-fold]').forEach(c => drawFolded(c.getContext('2d'), c.width, c.height, months[c.dataset.fold]));
     paint();
@@ -234,10 +256,10 @@ export function mount(root, params = {}) {
     if (!spot) { if (flipped) { box.classList.remove('open'); setTimeout(() => { box.hidden = true; flipped = null; paint(); }, 380); } return; }
     flipped = spot;
     const d = spot.d, mins = Math.round(d.hours * 60);
-    const fc = document.createElement('canvas'), dpr = 2; fc.width = fc.height = spot.S * dpr; const fg = fc.getContext('2d'); fg.scale(dpr, dpr); drawPatch(fg, d, 0, 0, spot.S, dpr);
-    const lw = Math.min(wrap.clientWidth - 40, 280), lh = 165;
-    const cx = Math.max(10, Math.min(wrap.clientWidth - lw - 10, spot.x + spot.S / 2 - lw / 2)), cy = Math.max(10, spot.y + spot.S / 2 - lh / 2);
-    box.style.setProperty('--fx', (spot.x - cx) + 'px'); box.style.setProperty('--fy', (spot.y - cy) + 'px'); box.style.setProperty('--fs', String(spot.S / lw)); box.style.setProperty('--fsy', String(spot.S / lh));
+    const fc = document.createElement('canvas'), dpr = 2; fc.width = spot.w * dpr; fc.height = spot.S * dpr; const fg = fc.getContext('2d'); fg.scale(dpr, dpr); drawPatch(fg, d, 0, 0, spot.S, dpr, { w: spot.w });
+    const lw = Math.min(wrap.clientWidth - 30, 300), lh = 200;
+    const cx = Math.max(10, Math.min(wrap.clientWidth - lw - 10, spot.x + spot.w / 2 - lw / 2)), cy = Math.max(10, spot.y + spot.S / 2 - lh / 2);
+    box.style.setProperty('--fx', (spot.x - cx) + 'px'); box.style.setProperty('--fy', (spot.y - cy) + 'px'); box.style.setProperty('--fs', String(spot.w / lw)); box.style.setProperty('--fsy', String(spot.S / lh));
     box.style.left = cx + 'px'; box.style.top = cy + 'px'; box.style.width = lw + 'px'; box.style.height = lh + 'px';
     box.innerHTML = '<div class="flipin"><div class="face front"></div><div class="face back"><small>' + esc(dayWords(d.date)) + '</small><b>Rested ' + esc(hm(mins)) + (d.main.length > 1 ? ', in ' + d.main.length + ' parts' : '') + (d.naps.length ? ' + a nap' : '') + '</b><p>' + esc(d.rests.map(r => timeOf(r.start) + ' to ' + timeOf(r.end)).join(', then ')) + '</p><p>Felt ' + esc(d.feel) + '.' + (soft.has(d.date) ? ' A soft day, and you still rested.' : '') + (d.parts === 2 ? ' Two halves, stitched into one.' : '') + '</p></div></div>';
     box.querySelector('.front').style.backgroundImage = 'url(' + fc.toDataURL() + ')';
@@ -254,7 +276,7 @@ export function mount(root, params = {}) {
     if (t.closest('#flip')) { flipTo(null); return; }
     if (t.id === 'quilt' && layout) {
       const r = t.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-      const s = layout.spots.find(p => x >= p.x && x < p.x + p.S && y >= p.y && y < p.y + p.S);
+      const s = layout.spots.find(p => x >= p.x && x < p.x + p.w && y >= p.y && y < p.y + p.S);
       if (flipped) { flipTo(null); return; }
       if (s) flipTo(s);
     }

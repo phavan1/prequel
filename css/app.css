@@ -639,7 +639,7 @@ html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 .flip .back::before { content: ''; position: absolute; inset: 6px; border: 1.5px dashed #D9CBAA; border-radius: 6px; pointer-events: none; }
 .flip .back small { font: 800 12px var(--font-body); color: #6B6456; }
 .flip .back b { font-family: var(--font-hand); font-size: 26px; line-height: 1.05; }
-.flip .back p { margin: 0; font-family: var(--font-hand); font-size: 18px; line-height: 1.2; }
+.flip .back p { margin: 0; font-family: var(--font-hand); font-size: 17px; line-height: 1.15; }
 .qshelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .folded { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 18px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: inherit; }
 .folded.on { border: 2px solid var(--blue); }

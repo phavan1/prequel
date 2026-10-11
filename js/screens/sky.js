@@ -7,7 +7,7 @@ let raf = 0, cleanup = [];
 
 export function unmount() { cancelAnimationFrame(raf); cleanup.forEach(fn => fn()); cleanup = []; }
 
-export function mount(root) {
+export function mount(root, params = {}) {
   const st = get();
   const sky = updateSky();
   const lastVisit = sky.lastVisit || 0;
@@ -15,7 +15,7 @@ export function mount(root) {
 
   root.innerHTML =
     '<canvas id="sky" aria-label="Your sky. Each star is a moment you logged."></canvas>' +
-    '<div class="sky-top"><a class="back" href="#/home">‹ Home</a><h1>Your sky</h1><div class="stats" id="stats"></div><div class="legend">' +
+    '<div class="sky-top"><a class="back" href="' + (params.from === 'me' ? '#/me">‹ Me' : '#/home">‹ Home') + '</a><h1>Your sky</h1><div class="stats" id="stats"></div><div class="legend">' +
       Object.keys(AREAS).map(k => '<span><i style="background:' + AREAS[k].colour + '"></i>' + AREAS[k].name + '</span>').join('') + '</div></div>' +
     '<div class="sky-bar"><button type="button" class="btn alt" id="letBtn">Let something go</button><button type="button" class="btn alt" id="zoomBtn">Year view</button></div>' +
     '<div class="sky-card" id="card" hidden><button type="button" class="x" id="cardClose" aria-label="Close">×</button><div class="lbl" id="cardK"></div><div class="t" id="cardT"></div><div class="m" id="cardM"></div><div class="say" id="cardH" style="color:var(--blue)"></div></div>' +

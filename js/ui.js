@@ -93,4 +93,5 @@ const NAV = [
 export function nav(active) {
   return '<nav class="tabbar" aria-label="Main">' + NAV.map(n => '<a href="#/' + n[0] + '"' + (n[0] === active ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + n[2] + '</svg>' + n[1] + '</a>').join('') + '</nav>';
 }
+export const FROM = { me: ['#/me', 'Me'], home: ['#/home', 'Home'], rest: ['#/rest', 'Rest'], share: ['#/share', 'Share'], days: ['#/days', 'Days'] };
 export function backLink(href = '#/home', label = 'Home') { return '<a class="back" href="' + href + '">‹ ' + esc(label) + '</a>'; }

@@ -105,7 +105,7 @@ export function openNewGoal(onDone) {
 export function openEditGoal(id, onDone) {
   const st = get(), g = st.goals.find(x => x.id === id); if (!g) return;
   const d = { unit: g.unit || 'times', amount: !!g.amount };
-  const sheet = ('<h2>' + esc(g.name) + '</h2><p class="muted">' + count(g) + ' ' + esc(unitOf(g)) + (g.finished ? ' · finished ' + esc(prettyDate(dateKey(new Date(g.finished)))) : ' so far') + '</p>' +
+  const sheet = openSheet('<h2>' + esc(g.name) + '</h2><p class="muted">' + count(g) + ' ' + esc(unitOf(g)) + (g.finished ? ' · finished ' + esc(prettyDate(dateKey(new Date(g.finished)))) : ' so far') + '</p>' +
     (g.finished
       ? '<button type="button" class="btn" data-o="again">Start a fresh one, same goal</button>'
       : '<label class="field-label" for="eName">NAME</label><input id="eName" type="text" value="' + esc(g.name) + '" autocomplete="off"><label class="field-label" for="eTarget">COUNT UP TO</label><input id="eTarget" type="text" inputmode="decimal" value="' + g.target + '">' + (g.kind === 'own' ? '<div id="eUnit">' + unitPicker(d) + '</div>' : '') + '<button type="button" class="btn" data-o="save">Save</button>' +
