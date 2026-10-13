@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation. Start with `START_HERE.md`, then this file, then `DECISIONS.md` and `TEST_CHECKLIST.md`._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup; app still v36). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -280,6 +280,8 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 | Character art choice | Not stored: pictures follow the time of day and soft day | n/a | Code inspection |
 | Saving to Files from the share sheet, picking a file to restore, data surviving an iPhone restart | | | **iPhone only.** Phavan reports Save and Restore worked on his phone; not independently verified |
 
+**Priority (set by Phavan, 14 Oct 2026):** B1 is the **next recommended technical fix** after the docs cleanup. It was re-confirmed on 14 Oct 2026 (`backup.js`, on a copy, fictional data): `{"moments":[],"goals":"abc"}` is accepted and replaces everything. His preferred direction is stricter validation, a clear explanation of what restoring will replace, and a chance to save the current data before importing, while **older legitimate backups must keep restoring** and no new risks are introduced. **The implementation is not designed or approved yet:** discuss the proposed fix with him first, in its own development task.
+
 **Issues found (none fixed; all need Phavan's OK):**
 
 | # | Issue | Seriousness | Suggested fix |
@@ -305,6 +307,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 
 **Git history:** `.git/logs/HEAD` shows commits from the Stage 2 commit (7 Oct 2026) through `v36` (12 Oct, 01:26 Sydney time), then "Handover documents created and updated" (12 Oct, 07:01). **[verified]**
 **GitHub sync, verified 12 Oct 2026 ~08:00 Sydney:** `git ls-remote` on `https://github.com/phavan1/prequel.git` returned `main` = `9199dae…`, the same as local `main`. The working folder matched the git index exactly (no uncommitted changes) before the tools and docs below were added.
+**Final handover committed:** Phavan then committed and pushed the tools and handover docs as `609bbc9` "Handover: preserve dev tools, backup audit, START_HERE and README" (12 Oct, 07:38 Sydney). **Verified 14 Oct 2026:** laptop `main`, `origin/main`, the git index and GitHub `main` (`git ls-remote` and a fresh clone) were all `609bbc9`, and every working file matched the index (no uncommitted or untracked files). The 14 Oct docs cleanup comes after this.
 **How to check yourself:** in VS Code, the Source Control view shows no ↑/↓ numbers when in sync. Or on github.com/phavan1/prequel, the latest commit message should match the last one in VS Code.
 
 ## 7. Character art [verified file list; descriptions from history]
@@ -335,7 +338,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | # | Issue | Status |
 |---|---|---|
 | 1 | "Save and log" on the packet-label sheet did nothing on iPhone. Couldn't reproduce in Chromium; v32 added a keyboard-close repaint fix in `openSheet`. | **Not confirmed on iPhone** |
-| 2 | The bottom tab bar highlights **Home** on Quilt (and other sub-pages) even when you came from Me. | Open |
+| 2 | The bottom tab bar highlights **Home** on several sub-pages, whatever section you came from. Checked in code 14 Oct 2026: Food, Rest, Weather, the Jar and **Quilt** all call `nav('home')`. For Food, Rest, Weather and the Jar that's arguably right, since they're opened from Home. **Quilt is the clear case**: it's also opened from Me (`?from=me`) and Rest (`?from=rest`) but still lights up Home. (Letters and Mind light up Mind; Share and Settings light up Me; Sky and Skate home have no tab bar.) | Open, not discussed; don't change yet |
 | 3 | PDF text can't be selected or searched, because pages are pictures. | By design for now |
 | 4 | INDB recipes have **no B12** values, so reports read low. Licence unconfirmed; keep the credit. | Open |
 | 5 | Data lives only on the phone (IndexedDB). If iOS clears website data or the phone is lost, only a backup file saves it. | Mitigated by backup nudge |
@@ -345,10 +348,13 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | 9 | All testing has been desktop Chromium. iPhone-only behaviour (keyboard, share sheet, Add to Home Screen updates, storage) needs his phone. | Ongoing |
 | 10 | A long single file (`food.js` ~38 KB) and string-built HTML make edits risky. **Always re-test edited sheets.** In v25 a text replacement silently broke the goal sheet until v35. | Process risk |
 | 11 | Food search ranking is heuristic. Some names (seeraga samba, sona masoori, ponni) aren't recognised. | Open, offered |
-| 12 | Backup restore issues B1–B5 (section 5b). | Open, needs approval |
+| 12 | Backup restore issues B1–B5 (section 5b). **B1 is the next recommended fix.** | Open, needs discussion and approval |
+| 14 | `DEFAULT_COMFORT` in `store.js` holds old comfort-menu examples, and they're in the public repo even though no screen shows them. | Left untouched on purpose (14 Oct 2026); to discuss |
 | 13 | The script that built `data/foods.json` was never saved. | Can't be recovered; method in `DECISIONS.md` |
 
 ## 9. Pending work and decisions waiting on Phavan
+
+**Next recommended technical fix:** B1, backup restore validation (section 5b). To be discussed before anything is built.
 
 **Waiting for his decision (don't build until he chooses):**
 1. **Night chips on Rest** ("Awake for a bit?"). Options: remove; one night-only "I'm awake for a bit / Back to sleep" button that logs the time and length (Claude's pick); or keep but show only 10pm–6am.
@@ -356,7 +362,8 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 3. **Goal-completion celebration:** count-up and confetti screen, gold shooting star in the sky, trophy landing on the shelf, optional note to future you, "Share this" milestone card, optional chime. Also: loud or quiet and warm? Never answered.
 4. **Mind page redesign:** he asked to keep it in mind; not started.
 5. **Indian rice names in food search:** offered.
-6. **Backup restore improvements** B1–B5 (section 5b). Recommended: B1 and B2.
+6. **Backup restore improvements** B1–B5 (section 5b). B1 first (Phavan's priority, 14 Oct 2026); B2 recommended too.
+7. **Comfort menu defaults** (`DEFAULT_COMFORT` in `store.js`): keep, change or remove. Left untouched for now.
 
 **Backlog:**
 - Rest page review.
@@ -391,22 +398,25 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 - **Last completed:** v36, sleep diary daily totals and the "Hours each day" chart. Committed locally on 12 Oct 01:26.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
-- **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. These are **not yet committed**; Phavan commits them.
-- **Next:** Phavan commits and syncs, then starts a fresh conversation in the same Claude Project with the prompt in `START_HERE.md`.
+- **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
+- **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
+- **Next:** Phavan commits the docs cleanup. Then back to creative development; B1 is the recommended first technical fix, to be discussed first.
 
 ## 12. Instructions for a new Claude conversation
 
-1. **Read in this order:**
-   0. `START_HERE.md`
-   1. this file
-   2. `DECISIONS.md`
-   3. `TEST_CHECKLIST.md`
-   4. the Project doc `claude/prequel-build-status.md`
-   5. then the actual code: `js/store.js`, `js/app.js`, `sw.js` and the screen you're touching
+1. **Read in this order** (the same as `START_HERE.md` section 3):
+   1. `START_HERE.md`
+   2. this file
+   3. `DECISIONS.md`
+   4. `TEST_CHECKLIST.md`
+   5. `tools/README.md`
+   6. the Project doc `claude/prequel-build-status.md`
+   7. then the actual code: `sw.js`, `js/app.js`, `js/store.js`, `js/ui.js`, and the screen you're touching
 2. **The code on the laptop is the source of truth.** Re-read a file before editing it. Don't trust these docs over the code.
-3. **Talk first.** Phavan wants ideas discussed, options compared and screenshots shown **before** anything is pushed. Explain things in plain, non-technical language.
+3. **Talk first, as a creative collaborator** (`DECISIONS.md` F). Phavan wants ideas discussed, options compared and screenshots shown **before** anything is pushed, and nothing built until he explicitly approves it. Explain things in plain, non-technical language.
 4. **Respect the principles** in `DECISIONS.md`: no zeros, no streaks or percentages, colour never alone, dates in words, kind wording, offline always.
 5. **Every release:** bump `VERSION`, update `SHELL` for new files, test in a browser (`node --input-type=module --check` for syntax, then the scripts in `tools/tests/`), write to the laptop, read back and compare, then give a `vN: …` commit message. **Never commit or push yourself.**
 6. **After any text-replacement edit,** confirm the change actually happened (assert the old string existed) and click through the affected sheet. A silent bad replace broke goals in v25.
 7. **Say clearly what was tested where:** "tested in a browser here" versus "please check on your phone".
 8. **Keep personal details out of the repo** (health information, private notes). The app's own data never leaves his phone.
+9. **Keep the docs current as you go**, updating only what changed, and follow the focused handover when moving to a new conversation (`START_HERE.md` 8b and 8c).

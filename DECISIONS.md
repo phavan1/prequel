@@ -1,6 +1,6 @@
 # Prequel: decisions
 
-_Written on 12 October 2026, at version **v36**. This file says **why** Prequel is the way it is. Read it before changing anything you see here._
+_Written on 12 October 2026, at version **v36**; last updated 14 October 2026. This file says **why** Prequel is the way it is. Read it before changing anything you see here. Add to it only when Phavan **explicitly approves or rejects** something; ideas still being explored belong in section H, or aren't written down yet._
 
 **What the labels mean:**
 - **Confirmed**: Phavan asked for it or approved it, and it's built (or he made a clear call).
@@ -117,8 +117,18 @@ _Written on 12 October 2026, at version **v36**. This file says **why** Prequel 
 
 **How `foods.json` was built** [from history; script lost; details unverified]: INDB recipes and USDA SR27 foods were read in. The 12 nutrients were normalised to **per 100 g**, with serving sizes kept where the source had them. Each entry is tagged with its source, and everything was written as one JSON file. To rebuild it, a new script would be needed. Check the result against the current file before replacing it.
 
-## F. How Phavan likes to work (confirmed) [from history]
+## F. How Phavan likes to work (confirmed) [from history; collaboration style restated by Phavan, 14 Oct 2026]
 
+**Creative collaboration (this matters as much as the technical workflow).** Phavan is conversational and creative. He enjoys brainstorming, improvising, exploring unusual ideas and slowly discovering what a feature should become. Claude is his creative collaborator and development partner, **not an assistant that takes instructions and immediately writes code.** That means:
+- Discuss ideas before implementing them, and explore possibilities without rushing into code.
+- Offer thoughtful alternatives, with their advantages and disadvantages, and give a recommendation. **The final decision is his.**
+- Challenge ideas constructively when something could work better.
+- Respect decisions he's already made (sections A–E and G).
+- Preserve Prequel's personality, charm and emotional identity.
+- Keep explanations simple, approachable and conversational.
+- **Never implement an idea just because it was discussed.** Wait for his explicit approval.
+
+**Technical workflow:**
 - **Discuss first.** Ideas, options and a recommendation, then he decides. Big features get a plan before any code.
 - **Show screenshots** of changes before pushing.
 - **Plain, non-technical language.** Short explanations, with the reasoning.
@@ -128,6 +138,7 @@ _Written on 12 October 2026, at version **v36**. This file says **why** Prequel 
 - He writes the character prompts in ChatGPT and sends the images back; Claude cuts them out with `tools/art/`.
 - **`tools/` is development only:** never add it to `sw.js` `SHELL` and never link it from the app. Test scripts use made-up data only, and real backups never go in the repo.
 - **Audits and handovers don't change app code.** Bugs found are written down and fixed only after he approves.
+- **Docs are kept current as work happens** (agreed 14 Oct 2026), updating only the relevant parts, with a short, focused handover when moving to a new conversation instead of a full one. The steps are in `START_HERE.md` 8b and 8c.
 
 ## G. Never reverse without discussion
 
@@ -155,13 +166,19 @@ _Written on 12 October 2026, at version **v36**. This file says **why** Prequel 
 | A whole-app soft-day look | Earlier | Offered, no answer |
 | A one-time "You've already filled N jars!" moment | Jar work | Offered |
 | Light motion lines on dark share cards | v23 | Offered |
-| Fix the bottom tab bar so it highlights the section you came from | Found during this handover | Not discussed yet |
+| Fix the bottom tab bar so it highlights the section you came from (mainly Quilt, opened from Me and Rest; see HANDOVER section 8, issue 2) | Found during this handover; described more accurately 14 Oct 2026 | Not discussed yet |
+| Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
-| Backup restore safety: stricter file check and a "save what's here first" option (B1); kind error message (B2); record "Last backup" only after it really saved (B3); prefer the newer copy on load (B4); save immediately after restore (B5) | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Not approved.** Recommended: B1, B2 |
+| Backup restore safety: stricter file check and a "save what's here first" option (B1); kind error message (B2); record "Last backup" only after it really saved (B3); prefer the newer copy on load (B4); save immediately after restore (B5) | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Priority set, fix not approved.** On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
 
 ### Done during the handover (approved by Phavan, 12 Oct 2026)
 - `README.md` rewritten as a short entry point.
 - Dev tools saved in `tools/` (art scripts, seven test scripts, fictional sample data).
+
+### Agreed on 14 Oct 2026
+- The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
+- B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
+- The creative-collaboration style in section F.
 
 ## I. Future ideas (his, not yet planned in detail)
 

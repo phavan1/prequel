@@ -1,6 +1,6 @@
 # Prequel: test checklist
 
-_Written on 12 October 2026, at version **v36**. Run the relevant parts before every release, and all of it after a big change._
+_Written on 12 October 2026, at version **v36**; last updated 14 October 2026. Run the relevant parts before every release, and all of it after a big change. Update this file whenever behaviour changes or a new regression test is needed._
 
 **Who can run each test:**
 - **[Claude]**: Claude can run it in desktop Chromium with Playwright, using fake data (`sample-backup.json`).
@@ -11,8 +11,9 @@ _Written on 12 October 2026, at version **v36**. Run the relevant parts before e
 
 **How Claude sets up a test:**
 - Syntax check every changed module: `node --input-type=module --check < js/file.js`
-- Serve the app: `(cd app && python3 -m http.server 8765 &)`
-- Run Playwright with `NODE_PATH=$(npm root -g)` at a phone viewport (390×844), loading `tools/tests/sample-backup.json` (made-up data) through Settings → Restore, always in a throwaway browser profile
+- Work on a **copy** of the project in Claude's workspace (the files staged from the laptop, or a fresh clone of `phavan1/prequel`), never on real app data.
+- Serve the app from the **project root** (the folder with `index.html`; there's no `app/` folder): `python3 -m http.server 8765 &`. The test scripts expect `http://localhost:8765/` unless `PREQUEL_URL` says otherwise (see `tools/README.md`).
+- Run the scripts from the project root, for example `NODE_PATH=$(npm root -g) node tools/tests/backup.js` (optionally `SHOTS=<folder>` for screenshots). They use a phone viewport (390×844), load `tools/tests/sample-backup.json` (made-up data) through Settings → Restore, and always use a throwaway browser profile.
 - Use `page.clock.install()` to test times of day
 - Take screenshots and look at them, then read the console for errors
 
@@ -31,12 +32,12 @@ _Written on 12 October 2026, at version **v36**. Run the relevant parts before e
   - Quilt from Rest → Rest; Quilt from Me → Me; Quilt from Home → Home
   - Sky from Me → Me; Sky from Home → Home
   - Share from a Quilt → back to that month's quilt
-- [ ] [Claude] The bottom tab bar's five tabs go to the right pages. (Known: on sub-pages it highlights Home.)
+- [ ] [Claude] The bottom tab bar's five tabs go to the right pages. (Known, not yet fixed: Food, Rest, Weather, the Jar and Quilt always highlight Home, so Quilt opened from Me or Rest still lights up Home. See HANDOVER section 8, issue 2.)
 - [ ] [Claude] The Me gear opens Settings, and its back goes to Me.
 - [ ] [iPhone] Swiping back with the iPhone gesture behaves sensibly.
 
 ## 2. Data persistence, backup and restore
-_Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.js`, or a new state field. Last run: 12 Oct 2026, v36, 21/21 passed._
+_Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.js`, or a new state field. Last run: 14 Oct 2026, v36 (on a copy), 21/21 passed. B1 is the next recommended fix (HANDOVER 5b); when it's built, its regression tests go here._
 - [ ] [Claude] Log something, reload, and it's still there (IndexedDB). Same with IndexedDB blocked (localStorage fallback).
 - [ ] [Claude] Full round trip: every state field (moments, sessions, active, custom workouts, meals, myFoods with per100/recipe/once, weights, rests, pendingSleep, weather, mind, letters, goals with units/paused, goalLogs with amt, heavy, jar, sky, quilt, settings, games, unknown fields) comes back **identical** in an empty app, and after a reload.
 - [ ] [Claude] **A new state field** added in a release appears in the export and survives restore (it should, automatically; check it).
@@ -44,7 +45,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Decimals, nulls, emoji, line breaks and links between records (meal→food, log→goal, recipe→ingredient) survive.
 - [ ] [Claude] **Old backup** (`sample-backup.json`, first-week format) restores, and every screen opens without errors.
 - [ ] [Claude] **Bad files** (not JSON, empty, an array, no `moments`, `moments` not a list) are refused and current data stays untouched.
-- [ ] [Claude] Known gap B1: a file with `moments` but broken other parts is accepted. Re-check this if B1 gets fixed.
+- [ ] [Claude] Known gap B1: a file with `moments` but broken other parts (e.g. `goals: "abc"`) is accepted and replaces everything (re-confirmed 14 Oct 2026). When B1 is fixed: broken files must be refused with nothing changed, **and** older legitimate backups (`sample-backup.json`) must still restore.
 - [ ] [Claude] Deleting a record also removes its star (`ref`).
 - [ ] [Claude] Start fresh asks twice and offers a backup first.
 - [ ] [iPhone] **Save a backup** opens the share sheet. "Save to Files" works, and the file name has today's date.
