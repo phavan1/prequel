@@ -21,7 +21,7 @@ Each script opens the app in a phone-sized Chromium window, loads fictional data
 
 | Script | Checks |
 |---|---|
-| `backup.js` | **Backup and restore audit**: full round trip, reload, duplicates, bad files, old backup, localStorage fallback. Prints PASS/FAIL lines. |
+| `backup.js` | **Backup and restore audit**: full round trip, reload, duplicates, bad and damaged files, old backup, localStorage fallback, and (v38) the comparison sheet, older warning, 7-day undo, B3 and B5. Prints PASS/FAIL lines. |
 | `share.js` | Every share-card type and look, saved as PNGs |
 | `reports.js` | Sleep diary and food report PDFs, saved to `shots/` |
 | `jar.js` | The jar: adding chips and written wins, removing from "In the jar today" |
@@ -46,4 +46,4 @@ node tools/tests/backup.js              # in another
 - The scripts click specific buttons (`[data-…]` attributes). If a screen changes, its script may need updating. That's expected.
 - In Claude's cloud workspace, Playwright may already be installed globally: run with `NODE_PATH=$(npm root -g) node tools/tests/<script>.js`.
 
-**Last run (14 Oct 2026, v37, Claude's workspace):** all nine scripts ran with no page errors; `backup.js` 21/21, `usuals.js` 16/16, `quick.js` 17/17 passed.
+**Last run (14 Oct 2026, v38, Claude's workspace):** all nine scripts ran with no page errors; `backup.js` 40/40, `usuals.js` 16/16, `quick.js` 17/17 passed.

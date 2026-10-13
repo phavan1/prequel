@@ -1,4 +1,6 @@
-// Backup and restore audit. Uses fictional data only, in throwaway browser profiles.
+// Backup and restore audit (v36), extended in v38 for the safer restore: damaged files refused, the comparison
+// sheet, the older-backup warning, the 7-day undo, "Last backup" only after a real save, and saving straight away.
+// Uses fictional data only, in throwaway browser profiles.
 // Run: serve the app folder on a port, then  PREQUEL_URL=http://localhost:8765/ node tools/tests/backup.js
 const { chromium } = require('playwright'); const fs = require('fs'); const path = require('path');
 const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';
@@ -26,8 +28,10 @@ async function page(b, opts = {}) {
 const state = p => p.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
 async function restore(p, file) {
   await p.goto(BASE + '#/settings'); await p.waitForTimeout(400);
-  await p.setInputFiles('#importFile', file); await p.waitForTimeout(200); await p.click('[data-yes]'); await p.waitForTimeout(900);
-  return (await p.locator('.toast').allInnerTexts().catch(() => [])).join(' ');
+  await p.setInputFiles('#importFile', file); await p.waitForTimeout(500);
+  if (await p.locator('#sheet [data-yes]').count()) { await p.click('#sheet [data-yes]'); await p.waitForTimeout(900); return (await p.locator('.toast').allInnerTexts().catch(() => [])).join(' '); }
+  const t = await p.locator('#sheet').innerText().catch(() => ''); await p.click('#sheet [data-close]').catch(() => {}); await p.waitForTimeout(200);
+  return t.replace(/\s+/g, ' ');
 }
 async function exportUI(p, name) {
   await p.goto(BASE + '#/settings'); await p.waitForTimeout(400);
@@ -107,13 +111,23 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
     const pre = await state(B.p); const toast = await restore(B.p, f); const post = await state(B.p);
     ok('refuses ' + n + ' and keeps current data', diff(strip(pre), strip(post)).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0, 'toast: ' + toast);
   }
-  // A file that passes the check but has broken parts (shows how thin validation is)
-  const weird = path.join(OUT, 'weird-goals-string.json'); fs.writeFileSync(weird, JSON.stringify({ moments: [], goals: 'abc' }));
-  B.p.errs.length = 0; const tw = await restore(B.p, weird); const sw = await state(B.p);
-  ok('[risk check] a file with {moments:[], goals:"abc"} is accepted', sw.goals === 'abc', 'toast: ' + tw + ' (goals is now ' + JSON.stringify(sw.goals) + ')');
-  await B.p.goto(BASE + '#/me'); await B.p.waitForTimeout(500);
-  ok('[risk check] Me screen still works after that file', B.p.errs.length === 0, B.p.errs.slice(0, 2).join(' | '));
-  await restore(B.p, file);
+  // B1 (fixed in v38): files with a moments list but broken parts are refused as a whole, and nothing changes
+  const damaged = {
+    'dmg-goals-string.json': { moments: [], goals: 'abc' },
+    'dmg-meals-null.json': { moments: [], meals: null },
+    'dmg-moment-no-date.json': { moments: [{ id: 'x', text: 'hi' }] },
+    'dmg-exercises.json': { moments: [], sessions: [{ id: 's', date: '2026-10-01', exercises: 'legs' }] },
+    'dmg-settings.json': { moments: [], settings: 'dark' },
+    'dmg-tinywins.json': { moments: [], settings: { tinyWins: 'Showered' } }
+  };
+  for (const [n, obj] of Object.entries(damaged)) {
+    const f = path.join(OUT, n); fs.writeFileSync(f, JSON.stringify(obj));
+    const pre = await state(B.p); const t = await restore(B.p, f); const post = await state(B.p);
+    ok('refuses damaged ' + n + ' as a whole and keeps current data', /damaged in places/.test(t) && diff(strip(pre), strip(post)).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0, t.slice(0, 90));
+  }
+  // B2: kind words instead of the browser's technical message
+  { const f = path.join(OUT, 'bad-not-json.json'); const t = await restore(B.p, f);
+    ok('a file that isn\'t JSON gets a kind message (no technical text)', /couldn't be read/.test(t) && !/Unexpected token/.test(t), t.slice(0, 90)); }
   await B.ctx.close();
 
   // 4. Old backup (from the first week: no goals, food numbers, jar or quilt fields).
@@ -132,6 +146,60 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   const d5 = diff(strip(exported), strip(ls)).filter(x => !/^\.(lastSeen|lastHello)/.test(x));
   ok('without IndexedDB, restore persists through localStorage', d5.length === 0, d5.slice(0, 4).join('; '));
   await D.ctx.close();
+
+  // 6. v38 restore safety: comparison, older warning, save-first, 7-day undo, immediate save
+  const E = await page(b);
+  await restore(E.p, file); // a full app
+  const full = await state(E.p);
+  const older = path.join(OUT, 'older-backup.json');
+  fs.writeFileSync(older, JSON.stringify(Object.assign({}, JSON.parse(fs.readFileSync(SAMPLE, 'utf8')), { exported: '2026-09-01T09:00:00.000Z' })));
+  await E.p.goto(BASE + '#/settings'); await E.p.waitForTimeout(400);
+  await E.p.setInputFiles('#importFile', older); await E.p.waitForTimeout(500);
+  const sheetText = (await E.p.locator('#sheet').innerText()).replace(/\s+/g, ' ');
+  await E.p.screenshot({ path: OUT + '/restore-compare.png' });
+  ok('restore sheet compares the backup with what\'s here', /THIS BACKUP/i.test(sheetText) && /IN THE APP NOW/i.test(sheetText) && /\d+ stars/.test(sheetText), sheetText.slice(0, 160));
+  ok('an older backup gets the "would be gone" warning', /older than what's here/.test(sheetText));
+  ok('"Save what\'s here as a file first" is offered', await E.p.locator('#sheet [data-savefirst]').count() === 1);
+  await E.p.click('#sheet [data-close]'); await E.p.waitForTimeout(200);
+  ok('cancelling the restore changes nothing', diff(strip(full), strip(await state(E.p))).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0);
+  await E.p.setInputFiles('#importFile', older); await E.p.waitForTimeout(500); await E.p.click('#sheet [data-yes]');
+  await E.p.waitForSelector('.toast.show'); // straight after the toast, before any delayed save could happen
+  const raw = await E.p.evaluate(() => new Promise(r => { const q = indexedDB.open('prequel'); q.onsuccess = () => { const g = q.result.transaction('kv').objectStore('kv').get('state'); g.onsuccess = () => r(g.result); }; }));
+  ok('B5: a restore is saved straight away', raw && raw.moments.length === JSON.parse(fs.readFileSync(SAMPLE, 'utf8')).moments.length);
+  await E.p.waitForTimeout(500); await E.p.screenshot({ path: OUT + '/restore-undo-card.png', fullPage: true });
+  const card = (await E.p.locator('.undocard').innerText().catch(() => '')).replace(/\s+/g, ' ');
+  ok('Settings shows the undo card, saying what was kept and until when', /stored the app's data from just before/.test(card) && /stays until/.test(card), card.slice(0, 160));
+  await E.p.reload(); await E.p.waitForTimeout(2600); await E.p.mouse.click(5, 5); await E.p.waitForTimeout(400);
+  await E.p.goto(BASE + '#/settings'); await E.p.waitForTimeout(400);
+  ok('the undo card is still there after reopening the app', await E.p.locator('.undocard').count() === 1);
+  await E.p.click('[data-undo]'); await E.p.waitForTimeout(300); await E.p.screenshot({ path: OUT + '/restore-undo-sheet.png' });
+  await E.p.click('#sheet [data-o="undo"]'); await E.p.waitForTimeout(900);
+  const back = await state(E.p);
+  ok('undo puts back exactly what was there before the restore', diff(strip(full), strip(back)).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0, diff(strip(full), strip(back)).slice(0, 3).join('; '));
+  ok('the undo card goes away after undoing', await E.p.locator('.undocard').count() === 0);
+  // the copy expires after 7 days
+  await E.p.setInputFiles('#importFile', older); await E.p.waitForTimeout(500); await E.p.click('#sheet [data-yes]'); await E.p.waitForTimeout(900);
+  await E.p.clock.setSystemTime(new Date('2026-10-19T10:00:00')); await E.p.reload(); await E.p.waitForTimeout(2600); await E.p.mouse.click(5, 5); await E.p.goto(BASE + '#/settings'); await E.p.waitForTimeout(400);
+  ok('day 7: the undo is still offered', await E.p.locator('.undocard').count() === 1);
+  await E.p.clock.setSystemTime(new Date('2026-10-19T10:00:00').getTime() + 3 * 864e5); await E.p.reload(); await E.p.waitForTimeout(2600); await E.p.mouse.click(5, 5); await E.p.goto(BASE + '#/settings'); await E.p.waitForTimeout(400);
+  ok('after 7 days the copy is gone', await E.p.locator('.undocard').count() === 0);
+  await E.ctx.close();
+  // restoring into an empty app (a new phone): nothing to keep, no undo card
+  const F = await page(b);
+  await F.p.setInputFiles('#importFile', file); await F.p.waitForTimeout(500);
+  ok('a new, empty app says nothing will be lost', /nothing will be lost/.test(await F.p.locator('#sheet').innerText()) && await F.p.locator('#sheet [data-savefirst]').count() === 0);
+  await F.p.click('#sheet [data-yes]'); await F.p.waitForTimeout(900);
+  ok('no undo card after restoring into an empty app', await F.p.locator('.undocard').count() === 0);
+  await F.ctx.close();
+  // B3: closing the share sheet without saving doesn't count as a backup
+  const G = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await G.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.reject(new DOMException('cancelled', 'AbortError')); });
+  const gp = await G.newPage(); await gp.clock.install({ time: new Date('2026-10-12T10:00:00') });
+  await gp.goto(BASE + '#/settings'); await gp.waitForTimeout(2600); await gp.mouse.click(5, 5); await gp.waitForTimeout(400);
+  await gp.click('[data-export]'); await gp.waitForTimeout(500);
+  const gs = await state(gp), gt = (await gp.locator('.toast').allInnerTexts().catch(() => [])).join(' ');
+  ok('B3: cancelling the share sheet doesn\'t set "Last backup"', !gs.lastBackup && /No backup saved/.test(gt), gt);
+  await G.close();
 
   await b.close();
   for (const r of results) console.log(r[0] + '  ' + r[1] + (r[2] ? '   — ' + r[2] : ''));

@@ -79,16 +79,18 @@ export function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
-// save a file: the share sheet on iPhone (Save to Files), a normal download elsewhere
+// save a file: the share sheet on iPhone (Save to Files), a normal download elsewhere.
+// Says what happened: 'shared', 'downloaded', or 'cancelled' (the share sheet was closed without saving)
 export async function downloadFile(name, text, type) {
   const blob = new Blob([text], { type });
   try {
     const file = new File([blob], name, { type });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return; }
-  } catch (e) { if (e && e.name === 'AbortError') return; }
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return 'shared'; }
+  } catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  return 'downloaded';
 }
 
 export function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }

@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, then **v37**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, then **v38**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -257,8 +257,18 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 
 **How it works** [verified in `store.js` and `screens/settings.js`]:
 - **Save a backup** writes the **whole state object** as JSON (`exportJSON`), plus an `exported` timestamp, and hands it to the iPhone share sheet (or a download on desktop). File name: `prequel-backup-YYYY-MM-DD.json`.
-- **Restore** reads the file, checks it's JSON with a `moments` list, then **replaces everything** (not a merge). The sheet warns: "Everything in the app now will be replaced with what's in <file>." Missing top-level fields are filled from `fresh()`, and `settings` is merged with defaults. Unknown fields are kept.
-- **No user data is stored anywhere except that one state object.** No other localStorage, IndexedDB, cookies or caches hold user data (checked with a code search). So the export covers every category by construction, including fields added after v36.
+- **Restore (v38)** `checkBackup()` in `store.js` checks the file first. The rule is **missing parts are fine, wrong parts are not**:
+  - Fields an older backup doesn't have are filled from `fresh()`, `settings` is merged with defaults, and unknown fields are kept.
+  - A part that's there but the wrong shape gets the **whole file refused**, with no half-restores. That covers: a record list that isn't a list of objects, a dated record without a `YYYY-MM-DD` date, a map that isn't an object, a wrong `active`, `pendingSleep` or `quiltSeen`, session `exercises`/`sets` that aren't lists, and settings lists that aren't lists.
+  - Refusals show a kind sheet ("That file couldn't be read…", "That doesn't look like a Prequel backup…", "This backup looks damaged in places…", each saying nothing was changed).
+  - A good file opens **"Restore this backup?"**. It shows *This backup* (saved date, counts) next to *In the app now*. It warns when the backup is **older** than what's here ("Anything logged after <date> would be gone"), or has fewer stars when it has no date. It offers **"Save what's here as a file first"**, then replaces everything (not a merge) and **saves straight away** (`saveNow`).
+- **Safety copy and undo (v38):** if the app has anything logged, `restoreBackup()` first keeps a copy of the whole state under the IndexedDB key **`undo`** (`{at, state}`; localStorage `prequel-undo` when there's no IndexedDB).
+  - Settings then shows a card: "Your data from before the restore is safe… Prequel stored the app's data from just before, just in case. Want to undo the restore…? This copy stays until <date>."
+  - **Undo the restore…** asks first, puts the old state back, saves straight away and deletes the copy.
+  - The copy expires after **7 days** and is deleted on the next app start after that.
+  - If the copy can't be stored, a sheet says so and offers "Save what's here as a file" or "Restore anyway".
+  - Restoring into an empty app keeps no copy ("nothing will be lost").
+- **No user data is stored anywhere except that one state object**, apart from the temporary `undo` safety copy (v38), which is deliberately **not** in backups and expires after 7 days. No other localStorage, IndexedDB, cookies or caches hold user data. So the export covers every category by construction, including fields added later.
 - **Not in the backup, on purpose:** the static app itself (`foods.json`, the workout playbook in `data.js`, art, fonts). Saved foods and logged meals keep **their own copy of the numbers**, so restoring doesn't depend on the food database. Nothing is regenerated on restore: sky layout, quilt "seen" months and jar counts are stored fields and come back exactly.
 
 **Automated test results** (`tools/tests/backup.js`, fictional data, throwaway browser profiles, desktop Chromium; **21 of 21 passed**):
@@ -286,20 +296,20 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 | Character art choice | Not stored: pictures follow the time of day and soft day | n/a | Code inspection |
 | Saving to Files from the share sheet, picking a file to restore, data surviving an iPhone restart | | | **iPhone only.** Phavan reports Save and Restore worked on his phone; not independently verified |
 
-**Priority (set by Phavan, 14 Oct 2026):** B1 is the **next recommended technical fix** after the docs cleanup. It was re-confirmed on 14 Oct 2026 (`backup.js`, on a copy, fictional data): `{"moments":[],"goals":"abc"}` is accepted and replaces everything. His preferred direction is stricter validation, a clear explanation of what restoring will replace, and a chance to save the current data before importing, while **older legitimate backups must keep restoring** and no new risks are introduced. **The implementation is not designed or approved yet:** discuss the proposed fix with him first, in its own development task.
+**Status (v38, 14 Oct 2026): B1, B2, B3 and B5 are fixed; B4 is still open.** History: Phavan made B1 the priority after the docs cleanup. It was re-confirmed on 14 Oct 2026 (`backup.js`, on a copy, fictional data): `{"moments":[],"goals":"abc"}` is accepted and replaces everything. His preferred direction is stricter validation, a clear explanation of what restoring will replace, and a chance to save the current data before importing, while **older legitimate backups must keep restoring** and no new risks are introduced. The design (comparison sheet, older warning, save-first button, automatic 7-day undo with a transparent message, whole-file refusal) was discussed and approved on 14 Oct 2026 and built in v38.
 
-**Issues found (none fixed; all need Phavan's OK):**
+**Issues found in the audit (status updated for v38):**
 
 | # | Issue | Seriousness | Suggested fix |
 |---|---|---|---|
-| B1 | Validation is thin: any JSON with a `moments` list is accepted. A damaged or wrong file (e.g. `{"moments":[],"goals":"abc"}`, tested) **replaces all current data**. | **Medium** | Check the main lists are the right types before replacing. Offer "Save a backup of what's here first" in the Restore sheet, like Start fresh does. |
-| B2 | A bad file shows a raw technical message (e.g. "Unexpected token 'h' …"). | Low | Show a kind message: "That file couldn't be read. Nothing was changed." |
-| B3 | "Last backup" is recorded the moment Save a backup is tapped, even if the share sheet is cancelled. | Low | Only record it after the share or download succeeds. |
-| B4 | If an IndexedDB write ever fails, the newer copy goes to localStorage, but the next start reads the older IndexedDB copy first. | Low (rare) | On load, prefer whichever copy is newer. |
-| B5 | Saving is delayed 150 ms, so closing the app in that instant after a restore could lose it. | Very low | Save immediately after a restore. |
+| B1 | Validation is thin: any JSON with a `moments` list is accepted. A damaged or wrong file (e.g. `{"moments":[],"goals":"abc"}`, tested) **replaces all current data**. | **Medium** | **Fixed in v38**: stricter check, comparison sheet, save-first button, 7-day undo. |
+| B2 | A bad file shows a raw technical message (e.g. "Unexpected token 'h' …"). | Low | **Fixed in v38**: kind messages in a sheet. |
+| B3 | "Last backup" is recorded the moment Save a backup is tapped, even if the share sheet is cancelled. | Low | **Fixed in v38**: `downloadFile` reports `'cancelled'`; then "No backup saved this time." and no date. |
+| B4 | If an IndexedDB write ever fails, the newer copy goes to localStorage, but the next start reads the older IndexedDB copy first. | Low (rare) | **Still open.** On load, prefer whichever copy is newer. |
+| B5 | Saving is delayed 150 ms, so closing the app in that instant after a restore could lose it. | Very low | **Fixed in v38**: `saveNow()` after restore and undo. |
 | B6 | Backups are plain JSON with personal food, sleep and weight logs. | Note | Keep them in private places (Files or iCloud Drive). Never put a real backup in the repo. |
 
-**Conclusion:** a backup file realistically **can** recover all personal data after the phone's storage is lost, because it's a complete copy. The main risk is B1: restoring the wrong file.
+**Conclusion:** a backup file realistically **can** recover all personal data after the phone's storage is lost, because it's a complete copy. Since v38 the remaining risk of restoring the wrong file is covered by the comparison sheet and the 7-day undo.
 
 ## 6. Deployment and versioning workflow [verified + from history]
 
@@ -354,14 +364,14 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | 9 | All testing has been desktop Chromium. iPhone-only behaviour (keyboard, share sheet, Add to Home Screen updates, storage) needs his phone. | Ongoing |
 | 10 | A long single file (`food.js` ~38 KB) and string-built HTML make edits risky. **Always re-test edited sheets.** In v25 a text replacement silently broke the goal sheet until v35. | Process risk |
 | 11 | Food search ranking is heuristic. Some names (seeraga samba, sona masoori, ponni) aren't recognised. | Open, offered |
-| 12 | Backup restore issues B1–B5 (section 5b). **B1 is the next recommended fix.** | Open, needs discussion and approval |
+| 12 | Backup restore issues B1–B5 (section 5b). | B1, B2, B3, B5 **fixed in v38**; B4 open (rare) |
 | 15 | Rest shows "Your quilt · 0 patches" when nothing is logged yet: a zero on screen (found 14 Oct 2026 while testing v37; not changed). | Open, ask him |
 | 14 | `DEFAULT_COMFORT` in `store.js` holds old comfort-menu examples, and they're in the public repo even though no screen shows them. | Left untouched on purpose (14 Oct 2026); to discuss |
 | 13 | The script that built `data/foods.json` was never saved. | Can't be recovered; method in `DECISIONS.md` |
 
 ## 9. Pending work and decisions waiting on Phavan
 
-**Next recommended technical fix:** B1, backup restore validation (section 5b). To be discussed before anything is built.
+**Done in v38:** B1, B2, B3 and B5 (section 5b). B4 is still open.
 
 **Waiting for his decision (don't build until he chooses):**
 1. **Night chips on Rest** ("Awake for a bit?"). Options: remove; one night-only "I'm awake for a bit / Back to sleep" button that logs the time and length (Claude's pick); or keep but show only 10pm–6am.
@@ -369,7 +379,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 3. **Goal-completion celebration:** count-up and confetti screen, gold shooting star in the sky, trophy landing on the shelf, optional note to future you, "Share this" milestone card, optional chime. Also: loud or quiet and warm? Never answered.
 4. **Mind page redesign:** he asked to keep it in mind; not started.
 5. **Indian rice names in food search:** offered.
-6. **Backup restore improvements** B1–B5 (section 5b). B1 first (Phavan's priority, 14 Oct 2026); B2 recommended too.
+6. **Backup B4** (prefer the newer copy on start). Rare; not discussed yet. B1, B2, B3 and B5 are done (v38).
 7. **Comfort menu defaults** (`DEFAULT_COMFORT` in `store.js`): keep, change or remove. Left untouched for now.
 
 **Backlog:**
@@ -393,7 +403,7 @@ Everything in `tools/` is **development only**. It isn't in `sw.js` `SHELL`, isn
 | `tools/art/defringe.py` | session `tools/defringe3.py` | Header comment only. `defringe2.py` was the same minus the automatic step, so it wasn't kept. | Ran; output was **pixel-identical** to the shipped `art/cgrab.webp` |
 | `tools/art/holes.py` | session `tools/holes.py` | Takes an image path and output path instead of fixed `app/art` and `shots` folders. | Ran |
 | `tools/tests/{share,reports,jar,quilt,meal,units}.js` | session `share.js`, `reports.js`, `jar4.js`, `q2.js`, `meal.js`, `units.js` | Server address, sample file and screenshot folder made configurable. A test name `'Phavan'` changed to `'Sam'`. Steps unchanged. | All ran against v36 with no page errors |
-| `tools/tests/backup.js` | written 12 Oct 2026 for the audit | New | 21/21 passed |
+| `tools/tests/backup.js` | written 12 Oct 2026 for the audit; extended 14 Oct 2026 for v38 (damaged files, kind messages, comparison, older warning, undo and its 7-day expiry, empty-app restore, B3, B5) | New | 40/40 passed (v38) |
 | `tools/tests/usuals.js` | written 14 Oct 2026 for v37 | New: usuals, "All your usuals", report empty states, no future dates | 16/16 passed |
 | `tools/tests/quick.js` | written 14 Oct 2026 for v37 | New: Quick session both ways, "Same as last time", Days sheet for ticked sessions, planned workouts unchanged | 17/17 passed |
 | `tools/tests/sample-backup.json` | session `sample-backup.json` | `settings.name` changed to `'Sam'`; everything else was already made up | Checked: no real personal data |
@@ -405,11 +415,11 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 ## 11. Status right now
 
-- **Last completed:** **v37** (14 Oct 2026, not yet committed): no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for both reports, and Quick session on Move. Tested in desktop Chromium only.
+- **Last completed:** **v38** (14 Oct 2026, not yet committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
 - **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
 - **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
-- **Next:** Phavan commits v37 and checks it on his iPhone (especially the date wheel and the Quick session sheets). B1 is still the recommended first technical fix, to be discussed first.
+- **Next:** Phavan commits v38 and checks the restore on his iPhone (picking a file, the comparison sheet, undo). Then: what happens to the data if the phone breaks or is replaced (his question, to discuss).
 
 ## 12. Instructions for a new Claude conversation
 

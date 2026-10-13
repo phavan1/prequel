@@ -1,10 +1,10 @@
 # START HERE
 
-_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 14 October 2026 (v37). This file doesn't depend on any earlier conversation._
+_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 14 October 2026 (v38). This file doesn't depend on any earlier conversation._
 
 ## 1. What this is
 **Prequel** is Phavan's personal iPhone web app (PWA): a kind, offline, private lifestyle companion. Logs of moving, food, rest, feelings and small wins become a night sky, quilts, a jar of stars, share cards and PDF reports.
-**Version: v37** (`const VERSION = 'prequel-v37'` in `sw.js`). v37 (14 Oct 2026): no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for the food report and sleep diary, and Quick session on Move. See the tracker's version table for the history.
+**Version: v38** (`const VERSION = 'prequel-v38'` in `sw.js`). v38 (14 Oct 2026): a safer backup restore with a 7-day undo. v37: no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for the food report and sleep diary, and Quick session on Move. See the tracker's version table for the history.
 
 ## 2. Where it lives
 - **Code:** `C:\Users\Phava\Documents\companion-app` on Phavan's Windows laptop (a git repo, branch `main`). Claude reaches it through the Claude desktop app link, when the conversation is linked to his computer.
@@ -79,9 +79,10 @@ When Phavan says we're preparing to move to another conversation, do a **focused
 **Starting a new conversation:** read the docs in section 3, look at the relevant code, verify the version and git status, point out anything that doesn't match, and then **wait for Phavan's instructions** before changing anything.
 
 ## 9. Waiting on Phavan
+- **Check v38 on the iPhone:** restore a backup from Files (comparison sheet, undo card, undo).
 - **Check v37 on the iPhone:** a future day on the date wheel snaps back to today; usuals and the "All your usuals" sheet; Quick session both ways.
 - **Pin on usuals** (offered, not answered) and **"Your quilt · 0 patches"** on Rest with nothing logged (a zero on screen, found 14 Oct).
-- **Next recommended technical fix: B1, backup restore validation** (HANDOVER 5b). Today any file with a `moments` list replaces everything (re-confirmed 14 Oct 2026). Phavan's preferred direction: stricter checks, a clear explanation of what restoring will replace, and a chance to save what's in the app first, while old legitimate backups keep restoring. **The fix itself isn't designed or approved yet; discuss it first.** B2–B5 stay documented.
+- **Backup restore fixed in v38** (B1, B2, B3, B5): stricter check, comparison sheet, save-first, 7-day undo. **B4 is still open** (rare; not discussed). Next topic Phavan asked for: what happens to the data if the phone breaks or is replaced.
 - **Night chips on Rest:** remove, replace with one "awake for a bit" button, or show them only at night.
 - **Weather row** in the sleep diary.
 - **Goal celebration** (and loud or quiet?).

@@ -85,6 +85,13 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - Editing a food's numbers can also fix past logs, but **only if he ticks the box**.
 - **Usuals (v37):** the top 5 sit on the page **in a vertical list**, then an "All your usuals" button opens a sheet with all of them. He chose this over a sideways-scrolling row (**he doesn't like sideways scrolling**) and over hiding all usuals behind a button (that would cost an extra tap for the most common log).
 
+**Backup and restore (v38)**
+- **Missing parts are fine, wrong parts are not.** Old backups keep restoring; a file with any wrong-shaped part is refused **as a whole**. Phavan didn't want Prequel to try to rescue what it can.
+- Before restoring, show **what's in the backup next to what's in the app now**, and warn when the backup is older ("Anything logged after <date> would be gone").
+- Offer **"Save what's here as a file first"**, and **also** keep an automatic safety copy on the phone for **7 days**, with an undo.
+- **Transparency:** the undo card says plainly that Prequel stored the app's data from before the restore, just in case, asks whether to undo, and says until when it's kept.
+- Kind refusal messages that always say nothing was changed. "Last backup" only counts once the file was really saved. A restore is saved straight away.
+
 **Logging dates**
 - **Nothing can be logged for a future day (v37)**, on any screen. A future pick snaps back to today with a gentle note. **Exception:** Mind reminders, where looking ahead is the point.
 
@@ -184,7 +191,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | "Your quilt · 0 patches" on Rest with nothing logged (a zero on screen) | Found while testing v37 | Not discussed yet |
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
-| Backup restore safety: stricter file check and a "save what's here first" option (B1); kind error message (B2); record "Last backup" only after it really saved (B3); prefer the newer copy on load (B4); save immediately after restore (B5) | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Priority set, fix not approved.** On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
+| Backup B4: prefer the newer copy on load | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Still open.** (B1, B2, B3 and B5 were approved and built in v38, see section C.) Earlier note: On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
 
 ### Done during the handover (approved by Phavan, 12 Oct 2026)
 - `README.md` rewritten as a short entry point.
@@ -194,6 +201,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v38: safer restore (B1, B2, B3, B5), with the comparison sheet, the older warning, save-first, a 7-day undo with a transparent message, and whole-file refusal.
 - v37: no future dates, top-5 usuals + "All your usuals" sheet, report empty states, Quick session (all approved by Phavan and built).
 
 ## I. Future ideas (his, not yet planned in detail)

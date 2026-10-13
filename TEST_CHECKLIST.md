@@ -44,7 +44,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. R
 - [ ] [iPhone] On the iPhone date wheel, choosing tomorrow snaps back to today. (`max` alone doesn't stop it on iOS.)
 
 ## 2. Data persistence, backup and restore
-_Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.js`, or a new state field. Last run: 14 Oct 2026, v36 (on a copy), 21/21 passed. B1 is the next recommended fix (HANDOVER 5b); when it's built, its regression tests go here._
+_Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.js`, or a new state field. Last run: 14 Oct 2026, v38, 40/40 passed._
 - [ ] [Claude] Log something, reload, and it's still there (IndexedDB). Same with IndexedDB blocked (localStorage fallback).
 - [ ] [Claude] Full round trip: every state field (moments, sessions, active, custom workouts, meals, myFoods with per100/recipe/once, weights, rests, pendingSleep, weather, mind, letters, goals with units/paused, goalLogs with amt, heavy, jar, sky, quilt, settings, games, unknown fields) comes back **identical** in an empty app, and after a reload.
 - [ ] [Claude] **A new state field** added in a release appears in the export and survives restore (it should, automatically; check it).
@@ -52,14 +52,21 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Decimals, nulls, emoji, line breaks and links between records (meal→food, log→goal, recipe→ingredient) survive.
 - [ ] [Claude] **Old backup** (`sample-backup.json`, first-week format) restores, and every screen opens without errors.
 - [ ] [Claude] **Bad files** (not JSON, empty, an array, no `moments`, `moments` not a list) are refused and current data stays untouched.
-- [ ] [Claude] Known gap B1: a file with `moments` but broken other parts (e.g. `goals: "abc"`) is accepted and replaces everything (re-confirmed 14 Oct 2026). When B1 is fixed: broken files must be refused with nothing changed, **and** older legitimate backups (`sample-backup.json`) must still restore.
+- [ ] [Claude] **B1 (v38):** files with broken parts (e.g. `goals: "abc"`, `meals: null`, a moment with no date, `exercises: "legs"`, `settings: "dark"`) are refused **as a whole** with "This backup looks damaged in places…", and nothing changes. Older legitimate backups (`sample-backup.json`) still restore.
+- [ ] [Claude] **B2:** refusal messages are kind and never show technical text ("Unexpected token…").
+- [ ] [Claude] The restore sheet shows *This backup* next to *In the app now*. An older backup gets the "would be gone" warning. "Save what's here as a file first" is offered. Cancel changes nothing.
+- [ ] [Claude] **Undo:** after a restore, Settings shows the undo card (what was kept, until when). It's still there after reopening the app. Undo puts back exactly the old data, and the card goes away. It's still offered on day 7 and gone after.
+- [ ] [Claude] Restoring into an empty app says nothing will be lost and shows no undo card.
+- [ ] [Claude] **B5:** the restored data is in IndexedDB immediately after the toast.
+- [ ] [iPhone] The restore sheet, undo card and undo work on the phone, and the undo card is still there after closing the app fully.
 - [ ] [Claude] Deleting a record also removes its star (`ref`).
 - [ ] [Claude] Start fresh asks twice and offers a backup first.
 - [ ] [iPhone] **Save a backup** opens the share sheet. "Save to Files" works, and the file name has today's date.
 - [ ] [iPhone] **Restore** from Files: the warning shows, data comes back, and it's still there after closing the app fully and reopening.
 - [ ] [iPhone] Data survives restarting the phone and an app update.
 - [ ] [iPhone] Before a phone change: save a backup, then restore it on the new phone (or after deleting and re-adding the app). **Only do this with a fresh backup in Files first.**
-- [ ] [iPhone] Cancelling the share sheet: note whether "Last backup" still updates (known issue B3).
+- [ ] [Claude] **B3:** a cancelled share (AbortError) says "No backup saved this time." and doesn't set "Last backup".
+- [ ] [iPhone] Cancelling the share sheet doesn't change "Last backup"; saving to Files does.
 
 ## 2b. Offline and updates
 - [ ] [Claude] Every file the app uses is in `SHELL` (compare `SHELL` against the folder; `tools/` must **not** be in it).

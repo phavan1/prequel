@@ -69,15 +69,15 @@ function openDB() {
     req.onerror = () => reject(req.error);
   });
 }
-function idbGet() {
+function idbGet(key = KEY) {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readonly'); const r = tx.objectStore(STORE).get(KEY);
+    const tx = db.transaction(STORE, 'readonly'); const r = tx.objectStore(STORE).get(key);
     r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error);
   });
 }
-function idbPut(value) {
+function idbPut(value, key = KEY) {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(value, KEY);
+    const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(value, key);
     tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error);
   });
 }
@@ -88,6 +88,7 @@ export async function load() {
   if (!saved) { try { const raw = localStorage.getItem('prequel-state'); if (raw) saved = JSON.parse(raw); } catch (e) { /* private mode */ } }
   state = Object.assign(fresh(), saved || {});
   state.settings = Object.assign(fresh().settings, state.settings || {});
+  await loadUndo();
   // ask the browser to keep this data even when the phone is low on space
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* not supported */ }
   return state;
@@ -101,6 +102,14 @@ export function save() {
     try { if (db) await idbPut(snapshot); else localStorage.setItem('prequel-state', JSON.stringify(snapshot)); }
     catch (e) { try { localStorage.setItem('prequel-state', JSON.stringify(snapshot)); } catch (e2) { /* nothing more we can do */ } }
   }, 150);
+  listeners.forEach(fn => fn(state));
+}
+// write straight away (after a restore or an undo, so closing the app that instant loses nothing)
+export async function saveNow() {
+  clearTimeout(saveTimer);
+  const snapshot = JSON.parse(JSON.stringify(state));
+  try { if (db) await idbPut(snapshot); else localStorage.setItem('prequel-state', JSON.stringify(snapshot)); }
+  catch (e) { try { localStorage.setItem('prequel-state', JSON.stringify(snapshot)); } catch (e2) { /* nothing more we can do */ } }
   listeners.forEach(fn => fn(state));
 }
 export function get() { return state; }
@@ -119,13 +128,86 @@ export function removeById(listName, id) {
 
 // ---------- backup ----------
 export function exportJSON() { return JSON.stringify(Object.assign({ exported: new Date().toISOString() }, state), null, 1); }
-export function importJSON(text) {
-  const data = JSON.parse(text);
-  if (!data || typeof data !== 'object' || !Array.isArray(data.moments)) throw new Error('That file doesn\'t look like a backup from this app.');
-  delete data.exported;
-  state = Object.assign(fresh(), data);
-  state.settings = Object.assign(fresh().settings, data.settings || {});
-  save();
+
+// Checking a backup before it's used. Missing parts are fine (older backups don't have newer fields, and get them
+// filled in). A part that's there but the wrong shape means the whole file is refused: no half-restores.
+const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+const RECORDS = ['moments', 'weather', 'sessions', 'rests', 'mind', 'letters', 'foods', 'comfort', 'customWorkouts', 'myFoods', 'meals', 'weights', 'goals', 'goalLogs'];
+const DATED = ['moments', 'weather', 'sessions', 'rests', 'foods', 'meals', 'weights', 'goalLogs'];
+const MAPS = ['heavy', 'lifts', 'units', 'customExercises', 'workoutAdds', 'subsAdded', 'settings', 'sky', 'games'];
+export const BACKUP_PROBLEMS = {
+  unreadable: 'That file couldn\'t be read, so Prequel can\'t use it. Nothing was changed.',
+  notours: 'That doesn\'t look like a Prequel backup. Nothing was changed.',
+  damaged: 'This backup looks damaged in places, so Prequel didn\'t use it. Your app is exactly as it was.'
+};
+export function checkBackup(text) {
+  let d;
+  try { d = JSON.parse(text); } catch (e) { return { problem: 'unreadable' }; }
+  if (!isObj(d) || !Array.isArray(d.moments)) return { problem: 'notours' };
+  const bad = where => ({ problem: 'damaged', where });
+  for (const k of RECORDS) if (k in d && !(Array.isArray(d[k]) && d[k].every(isObj))) return bad(k);
+  for (const k of DATED) if (Array.isArray(d[k]) && !d[k].every(x => typeof x.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.date))) return bad(k);
+  for (const k of MAPS) if (k in d && !isObj(d[k])) return bad(k);
+  if ('quiltSeen' in d && !Array.isArray(d.quiltSeen)) return bad('quiltSeen');
+  if ('active' in d && d.active !== null && !isObj(d.active)) return bad('active');
+  if ('pendingSleep' in d && d.pendingSleep !== null && typeof d.pendingSleep !== 'number') return bad('pendingSleep');
+  if (Array.isArray(d.sessions) && !d.sessions.every(s => !('exercises' in s) || (Array.isArray(s.exercises) && s.exercises.every(x => isObj(x) && (!('sets' in x) || Array.isArray(x.sets)))))) return bad('sessions');
+  if (isObj(d.settings) && ['tinyWins', 'kindLines', 'dayTabs'].some(k => k in d.settings && !Array.isArray(d.settings[k]))) return bad('settings');
+  return { data: d };
+}
+// does this hold anything you logged? (a brand-new app doesn't, so there's nothing to keep a copy of)
+export function hasData(s = state) { return RECORDS.some(k => k !== 'comfort' && Array.isArray(s[k]) && s[k].length); }
+
+// A safety copy: before a restore replaces everything, the app's data from just before is kept on this phone
+// for 7 days (outside the main data, so it's never inside a backup), and Settings offers to put it back.
+const UNDO_KEY = 'undo', UNDO_DAYS = 7;
+let undoAt = null;
+async function readUndo() {
+  if (db) return idbGet(UNDO_KEY);
+  const raw = localStorage.getItem('prequel-undo'); return raw ? JSON.parse(raw) : null;
+}
+async function writeUndo(v) {
+  if (db) return v ? idbPut(v, UNDO_KEY) : idbPut(null, UNDO_KEY);
+  if (v) localStorage.setItem('prequel-undo', JSON.stringify(v)); else localStorage.removeItem('prequel-undo');
+}
+async function loadUndo() {
+  try {
+    const u = await readUndo();
+    if (u && u.at && Date.now() - u.at < UNDO_DAYS * 864e5) undoAt = u.at;
+    else { undoAt = null; if (u) await writeUndo(null); }
+  } catch (e) { undoAt = null; }
+}
+export function undoInfo() { return undoAt && Date.now() - undoAt < UNDO_DAYS * 864e5 ? { at: undoAt, until: undoAt + UNDO_DAYS * 864e5 } : null; }
+
+// replace everything with a checked backup. Keeps the safety copy first; if it can't, says so ('nocopy')
+// unless told to go ahead anyway.
+export async function restoreBackup(data, { withoutCopy = false } = {}) {
+  if (hasData()) {
+    const at = Date.now();
+    try { await writeUndo({ at, state: JSON.parse(JSON.stringify(state)) }); undoAt = at; }
+    catch (e) { if (!withoutCopy) return 'nocopy'; }
+  }
+  const d = JSON.parse(JSON.stringify(data)); delete d.exported;
+  state = Object.assign(fresh(), d);
+  state.settings = Object.assign(fresh().settings, d.settings || {});
+  await saveNow();
+  return 'ok';
+}
+// put back the data from before the last restore
+export async function undoRestore() {
+  let u = null; try { u = await readUndo(); } catch (e) { /* unreadable */ }
+  if (!u || !u.state) { undoAt = null; return false; }
+  state = Object.assign(fresh(), u.state);
+  state.settings = Object.assign(fresh().settings, u.state.settings || {});
+  await saveNow();
+  try { await writeUndo(null); } catch (e) { /* it expires anyway */ }
+  undoAt = null; return true;
+}
+// kept for anything that still restores from plain text in one step
+export async function importJSON(text) {
+  const r = checkBackup(text);
+  if (r.problem) throw new Error(BACKUP_PROBLEMS[r.problem]);
+  return restoreBackup(r.data, { withoutCopy: true });
 }
 // start fresh: everything back to how it was on day one
 export function reset() { state = fresh(); save(); }

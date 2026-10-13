@@ -665,3 +665,11 @@ html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 
 .dayhead { margin-top: 10px; padding-top: 14px; border-top: 1px dashed var(--line); }
 .ingrow em.dry { font-style: normal; color: var(--red); font-weight: 800; }
+
+/* restore: what's in the backup next to what's here now (v38) */
+.cmpgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cmp { display: flex; flex-direction: column; gap: 3px; padding: 12px; border-radius: 14px; background: var(--room); border: 1px solid var(--line); }
+.cmp .k { font-size: 11px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
+.cmp small { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.cmp b { font-size: 14px; font-weight: 800; line-height: 1.35; }
+.undocard { border: 2px dashed var(--blue); }
