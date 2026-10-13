@@ -114,9 +114,27 @@ function confirmDelete(root, key) {
   });
 }
 
+// a quick session logged without reps: see what you did, take off anything you didn't mean to tick
+function editTicked(root, s) {
+  const st = get(), keep = s.exercises.slice();
+  const draw = () => '<h2>' + esc(s.workoutName) + '</h2><p class="muted">' + esc(prettyDate(s.date, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Logged without numbers. It counts.</p>' +
+    keep.map((x, i) => '<div class="ditem"><span>' + esc(x.name) + '</span>' + (keep.length > 1 ? '<button type="button" class="x" data-tkrm="' + i + '" aria-label="Take off ' + esc(x.name) + '">×</button>' : '') + '</div>').join('') +
+    '<button type="button" class="btn" data-o="save">Save changes</button><button type="button" class="btn alt" data-close>Cancel</button>';
+  const sheet = openSheet(draw(), ev => {
+    const b = ev.target.closest('[data-tkrm]');
+    if (b) { keep.splice(Number(b.dataset.tkrm), 1); sheet.querySelector('.sheet').innerHTML = draw(); return; }
+    if (!ev.target.closest('[data-o]')) return;
+    s.exercises = keep;
+    const c = keep.length + (keep.length === 1 ? ' exercise' : ' exercises');
+    st.moments.forEach(m => { if (m.ref === s.id) m.text = s.workoutName + ' · ' + c; });
+    save(); closeSheet(); render(root);
+  });
+}
+
 // a finished workout: fix any number, or remove a set you didn't mean to log
 function editSession(root, id) {
   const st = get(), s = st.sessions.find(x => x.id === id); if (!s) return;
+  if (s.noReps) { editTicked(root, s); return; }
   const typeOf = x => (EXERCISES[x.key] || st.customExercises[x.key] || {}).t || (x.sets.some(z => z.b !== '' && z.b != null) ? 'wr' : 'hold');
   const removed = new Set(), w = JSON.parse(JSON.stringify(s.exercises)); // a working copy, so Cancel changes nothing
   const draw = () => '<h2>' + esc(s.workoutName) + '</h2><p class="muted">' + esc(prettyDate(s.date, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Fix any number, or remove a set. It still counts.</p>' +
@@ -207,7 +225,7 @@ function dayCard(d) {
   if (D.move.length) {
     const sets = D.move.map(m => m.text).join(', ');
     row('move', 'move', D.move.length === 1 ? 'Moved' : D.move.length + ' workouts', esc(sets),
-      D.move.map(m => '<div class="ditem"><span>' + esc(m.text) + (m.bright ? ' ✦' : '') + '</span>' + (m.ref && st.sessions.some(s => s.id === m.ref) ? '<button type="button" class="lnk" data-sess="' + m.ref + '">sets ›</button>' : '') + x('moments:' + m.id, m.text) + '</div>').join(''));
+      D.move.map(m => '<div class="ditem"><span>' + esc(m.text) + (m.bright ? ' ✦' : '') + '</span>' + (m.ref && st.sessions.some(s => s.id === m.ref) ? '<button type="button" class="lnk" data-sess="' + m.ref + '">' + (st.sessions.find(s => s.id === m.ref).noReps ? 'what ›' : 'sets ›') + '</button>' : '') + x('moments:' + m.id, m.text) + '</div>').join(''));
   }
   if (D.meals.length || D.oldFood.length) {
     let kc = 0, pr = 0, known = 0;

@@ -1,6 +1,6 @@
 // Reports as PDFs: the sleep diary (for your doctor) and the weekly / monthly food report.
 import { get, today, addDays, parseKey, dateKey } from './store.js';
-import { esc, openSheet, closeSheet, toast } from './ui.js';
+import { esc, openSheet, closeSheet, toast, him } from './ui.js';
 import { loadArt, fontsReady } from './cards.js';
 import { NUTRIENTS, totalOf, sumDay, qtyLabel, myFoods } from './nutrition.js';
 import { Doc, PW, PH, M, INK, SOFT, LINE, CARD, BLUE, SUN, HAND, BODY, txt, rr, wrap, longDate, dayDate, shortDay, range, clock, dur, shareFile } from './pdf.js';
@@ -286,24 +286,35 @@ function monthsWith(dates) {
   return out;
 }
 function rangeSheet(title, intro, opts, months, onPick) {
-  const optBtn = (o, i) => '<button type="button" class="opt" data-o="' + i + '">' + o[0] + '<small style="display:block;font-weight:700;opacity:.7">' + esc(range(o[1], o[2])) + '</small></button>';
+  // a range with nothing in it is shown softly and can't be picked, so no empty PDF is ever made
+  const optBtn = (o, i) => '<button type="button" class="opt' + (o.empty ? ' empty' : '') + '" data-o="' + i + '"' + (o.empty ? ' disabled' : '') + '>' + o[0] + '<small style="display:block;font-weight:700;opacity:.7">' + esc(range(o[1], o[2])) + (o.empty ? ' · nothing logged in these dates yet' : '') + '</small></button>';
   openSheet('<h2>' + title + '</h2><p class="muted">' + intro + '</p>' + opts.map(optBtn).join('') +
     (months.length ? '<div class="lbl">Or pick a month</div><div class="chips monthpick">' + months.map((m, i) => '<button type="button" class="chip small" data-m="' + i + '">' + m[0] + '</button>').join('') + '</div>' : '') +
     '<button type="button" class="btn alt" data-close>Cancel</button>', e => {
     let b;
-    if ((b = e.target.closest('[data-o]'))) { const o = opts[+b.dataset.o]; onPick(o[1], o[2], o[3]); return; }
+    if ((b = e.target.closest('[data-o]'))) { const o = opts[+b.dataset.o]; if (!o.empty) onPick(o[1], o[2], o[3]); return; }
     if ((b = e.target.closest('[data-m]'))) { const m = months[+b.dataset.m]; onPick(m[1], m[2], m[0]); }
   });
 }
+// before anything is logged there's no report to make yet: say so warmly instead of making an empty PDF
+function notYet(pose, title, text) {
+  openSheet('<div class="notyet">' + him(pose, 'breathe', 'Your character') + '<h2>' + title + '</h2><p class="muted">' + text + '</p></div><button type="button" class="btn" data-close>Okay</button>');
+}
+const markEmpty = (opts, dates) => opts.forEach(o => { o.empty = !dates.some(d => d >= o[1] && d <= o[2]); });
 export function openSleepDiary() {
   const t = today(), st = get();
+  if (!st.rests.length) { notYet('asleep', 'Your sleep diary starts with one rest', 'Log a night, or even a nap, and your first diary will be ready to make.'); return; }
   const first = st.rests.length ? st.rests.reduce((m, r) => r.date < m ? r.date : m, t) : t;
   const opts = [['Last 2 weeks', addDays(t, -13), t], ['Last 4 weeks', addDays(t, -27), t], ['Everything', first, t]];
+  markEmpty(opts, st.rests.map(r => r.date));
   rangeSheet('Sleep diary', 'A tidy PDF for you or your doctor. Which dates?', opts, monthsWith(st.rests.map(r => r.date)), (a, b) => build(() => sleepDiary(a, b), 'sleep diary'));
 }
 export function openFoodReport() {
   const t = today(), st = get();
   const opts = [['The last 7 days', addDays(t, -6), t, 'the last 7 days']];
-  const months = monthsWith((st.meals || []).map(m => m.date).concat((st.foods || []).map(f => f.date)));
+  const dates = (st.meals || []).map(m => m.date).concat((st.foods || []).map(f => f.date));
+  if (!dates.length) { notYet('eating', 'Your first food report is on its way', 'It\'ll be ready once you\'ve logged a day of food. Even one banana counts.'); return; }
+  markEmpty(opts, dates);
+  const months = monthsWith(dates);
   rangeSheet('Food report', 'Everything you ate, a typical day, and a few gentle ideas, as a PDF.', opts, months, (a, b, label) => build(() => foodReport(a, b, label), 'food report'));
 }

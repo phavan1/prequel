@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup; app still v36). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, then **v37**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -50,7 +50,7 @@ TEST_CHECKLIST.md      what to test, and where
 tools/                 development only, never cached or shipped as a feature (see section 10)
   README.md            how to use the tools
   art/                 clean_art.py, defringe.py, holes.py, requirements.txt
-  tests/               Playwright scripts, sample-backup.json (fictional), package.json, .gitignore (shots/)
+  tests/               Playwright scripts (incl. v37's usuals.js and quick.js), sample-backup.json (fictional), package.json, .gitignore (shots/)
 css/app.css            all styles: :root tokens, dark mode block, one section per screen
 data/foods.json        offline food database (about 1.4 MB)
 fonts/                 Nunito + Gaegu woff2
@@ -97,7 +97,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 |---|---|---|
 | `moments` | `{id, date, ts, area, text, bright, ref?, written?}` | Every star in the sky. `area` is one of `move, food, rest, win, mind, goal`. `ref` links to the source record. **Tiny wins are moments with `area:'win'`.** `written:1` means a win he wrote himself. |
 | `weather` | `{id, date, ts, types:[name], strength}` | Uses the names in `WEATHERS`. |
-| `sessions` | `{id, date, ts, workoutId, workoutName, light, exercises:[{key,name,swap,sets:[{a,b}]}]}` | Gym. |
+| `sessions` | `{id, date, ts, workoutId, workoutName, light, exercises:[{key,name,swap,sets:[{a,b}]}], noReps?}` | Gym. A Quick session (v37) has `workoutId:'quick'`, `workoutName:'Quick session'`. **`noReps:1`** means it was logged without reps: its exercises have empty `sets` and must be kept (Days uses its own sheet for these). |
 | `rests` | `{id, date, start, end, feel}` | `date` is **the day you woke up**. `feel` is `rested`, `okay` or `groggy`. |
 | `pendingSleep` | timestamp or null | "Going to sleep" pressed, waiting for "Woke up". |
 | `mind` | `{id, text, remindOn, created, letGo}` | Notes and lanterns. |
@@ -112,7 +112,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 | `settings` | `{name, tinyWins[], kindLines[], theme:'light'|'dark'|'auto', dayTabs[]}` | |
 | `games.skate` | `{best, runs}` | |
 | `sky` | cluster and constellation model | Built by `sky-model.js`. |
-| Other flags | `jarsSeen`, `jarSize`, `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
+| Other flags | `jarsSeen`, `jarSize`, `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session; `active.quick:1` for a Quick session), `quickMode` (`'reps'` or `'tick'`, the last Quick session answer, v37), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
 
 **Rules that matter when changing data:**
 - `removeById(list, id)` also removes moments whose `ref` is that id, which takes the star out of the sky.
@@ -145,7 +145,13 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 - Feeds: Home row, Me ribbon and noticing line, the jar's hard-day check, letter stamps, Days weather tab, My month card.
 - **Not yet** in the sleep diary or food report.
 
-### Move (`move.js`) [from history; not re-tested in this handover]
+### Move (`move.js`) [from history; Quick session verified v37]
+- **Quick session** (v37): a big blue button at the top of Move. It asks "How do you want to track it today?" and remembers the last answer (highlighted "last time"):
+  - **Track sets and reps:** "What's first?" picker (Recent exercises first), then the normal keypad. More exercises are added as you go with "+ Add" (no "keep it in this workout" box for a Quick session).
+  - **Track without reps:** "What did you do?" tick list (Recent first, add your own). Needs at least one tick. Saved as a session with `noReps:1`; the star reads "Quick session · N exercises". In Days it shows "what ›", opening a sheet to take an exercise off.
+  - **Same as last time:** repeats the last session's exercises (and swaps), tracked the same way as last time.
+  - It counts toward the road to 100, like any session.
+- The "add an exercise" sheet shows Recent exercises first (v37).
 - The Project Athletic playbook's 12 workouts.
 - Custom keypad, "Same again", machine-busy swaps, kg or plate number, add or new workouts, light sessions.
 - The `legday` and `cheer` pictures.
@@ -155,7 +161,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
   - Spelling-friendly synonyms (chana/channa, dal/dhal, yoghurt/yogurt, curd, dahi, paneer, aloo, palak…).
   - For grains and pulses, **cooked versions come first**.
 - **"Just log it"** without numbers, to fill in later.
-- **Usuals** chips ("Your usuals · tap to log"). Edit opens Your foods.
+- **Usuals** (v37): the **top 5** (most used, then most recent) as full-width rows going down the page; if there are more, an **"All your usuals ›"** button opens a sheet with all of them, searchable and grouped (Home-cooked, Eating out, Packaged, Everything else). Tapping one logs it. Edit opens Your foods. (Before v37: up to 8 wrapping chips.)
 - **"What you ate today"** list, separated from usuals by a dashed divider.
 - **Portion sheet:** stepper, quick chips (½…10), or type **grams**. Portions logged by grams show as "80 g".
 - **From a label** (v32):
@@ -173,7 +179,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 - **Make it yours:** rename, where it's from (Home-cooked, Eating out, Packaged), usual portion. **Edit the numbers** (v33), with "Also fix the times I've already logged it".
 - **Day totals sheet:** 12 nutrients; "from X of Y foods" when partial; "–" instead of 0.
 - **Weight log** with a little line chart.
-- **Reports (PDF):** the last 7 days or any month that has food.
+- **Reports (PDF):** the last 7 days or any month that has food. **Empty states (v37):** with no food logged at all, a warm "Your first food report is on its way" sheet (him eating) instead of a PDF; if "the last 7 days" has nothing, it's greyed out and dashed with "nothing logged in these dates yet" and can't be picked.
   - highlights, a typical day, a day-by-day chart (gym days solid, rest days light, labelled in words)
   - gym days against rest days, where food came from, regulars, protein sources, weight
   - gentle ideas: protein per kg, fibre, saturated fat, B12, vitamin D, sodium
@@ -183,7 +189,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 - Going to sleep / Woke up. A 24-hour ring for the day. Add a rest by hand. How you felt.
 - Night chips: "Awake for a bit? What did you do" (`NIGHT_THINGS`). **Their future is undecided.**
 - Link to the quilt (`?from=rest`).
-- **Sleep diary (PDF):** last 2 weeks, last 4 weeks, everything, or any month.
+- **Sleep diary (PDF):** last 2 weeks, last 4 weeks, everything, or any month. **Empty states (v37):** no rests at all shows "Your sleep diary starts with one rest" (him asleep); empty ranges are greyed. The card no longer says "0 logged so far".
   - At a glance: days logged, typical sleep, usually asleep and up around (medians)
   - **Hours each day** chart (v36): solid night, striped daytime, dashed typical line
   - Sleep chart, 6pm to 6pm
@@ -244,7 +250,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 ### Settings (`settings.js`) and everywhere
 - Name, kind lines and tiny-win list. Look: Light, Cosy dark or Match my phone. Backup and restore. Start fresh (a Reset card that asks twice and offers a backup first).
 - Dark mode via `html[data-theme="dark"]`.
-- Any past date can be logged on most screens with the date chip.
+- Any past date can be logged on most screens with the date chip. **Never a future date (v37):** `ui.js` snaps any `input[type=date]` that has a `max` back to today with the toast "Can't log ahead. Back to today." (the iPhone date wheel ignores `max`), and `setLogDate`/`logDate` ignore a future `?d=` in the address. Rest's "add by hand" also refuses a wake-up time later than now. **Mind reminders are the exception**: their date boxes have no `max`, so future dates still work there.
 - **Back buttons return to where you came from**, using `?from=` (v35).
 
 ## 5b. Backup and restore (audited 12 Oct 2026)
@@ -349,6 +355,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | 10 | A long single file (`food.js` ~38 KB) and string-built HTML make edits risky. **Always re-test edited sheets.** In v25 a text replacement silently broke the goal sheet until v35. | Process risk |
 | 11 | Food search ranking is heuristic. Some names (seeraga samba, sona masoori, ponni) aren't recognised. | Open, offered |
 | 12 | Backup restore issues B1–B5 (section 5b). **B1 is the next recommended fix.** | Open, needs discussion and approval |
+| 15 | Rest shows "Your quilt · 0 patches" when nothing is logged yet: a zero on screen (found 14 Oct 2026 while testing v37; not changed). | Open, ask him |
 | 14 | `DEFAULT_COMFORT` in `store.js` holds old comfort-menu examples, and they're in the public repo even though no screen shows them. | Left untouched on purpose (14 Oct 2026); to discuss |
 | 13 | The script that built `data/foods.json` was never saved. | Can't be recovered; method in `DECISIONS.md` |
 
@@ -387,6 +394,8 @@ Everything in `tools/` is **development only**. It isn't in `sw.js` `SHELL`, isn
 | `tools/art/holes.py` | session `tools/holes.py` | Takes an image path and output path instead of fixed `app/art` and `shots` folders. | Ran |
 | `tools/tests/{share,reports,jar,quilt,meal,units}.js` | session `share.js`, `reports.js`, `jar4.js`, `q2.js`, `meal.js`, `units.js` | Server address, sample file and screenshot folder made configurable. A test name `'Phavan'` changed to `'Sam'`. Steps unchanged. | All ran against v36 with no page errors |
 | `tools/tests/backup.js` | written 12 Oct 2026 for the audit | New | 21/21 passed |
+| `tools/tests/usuals.js` | written 14 Oct 2026 for v37 | New: usuals, "All your usuals", report empty states, no future dates | 16/16 passed |
+| `tools/tests/quick.js` | written 14 Oct 2026 for v37 | New: Quick session both ways, "Same as last time", Days sheet for ticked sessions, planned workouts unchanged | 17/17 passed |
 | `tools/tests/sample-backup.json` | session `sample-backup.json` | `settings.name` changed to `'Sam'`; everything else was already made up | Checked: no real personal data |
 | `tools/art/requirements.txt`, `tools/tests/package.json`, `tools/tests/.gitignore` | new | Dependencies: Python OpenCV, NumPy, Pillow; Node Playwright 1.56.0. Screenshots are ignored. | |
 
@@ -396,11 +405,11 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 ## 11. Status right now
 
-- **Last completed:** v36, sleep diary daily totals and the "Hours each day" chart. Committed locally on 12 Oct 01:26.
+- **Last completed:** **v37** (14 Oct 2026, not yet committed): no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for both reports, and Quick session on Move. Tested in desktop Chromium only.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
 - **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
 - **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
-- **Next:** Phavan commits the docs cleanup. Then back to creative development; B1 is the recommended first technical fix, to be discussed first.
+- **Next:** Phavan commits v37 and checks it on his iPhone (especially the date wheel and the Quick session sheets). B1 is still the recommended first technical fix, to be discussed first.
 
 ## 12. Instructions for a new Claude conversation
 

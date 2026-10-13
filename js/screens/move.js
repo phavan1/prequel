@@ -65,6 +65,7 @@ function renderStart() {
   const L = [['green', 'Green', 'awake, normal', '#2E8B57'], ['yellow', 'Yellow', 'tired, a bit sore', '#E3B000'], ['red', 'Red', 'unwell, faint, pain', '#C2412D']];
   root.innerHTML =
     '<div class="top"><div class="lbl">Session ' + (st.sessions.length + 1) + ' · road to 100</div>' + dateChip() + '</div>' +
+    '<button type="button" class="quickgo" data-quick="1"><b>Quick session</b><span>No plan needed. Just go.</span><i aria-hidden="true">›</i></button>' +
     '<h1>How\'s the body?</h1>' +
     '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' +
     '<div class="card sug"><div class="k">' + s.k + '</div><h2>' + s.h + '</h2><p>' + s.p + '</p>' +
@@ -211,6 +212,7 @@ function onClick(e) {
   if ((b = t.closest('[data-light]'))) { light = b.dataset.light; renderStart(); return; }
   if ((b = t.closest('[data-start]'))) { startWorkout(b.dataset.start); return; }
   if (t.closest('[data-newwk]')) { openNewWk(); return; }
+  if (t.closest('[data-quick]')) { openQuick(); return; }
   if (t.closest('[data-manage]')) { openManage(); return; }
   if (!a) return;
   if (t.closest('[data-leave]')) {
@@ -268,11 +270,11 @@ function openAddEx() {
   const a = act(), lib = EX(), inWk = new Set(a.items.map(x => x[0]));
   const keys = Object.keys(lib).filter(k => !inWk.has(k));
   const draw = () => '<h2>Add an exercise</h2><p class="muted">Pick one, or make your own. It joins today\'s ' + esc(a.n) + '.</p>' +
-    '<div class="chips">' + keys.map(k => '<button type="button" class="chip small" data-pickex="' + k + '">' + esc(lib[k].n) + '</button>').join('') + '</div>' +
+    exChips(keys, k => 'data-pickex="' + k + '"') +
     '<div class="lbl" style="margin-top:6px">Make your own</div>' +
     '<label class="sr" for="exIn">Exercise name</label><input id="exIn" type="text" placeholder="e.g. Cable fly" autocomplete="off" enterkeyhint="done">' +
     '<div class="chips" id="typePicks">' + TYPES.map(tp => '<button type="button" class="chip small" data-type="' + tp[0] + '" aria-pressed="' + (tp[0] === addType) + '">' + tp[1] + '</button>').join('') + '</div>' +
-    '<label class="keep"><input type="checkbox" id="keepIt" checked> Keep it in ' + esc(a.n) + ' for next time</label>' +
+    (a.quick ? '' : '<label class="keep"><input type="checkbox" id="keepIt" checked> Keep it in ' + esc(a.n) + ' for next time</label>') +
     '<div class="err" id="exErr"></div>' +
     '<button type="button" class="btn" data-makeex="1">Add it</button><button type="button" class="btn alt" data-close>Cancel</button>';
   openSheet(draw(), (ev) => {
@@ -324,6 +326,97 @@ function openNewWk(existing) {
       save(); closeSheet(); renderStart(); toast('Saved ' + draft.name);
     }
   });
+}
+
+// ---------- quick session: no planning. Track sets and reps as you go, or just tick what you did ----------
+// your most recent exercises first, so the ones you actually do are right there
+function recentKeys() {
+  const lib = EX(), out = [];
+  get().sessions.slice().sort((a, b) => (b.date + b.ts).localeCompare(a.date + a.ts)).forEach(s => s.exercises.forEach(x => { if (lib[x.key] && !out.includes(x.key)) out.push(x.key); }));
+  return out.slice(0, 8);
+}
+function exChips(keys, attr, on) {
+  const lib = EX(), rec = recentKeys().filter(k => keys.includes(k)), rest = keys.filter(k => !rec.includes(k));
+  const chip = k => { const n = on ? on.indexOf(k) : -1; return '<button type="button" class="chip small" ' + attr(k) + (on ? ' aria-pressed="' + (n >= 0) + '"' : '') + '>' + (n >= 0 ? '✓ ' : '') + esc(lib[k].n) + '</button>'; };
+  return (rec.length ? '<div class="lbl">Recent</div><div class="chips">' + rec.map(chip).join('') + '</div>' : '') +
+    (rest.length ? '<div class="lbl">' + (rec.length ? 'Everything else' : 'Exercises') + '</div><div class="chips">' + rest.map(chip).join('') + '</div>' : '');
+}
+function lastSession() {
+  const d = logDate();
+  return get().sessions.filter(s => s.date <= d && s.exercises.length).sort((a, b) => (a.date + a.ts).localeCompare(b.date + b.ts)).pop() || null;
+}
+function openQuick() {
+  const st = get(), was = st.quickMode, prev = lastSession(), lib = EX();
+  const opt = (k, title, sub) => '<button type="button" class="opt' + (was === k ? ' cur' : '') + '" data-q="' + k + '">' + title + (was === k ? ' <span class="lastpick">last time</span>' : '') + '<small style="display:block;font-weight:700;opacity:.7">' + sub + '</small></button>';
+  const names = prev ? prev.exercises.map(x => x.name).slice(0, 3).join(', ') + (prev.exercises.length > 3 ? '…' : '') : '';
+  openSheet('<h2>Quick session</h2><p class="muted">How do you want to track it today?</p>' +
+    opt('reps', 'Track sets and reps', 'pick exercises as you go') + opt('tick', 'Track without reps', 'just tick what you did') +
+    (prev ? '<div class="lbl">Or</div><button type="button" class="opt" data-q="same">Same as last time<small style="display:block;font-weight:700;opacity:.7">' + esc(prev.workoutName) + ' · ' + esc(names) + '</small></button>' : '') +
+    '<button type="button" class="btn ghost" data-close>Not now</button>', ev => {
+    const b = ev.target.closest('[data-q]'); if (!b) return;
+    const q = b.dataset.q;
+    if (q === 'reps') { st.quickMode = 'reps'; save(); openFirstPick(); return; }
+    if (q === 'tick') { st.quickMode = 'tick'; save(); openTick([]); return; }
+    // same as last time: the same exercises (and swaps), tracked the same way as last time
+    const keys = prev.exercises.map(x => x.key).filter(k => lib[k]);
+    if (!keys.length) { toast('Those exercises aren\'t around any more. Pick fresh?'); return; }
+    if (prev.noReps) { openTick(keys); return; }
+    const base = byId(prev.workoutId), swap = {};
+    const items = keys.map((k, j) => { const x = prev.exercises.find(y => y.key === k); if (x && x.swap) swap[j] = x.swap; return ((base && base.items.find(it => it[0] === k)) || [k, lib[k].t === 'mins' ? '1' : '2', defRange(lib[k].t)]).slice(); });
+    closeSheet(); beginQuick(base ? prev.workoutId : 'quick', base ? prev.workoutName : 'Quick session', items, swap, 'Same as last time. ' + nameOf0(items[0][0], swap[0]) + ' first.');
+  });
+}
+const nameOf0 = (k, sw) => sw || (EX()[k] || { n: '?' }).n;
+function beginQuick(id, name, items, swap, line) {
+  get().active = { id, n: name, items, i: 0, log: {}, swap: swap || {}, hinted: {}, light, date: logDate(), started: Date.now(), lastAt: 0, quick: id === 'quick' ? 1 : 0 };
+  save(); view = 'wk'; prefill(); say = line; render(); window.scrollTo(0, 0);
+}
+// with numbers: pick just the first exercise, then add the rest as you go
+function openFirstPick() {
+  const lib = EX();
+  openSheet('<h2>What\'s first?</h2><p class="muted">Just the first one. Add the next whenever you\'re ready.</p>' + exChips(Object.keys(lib), k => 'data-first="' + k + '"') +
+    '<div class="lbl">Not in the list?</div><div class="addrow"><label class="sr" for="qNew">New exercise name</label><input id="qNew" type="text" placeholder="Type an exercise" autocomplete="off" enterkeyhint="done"><button type="button" class="btn alt" data-firstnew="1">Add</button></div>' +
+    '<button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
+    let b, k = null;
+    if ((b = ev.target.closest('[data-first]'))) k = b.dataset.first;
+    if (ev.target.closest('[data-firstnew]')) { const v = (document.getElementById('qNew').value || '').trim(); if (!v) return; k = newExercise(v, 'wr'); }
+    if (!k) return;
+    const L = EX(), it = [k, L[k].t === 'mins' ? '1' : '2', defRange(L[k].t)];
+    closeSheet(); beginQuick('quick', 'Quick session', [it], {}, 'No plan, no problem. ' + L[k].n + ' first.');
+  });
+}
+// without reps: tick everything you did, and it's logged
+function openTick(pre) {
+  const picked = pre.slice();
+  const draw = msg => '<h2>What did you do?</h2><p class="muted">Tick everything you did. No numbers needed.</p>' +
+    exChips(Object.keys(EX()), k => 'data-tick="' + k + '"', picked) +
+    '<div class="lbl">Not in the list?</div><div class="addrow"><label class="sr" for="tkNew">New exercise name</label><input id="tkNew" type="text" placeholder="Type an exercise" autocomplete="off" enterkeyhint="done"><button type="button" class="btn alt" data-ticknew="1">Add</button></div>' +
+    '<div class="err">' + (msg || '') + '</div>' +
+    '<button type="button" class="btn" data-ticklog="1">' + (picked.length ? 'Log it · ' + picked.length + (picked.length === 1 ? ' exercise' : ' exercises') : 'Log it') + '</button><button type="button" class="btn ghost" data-close>Cancel</button>';
+  const redraw = msg => { const sh = document.querySelector('#sheet .sheet'), y = sh.scrollTop; sh.innerHTML = draw(msg); sh.scrollTop = y; };
+  openSheet(draw(), ev => {
+    const t = ev.target; let b;
+    if ((b = t.closest('[data-tick]'))) { const k = b.dataset.tick, n = picked.indexOf(k); if (n >= 0) picked.splice(n, 1); else picked.push(k); redraw(); return; }
+    if (t.closest('[data-ticknew]')) { const v = (document.getElementById('tkNew').value || '').trim(); if (!v) return; picked.push(newExercise(v, 'wr')); save(); redraw(); return; }
+    if (t.closest('[data-ticklog]')) { if (!picked.length) { redraw('Tick at least one, or add your own.'); return; } logTicked(picked); }
+  });
+}
+function logTicked(keys) {
+  const st = get(), lib = EX(), d = logDate();
+  const exercises = keys.map(k => ({ key: k, name: lib[k].n, swap: null, sets: [] }));
+  const first = st.sessions.length === 0;
+  const session = { id: uid(), date: d, ts: Date.now(), workoutId: 'quick', workoutName: 'Quick session', light, exercises, noReps: 1 };
+  st.sessions.push(session);
+  const c = exercises.length + (exercises.length === 1 ? ' exercise' : ' exercises');
+  addMoment('move', 'Quick session · ' + c, d, { ref: session.id, bright: first ? 1 : 0 });
+  save();
+  const n = st.sessions.length;
+  openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + him('cheer', 'pop', 'Your character jumping with joy') +
+    '<div class="big">Session ' + n + ' done.</div>' +
+    '<p class="muted">' + c + ', no numbers needed. A star just went up in your sky.</p>' +
+    '<p class="muted" style="font-size:13px">' + n + ' of 100.' + (n >= 100 ? ' You made it. And it keeps going.' : '') + '</p>' +
+    '<button type="button" class="btn wide" data-close>Back to Move</button></div>', null);
+  view = 'start'; render();
 }
 
 // ---------- you're in control: change or remove anything you've added ----------

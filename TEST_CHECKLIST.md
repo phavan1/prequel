@@ -7,7 +7,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. R
 - **[iPhone]**: needs Phavan's iPhone, with Prequel installed from Safari to the Home Screen.
 - **[Both]**: Claude checks the logic first, then Phavan confirms the feel on his phone.
 
-**Ready-made scripts:** `tools/tests/` (see `tools/README.md`). Use the matching one: `backup.js` §2, `meal.js` §3, `reports.js` §4, `units.js` §5, `jar.js` and `quilt.js` §6, `share.js` §7.
+**Ready-made scripts:** `tools/tests/` (see `tools/README.md`). Use the matching one: `backup.js` §2, `meal.js` and `usuals.js` §3, `reports.js` and `usuals.js` §4, `units.js` §5, `quick.js` §5b, `jar.js` and `quilt.js` §6, `share.js` §7, `usuals.js` §1b.
 
 **How Claude sets up a test:**
 - Syntax check every changed module: `node --input-type=module --check < js/file.js`
@@ -35,6 +35,13 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. R
 - [ ] [Claude] The bottom tab bar's five tabs go to the right pages. (Known, not yet fixed: Food, Rest, Weather, the Jar and Quilt always highlight Home, so Quilt opened from Me or Rest still lights up Home. See HANDOVER section 8, issue 2.)
 - [ ] [Claude] The Me gear opens Settings, and its back goes to Me.
 - [ ] [iPhone] Swiping back with the iPhone gesture behaves sensibly.
+
+## 1b. No future dates (v37)
+- [ ] [Claude] A future `?d=` in the address goes back to today with "Can't log ahead. Back to today." (Food, Move, Rest, Weather, Jar.)
+- [ ] [Claude] Picking a future day in the date chip, the goal "Logging for" box, the weight date or Rest's "add by hand" snaps back to today.
+- [ ] [Claude] Rest "add by hand" refuses a wake-up time later than now ("That wake-up hasn't happened yet.").
+- [ ] [Claude] Past days still work everywhere. **Mind reminders still accept future dates.**
+- [ ] [iPhone] On the iPhone date wheel, choosing tomorrow snaps back to today. (`max` alone doesn't stop it on iOS.)
 
 ## 2. Data persistence, backup and restore
 _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.js`, or a new state field. Last run: 14 Oct 2026, v36 (on a copy), 21/21 passed. B1 is the next recommended fix (HANDOVER 5b); when it's built, its regression tests go here._
@@ -71,6 +78,8 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Editing a recipe updates the times it's already been logged.
 - [ ] [Claude] Day totals say "from X of Y foods" when some are unknown.
 - [ ] [Claude] Weight log saves and the chart draws.
+- [ ] [Claude] **Usuals (v37):** at most 5 on the page, in a vertical list, most used first. "All your usuals ›" shows only when there are more than 5; its sheet lists all of them grouped (Home-cooked, Eating out, Packaged, Everything else), search narrows it, and tapping one logs it for the chosen day.
+- [ ] [iPhone] The usuals list and the "All your usuals" sheet scroll comfortably with one thumb.
 - [ ] [iPhone] **"Save and log" on the label sheet works with the keyboard open and after closing it.** (Known issue 1. **Confirm this first.**)
 - [ ] [iPhone] Typing decimals on the iPhone keypad (a "." or "," keyboard) works in every number field.
 
@@ -86,6 +95,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] PDFs build with no network (Playwright offline mode).
 - [ ] [iPhone] Tapping a report opens the share sheet. "Save to Files" works and the PDF opens and reads well.
 - [ ] [iPhone] Reports work in **airplane mode**.
+- [ ] [Claude] **Empty states (v37):** with nothing logged, Food → Reports and Rest → Make a sleep diary show the warm "not yet" sheet, never an empty PDF. With older data only, "the last 7 days" (or 2/4 weeks) is greyed and can't be picked, while months with data are offered. The sleep diary card never says "0 logged".
 
 ## 5. Goals
 - [ ] [Claude] Create a linked goal and an own goal from Me and from the calendar ＋.
@@ -94,6 +104,15 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Rest it for now moves the goal to Resting. Pick it back up returns it, from Me **and** from the calendar ＋.
 - [ ] [Claude] Reaching the target shows "You did it." and moves the goal to the finished shelf.
 - [ ] [Claude] At zero, a goal shows "Ready when you are", never 0.
+
+## 5b. Move: Quick session (v37)
+- [ ] [Claude] The Quick session button opens "How do you want to track it today?". The last answer is highlighted ("last time"). "Same as last time" shows only after a session exists.
+- [ ] [Claude] **Without reps:** ticking exercises (and adding your own) then "Log it" saves one session with `noReps:1` and empty sets, adds a star "Quick session · N exercises", and counts toward 100. Logging with nothing ticked asks gently for one.
+- [ ] [Claude] In Days, a ticked session shows "what ›"; taking an exercise off and saving keeps the rest (it must never wipe them).
+- [ ] [Claude] **With sets and reps:** "What's first?" (Recent first) starts the keypad; "+ Add" adds more as you go with no "keep it" box; Finish saves `workoutId:'quick'`. Nothing is added to a saved workout.
+- [ ] [Claude] **Same as last time** starts with the last session's exercises (and swaps), in the same tracking style.
+- [ ] [Claude] Planned workouts still start the same way, and their "add exercise" sheet still has the "keep it" box.
+- [ ] [iPhone] The Quick session sheets feel quick when tired: big targets, little scrolling.
 
 ## 6. Calendar, jar and journal
 - [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins and Weather tabs switch on from ＋.

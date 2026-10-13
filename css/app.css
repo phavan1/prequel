@@ -90,6 +90,11 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .sheet { width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; background: var(--paper); border-radius: 24px 24px 0 0; padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 18px) 16px; display: flex; flex-direction: column; gap: 10px; }
 .sheet .opt { min-height: 50px; border-radius: 14px; border: 1px solid var(--line); background: var(--room); font-size: 15px; font-weight: 800; text-align: left; padding: 0 14px; }
 .sheet .opt.cur { border: 2px solid var(--blue); background: var(--blue-soft); }
+.sheet .opt.empty { opacity: .55; border-style: dashed; background: transparent; color: var(--ink-soft); }
+.notyet { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+.notyet .him { width: 150px; height: auto; }
+.notyet h2 { margin: 4px 0 0; }
+.notyet p { margin: 0; }
 .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tabbar) + 20px); transform: translate(-50%, 20px); opacity: 0; z-index: 50; background: var(--ink); color: #FFFFFF; padding: 10px 16px; border-radius: 14px; font-weight: 800; font-size: 14px; transition: opacity .25s, transform .25s; pointer-events: none; max-width: calc(100% - 32px); text-align: center; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
@@ -149,6 +154,11 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .wbtn b { font-size: 14px; }
 .wbtn span { font-size: 11px; color: var(--ink-soft); line-height: 1.15; }
 .wbtn.new { border-style: dashed; background: transparent; }
+.quickgo { display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%; min-height: 64px; padding: 10px 18px; margin: 4px 0 2px; border-radius: 18px; border: 0; background: var(--blue); color: #fff; text-align: left; font: inherit; }
+.quickgo b { font-size: 18px; font-weight: 900; }
+.quickgo span { grid-column: 1; font-size: 13px; font-weight: 700; opacity: .85; }
+.quickgo i { grid-row: 1 / span 2; grid-column: 2; font-style: normal; font-size: 26px; font-weight: 900; }
+.lastpick { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 99px; background: var(--blue); color: #fff; font-size: 10px; font-weight: 900; vertical-align: 2px; }
 .wk { display: flex; flex-direction: column; min-height: calc(100vh - env(safe-area-inset-top, 0px) - 12px); margin: 0 -16px; }
 .wkhead { display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 8px; }
 .wkhead h1 { font-size: 17px; text-align: center; }
@@ -438,6 +448,10 @@ body:has(.screen-skate) { overflow: hidden; overscroll-behavior: none; }
 .nutable b { font-size: 15px; font-weight: 900; }
 .wchart { width: 100%; height: auto; }
 .usuals .chip { min-height: 40px; font-size: 14px; }
+.reslist.usuals .res, .usualsall .res { min-height: 52px; }
+.reslist.usuals .allusuals { width: 100%; }
+.usualsall { max-height: 52vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.usualsall .lbl { margin: 8px 0 0; }
 
 .stepper { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 10px; }
 .stepper button { height: 60px; border-radius: 18px; border: 1px solid var(--line); background: var(--room); font-size: 28px; font-weight: 900; color: var(--ink); }

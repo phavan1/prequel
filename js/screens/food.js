@@ -17,6 +17,32 @@ export function mount(r) {
 }
 export function unmount() { clearTimeout(snackTimer); const s = document.getElementById('snack'); if (s) s.remove(); }
 
+// your usuals: the five you have most often sit on the page, the rest wait in a sheet
+const TOP_USUALS = 5;
+const allUsuals = () => myFoods().filter(f => !f.once).sort((a, b) => (b.uses || 0) - (a.uses || 0) || (b.last || 0) - (a.last || 0));
+const usualRow = f => '<button type="button" class="res usual" data-usual="' + f.id + '"><span>' + esc(f.name) + '<small>' + esc(f.unit) + ' · ' + kcalP(f.n) + '</small></span><b aria-hidden="true">+</b></button>';
+function usualsSheet() {
+  const all = allUsuals();
+  const groups = KINDS.concat([[null, 'Everything else']]);
+  const draw = q => {
+    const hit = f => !q || f.name.toLowerCase().includes(q);
+    const html = groups.map(([k, label]) => {
+      const list = all.filter(f => (k ? f.kind === k : !KINDS.some(x => x[0] === f.kind)) && hit(f));
+      return list.length ? '<div class="lbl">' + esc(label) + '</div>' + list.map(usualRow).join('') : '';
+    }).join('');
+    return html || '<p class="muted" style="font-size:13px">None of your usuals match that.</p>';
+  };
+  const sheet = openSheet('<h2>All your usuals</h2><p class="muted" style="margin:0">Tap one to log it' + (logDate() === today() ? '' : ' for ' + esc(prettyDate(logDate()))) + '.</p>' +
+    '<label class="sr" for="uq">Find one of your usuals</label><input id="uq" type="search" placeholder="Find one…" autocomplete="off">' +
+    '<div class="reslist usualsall" id="ulist">' + draw('') + '</div>' +
+    '<button type="button" class="btn ghost" data-close>Done</button>', ev => {
+    const b = ev.target.closest('[data-usual]'); if (!b) return;
+    const f = myFoods().find(x => x.id === b.dataset.usual); if (!f) return;
+    closeSheet(); finishLog(logFood(f, logDate()), f);
+  });
+  sheet.addEventListener('input', e => { if (e.target.id === 'uq') sheet.querySelector('#ulist').innerHTML = draw(e.target.value.trim().toLowerCase()); });
+}
+
 const kcalP = n => n ? Math.round(n[0] || 0) + ' cal · ' + Math.round(n[1] || 0) + ' g protein' : 'no numbers yet';
 
 function dayList() {
@@ -30,7 +56,7 @@ function render() {
   const d = logDate(), list = dayList();
   const S = sumDay(list.filter(x => x.m).map(x => x.m));
   const mealsN = list.length;
-  const usuals = myFoods().filter(f => !f.once).sort((a, b) => (b.uses || 0) - (a.uses || 0) || (b.last || 0) - (a.last || 0)).slice(0, 8);
+  const allU = allUsuals(), usuals = allU.slice(0, TOP_USUALS);
   const lastW = weights().slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts)[0];
   root.innerHTML =
     '<div class="top">' + backLink() + dateChip() + '</div>' +
@@ -39,7 +65,8 @@ function render() {
       '<em>' + (S.counted ? '~' + Math.round(S.t[0]).toLocaleString() + ' cal · ' + Math.round(S.t[1]) + ' g protein ›' : 'Anything counts. A banana counts.') + '</em></span></button>' +
     '<div class="fsearch"><label class="sr" for="fq">What did you have?</label><input id="fq" type="search" placeholder="What did you have?" autocomplete="off" enterkeyhint="go" value="' + esc(query) + '"></div>' +
     '<div id="res"></div>' +
-    (usuals.length ? '<div class="top usualshead"><div class="lbl">Your usuals · tap to log</div><button type="button" class="btn ghost" data-manage style="min-height:34px;padding:0 4px">Edit</button></div><div class="chips usuals">' + usuals.map(f => '<button type="button" class="chip" data-usual="' + f.id + '">' + esc(f.name) + '</button>').join('') + '</div>' : '') +
+    (usuals.length ? '<div class="top usualshead"><div class="lbl">Your usuals · tap to log</div><button type="button" class="btn ghost" data-manage style="min-height:34px;padding:0 4px">Edit</button></div><div class="reslist usuals">' + usuals.map(usualRow).join('') +
+      (allU.length > TOP_USUALS ? '<button type="button" class="rowlink allusuals" data-allusuals><span>All your usuals</span><b>›</b></button>' : '') + '</div>' : '') +
     '<div class="lbl dayhead">' + (d === today() ? 'What you ate today' : 'What you ate · ' + esc(prettyDate(d))) + '</div>' +
     '<div class="card daylist">' + (list.length ? list.map(x => x.m
       ? '<button type="button" class="entry" data-meal="' + x.m.id + '"><span class="t">' + timeOf(x.m.ts) + '</span><span class="nm">' + esc(x.m.name) + '<small>' + (x.m.sure ? '' : '~') + esc(qtyLabel(x.m)) + '</small></span><span class="kc">' + (x.m.n ? Math.round(totalOf(x.m)[0]) + ' cal' : '–') + '</span></button>'
@@ -99,6 +126,7 @@ function onClick(e) {
   if (t.closest('[data-label]')) { labelSheet(); return; }
   if (t.closest('[data-recipe]')) { recipeSheet(); return; }
   if (t.closest('[data-manage]')) { manageSheet(); return; }
+  if (t.closest('[data-allusuals]')) { usualsSheet(); return; }
   if (t.closest('[data-weight]')) { weightSheet(); return; }
   if (t.closest('[data-reports]')) { openFoodReport(); }
 }
@@ -377,7 +405,7 @@ function weightSheet() {
     if (t.closest('[data-o]')) {
       const kg = parseFloat(document.getElementById('wKg').value);
       if (!(kg > 20 && kg < 400)) { toast('Type your weight in kg'); return; }
-      W.push({ id: uid(), date: document.getElementById('wDay').value || today(), ts: Date.now(), kg: Math.round(kg * 10) / 10, where });
+      W.push({ id: uid(), date: [document.getElementById('wDay').value || today(), today()].sort()[0], ts: Date.now(), kg: Math.round(kg * 10) / 10, where });
       save(); redraw(); render(); toast('Noted.');
     }
   });

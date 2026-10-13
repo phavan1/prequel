@@ -8,8 +8,19 @@ export const reduceMotion = window.matchMedia && window.matchMedia('(prefers-red
 
 // ---------- which day you're logging for (backdating) ----------
 export const ctx = { date: null };
-export function logDate() { return ctx.date || today(); }
-export function setLogDate(d) { ctx.date = d && d !== today() ? d : null; }
+// nothing can be logged for a day that hasn't happened yet (the iPhone date wheel ignores max, so we check ourselves)
+export const AHEAD = 'Can\'t log ahead. Back to today.';
+export function logDate() { return ctx.date && ctx.date <= today() ? ctx.date : today(); }
+export function setLogDate(d) {
+  if (d && d > today()) { d = null; toast(AHEAD); }
+  ctx.date = d && d !== today() ? d : null;
+}
+// any date box with a max (every "which day" box except Mind's reminders) snaps a future day back to today
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (!el.matches || !el.matches('input[type="date"][max]') || !el.value || el.value <= today()) return;
+  el.value = today(); toast(AHEAD);
+}, true);
 export function prettyDate(key, opts) {
   if (key === today()) return 'Today';
   if (key === addDays(today(), -1)) return 'Yesterday';

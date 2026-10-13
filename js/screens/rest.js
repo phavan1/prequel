@@ -1,4 +1,4 @@
-import { get, save, uid, addMoment, removeById, dateKey, parseKey } from '../store.js';
+import { get, save, uid, addMoment, removeById, dateKey, parseKey, today } from '../store.js';
 import { FEELS, NIGHT_THINGS } from '../data.js';
 import { openSleepDiary } from '../reports.js';
 import { esc, nav, backLink, dateChip, logDate, him, timeOf, hm, prettyDate, toast, openSheet, closeSheet } from '../ui.js';
@@ -48,7 +48,7 @@ function openManual(root, endTs) {
   const endVal = end ? pad(end.getHours()) + ':' + pad(end.getMinutes()) : '07:00';
   let feel = 'okay';
   openSheet('<h2>Add a rest</h2><p class="muted">For a forgotten night, a nap, or the second half of a split night.</p>' +
-    '<label class="field-label" for="rDate">DAY YOU WOKE UP</label><input id="rDate" type="date" value="' + wake + '">' +
+    '<label class="field-label" for="rDate">DAY YOU WOKE UP</label><input id="rDate" type="date" max="' + today() + '" value="' + wake + '">' +
     '<div class="grid2"><div><label class="field-label" for="rFrom">FELL ASLEEP</label><input id="rFrom" type="time" value="00:00"></div><div><label class="field-label" for="rTo">WOKE UP</label><input id="rTo" type="time" value="' + endVal + '"></div></div>' +
     '<div class="lbl">How did it feel</div><div class="seg" id="feelSeg">' + FEELS.map(f => '<button type="button" data-f="' + f[0] + '" aria-pressed="' + (f[0] === feel) + '">' + f[1] + '</button>').join('') + '</div>' +
     '<button type="button" class="btn" data-add>Add it</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
@@ -61,6 +61,7 @@ function openManual(root, endTs) {
     const endD = new Date(y, m - 1, dd, ...to.split(':').map(Number));
     let startD = new Date(y, m - 1, dd, ...from.split(':').map(Number));
     if (startD >= endD) startD = new Date(startD.getTime() - 86400000); // fell asleep the evening before
+    if (d > today() || endD.getTime() > Date.now()) { toast('That wake-up hasn\'t happened yet.'); return; }
     addRest(startD.getTime(), endD.getTime(), feel); closeSheet(); render(root);
   });
 }
@@ -98,6 +99,6 @@ function render(root) {
     '<a class="rowlink" href="#/quilt?from=rest"><span>Your quilt · ' + new Set(st.rests.map(r => r.date)).size + ' patches</span><b>›</b></a>' +
     '<div class="lbl">Awake for a bit? What did you do</div>' +
     '<div class="chips">' + NIGHT_THINGS.map(n => '<button type="button" class="chip small" data-awake="' + esc(n) + '">' + esc(n) + '</button>').join('') + '</div>' +
-    '<div class="card"><div class="lbl">For your doctor</div><p class="muted" style="font-size:14px">Your rests as a tidy PDF sleep diary, ready to save or send. ' + st.rests.length + ' logged so far.</p><button type="button" class="btn alt" data-diary>Make a sleep diary</button></div>' +
+    '<div class="card"><div class="lbl">For your doctor</div><p class="muted" style="font-size:14px">Your rests as a tidy PDF sleep diary, ready to save or send.' + (st.rests.length ? ' ' + st.rests.length + ' logged so far.' : '') + '</p><button type="button" class="btn alt" data-diary>Make a sleep diary</button></div>' +
     nav('home');
 }

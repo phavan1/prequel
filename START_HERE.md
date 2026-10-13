@@ -1,10 +1,10 @@
 # START HERE
 
-_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 14 October 2026 (docs only, still v36). This file doesn't depend on any earlier conversation._
+_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 14 October 2026 (v37). This file doesn't depend on any earlier conversation._
 
 ## 1. What this is
 **Prequel** is Phavan's personal iPhone web app (PWA): a kind, offline, private lifestyle companion. Logs of moving, food, rest, feelings and small wins become a night sky, quilts, a jar of stars, share cards and PDF reports.
-**Version: v36** (`const VERSION = 'prequel-v36'` in `sw.js`). There are no app code changes after v36; only docs and `tools/` were added.
+**Version: v37** (`const VERSION = 'prequel-v37'` in `sw.js`). v37 (14 Oct 2026): no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for the food report and sleep diary, and Quick session on Move. See the tracker's version table for the history.
 
 ## 2. Where it lives
 - **Code:** `C:\Users\Phava\Documents\companion-app` on Phavan's Windows laptop (a git repo, branch `main`). Claude reaches it through the Claude desktop app link, when the conversation is linked to his computer.
@@ -32,7 +32,7 @@ _For Phavan and for any new Claude conversation. Written on 12 October 2026; las
 
 ## 6. Preserved development tools (in `tools/`)
 - `tools/art/`: `clean_art.py`, `defringe.py`, `holes.py`. They turn a ChatGPT picture into a clean 640 px webp cut-out.
-- `tools/tests/`: Playwright scripts (`backup`, `share`, `reports`, `jar`, `quilt`, `meal`, `units`) and `sample-backup.json` (**made-up data**).
+- `tools/tests/`: Playwright scripts (`backup`, `share`, `reports`, `jar`, `quilt`, `meal`, `units`, and v37's `usuals` and `quick`) and `sample-backup.json` (**made-up data**).
 - Not recoverable: the script that built `data/foods.json`, and the exact ChatGPT character prompt (the look is described in `DECISIONS.md` D).
 
 ## 7. Rules that matter most
@@ -79,6 +79,8 @@ When Phavan says we're preparing to move to another conversation, do a **focused
 **Starting a new conversation:** read the docs in section 3, look at the relevant code, verify the version and git status, point out anything that doesn't match, and then **wait for Phavan's instructions** before changing anything.
 
 ## 9. Waiting on Phavan
+- **Check v37 on the iPhone:** a future day on the date wheel snaps back to today; usuals and the "All your usuals" sheet; Quick session both ways.
+- **Pin on usuals** (offered, not answered) and **"Your quilt · 0 patches"** on Rest with nothing logged (a zero on screen, found 14 Oct).
 - **Next recommended technical fix: B1, backup restore validation** (HANDOVER 5b). Today any file with a `moments` list replaces everything (re-confirmed 14 Oct 2026). Phavan's preferred direction: stricter checks, a clear explanation of what restoring will replace, and a chance to save what's in the app first, while old legitimate backups keep restoring. **The fix itself isn't designed or approved yet; discuss it first.** B2–B5 stay documented.
 - **Night chips on Rest:** remove, replace with one "awake for a bit" button, or show them only at night.
 - **Weather row** in the sleep diary.

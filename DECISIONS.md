@@ -75,6 +75,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - Exports are PDF, with dates in words. **CSV export was rejected.**
 - Sleep diary periods: 2 weeks, 4 weeks, everything, or a picked month.
 - Food reports: last 7 days, or a picked month that has food.
+- **No empty PDFs (v37):** with nothing logged, a warm "first report" sheet explains it instead (never the words "no data"); a date range with nothing in it is greyed and can't be picked.
 - The food report's "gentle ideas" are suggestions, never verdicts. Some nutrients (B12, vitamin D, iron, fibre and others) were chosen for **personal health reasons he shared**. The details stay out of these docs.
 
 **Food**
@@ -82,6 +83,18 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - Label entry: blanks stay **unknown, never zero**. A **missing-decimal check** warns when the numbers don't add up (v32).
 - A saved meal can be a **one-off** ("Keep it in my foods" switched off).
 - Editing a food's numbers can also fix past logs, but **only if he ticks the box**.
+- **Usuals (v37):** the top 5 sit on the page **in a vertical list**, then an "All your usuals" button opens a sheet with all of them. He chose this over a sideways-scrolling row (**he doesn't like sideways scrolling**) and over hiding all usuals behind a button (that would cost an extra tap for the most common log).
+
+**Logging dates**
+- **Nothing can be logged for a future day (v37)**, on any screen. A future pick snaps back to today with a gentle note. **Exception:** Mind reminders, where looking ahead is the point.
+
+**Move: Quick session (v37)**
+- A one-tap way to start without planning, for tired days. It asks how to track it, and remembers the last answer:
+  - **Track sets and reps:** pick exercises as you go, not before.
+  - **Track without reps:** tick the exercises you did. He wants the exercises recorded even without numbers, so a plain "I went" log was rejected.
+- **Same as last time** repeats the last session's exercises.
+- A Quick session counts toward the road to 100, like any session.
+- Name: "Quick session".
 
 **Navigation**
 - **Back buttons go back to where you came from**, using `?from=` (v35). The `FROM` map in `ui.js` holds the labels. Any new link into a sub-page must pass `from`.
@@ -167,6 +180,8 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | A one-time "You've already filled N jars!" moment | Jar work | Offered |
 | Light motion lines on dark share cards | v23 | Offered |
 | Fix the bottom tab bar so it highlights the section you came from (mainly Quilt, opened from Me and Rest; see HANDOVER section 8, issue 2) | Found during this handover; described more accurately 14 Oct 2026 | Not discussed yet |
+| A pin on usuals, so a favourite always stays in the top five | v37 discussion | Offered; not answered, so not built |
+| "Your quilt · 0 patches" on Rest with nothing logged (a zero on screen) | Found while testing v37 | Not discussed yet |
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Backup restore safety: stricter file check and a "save what's here first" option (B1); kind error message (B2); record "Last backup" only after it really saved (B3); prefer the newer copy on load (B4); save immediately after restore (B5) | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Priority set, fix not approved.** On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
@@ -179,6 +194,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v37: no future dates, top-5 usuals + "All your usuals" sheet, report empty states, Quick session (all approved by Phavan and built).
 
 ## I. Future ideas (his, not yet planned in detail)
 
