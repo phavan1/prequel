@@ -419,7 +419,7 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
 - **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
 - **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
-- **Next:** Phavan commits v38 and checks the restore on his iPhone (picking a file, the comparison sheet, undo). Then: what happens to the data if the phone breaks or is replaced (his question, to discuss).
+- **Next:** Phavan commits v38 and checks the restore on his iPhone (picking a file, the comparison sheet, undo). Then: what happens to the data if the phone breaks or is replaced. **Shelved by Phavan until the next session**; options are listed in `DECISIONS.md` H.
 
 ## 12. Instructions for a new Claude conversation
 

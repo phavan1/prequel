@@ -82,7 +82,8 @@ When Phavan says we're preparing to move to another conversation, do a **focused
 - **Check v38 on the iPhone:** restore a backup from Files (comparison sheet, undo card, undo).
 - **Check v37 on the iPhone:** a future day on the date wheel snaps back to today; usuals and the "All your usuals" sheet; Quick session both ways.
 - **Pin on usuals** (offered, not answered) and **"Your quilt · 0 patches"** on Rest with nothing logged (a zero on screen, found 14 Oct).
-- **Backup restore fixed in v38** (B1, B2, B3, B5): stricter check, comparison sheet, save-first, 7-day undo. **B4 is still open** (rare; not discussed). Next topic Phavan asked for: what happens to the data if the phone breaks or is replaced.
+- **Backup restore fixed in v38** (B1, B2, B3, B5): stricter check, comparison sheet, save-first, 7-day undo. **B4 is still open** (rare; not discussed). 
+- **Shelved until the next session (Phavan, 14 Oct 2026): what happens to the data if the phone breaks or is replaced.** Today: reinstall from Safari, then Settings → Restore from the latest backup file; anything after that backup is lost. Three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified).
 - **Night chips on Rest:** remove, replace with one "awake for a bit" button, or show them only at night.
 - **Weather row** in the sleep diary.
 - **Goal celebration** (and loud or quiet?).
