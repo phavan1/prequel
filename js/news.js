@@ -4,6 +4,13 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 43, date: '2026-10-15', items: [
+    'Forgot to check the weight? Tap "Not noted" under the weight box. There\'s also "Bar only" and "Body weight".',
+    'Exercises you do with your own body weight can be set to "Body weight × reps", so you only type reps. Prequel offers to fix your old 0 kg sets too.',
+    'Each exercise has a ⋯ button: change how you measure it, fix the order you did things in, or remove it if you added it by mistake.',
+    'In Days, you can fix a past workout: mark a weight as not noted, put exercises in the right order, and more.',
+    'When you finish a session, you can copy it straight away. Move now shows just your last workout, with all the others one tap away.'
+  ] },
   { v: 42, date: '2026-10-15', items: [
     'Move remembers the order you really did your exercises in. The exercise buttons get little numbers as you go.',
     'Next time you do the same workout, you\'ll see "Last time" with the order you went in. Nothing gets rearranged.',

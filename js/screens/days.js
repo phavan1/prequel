@@ -1,5 +1,6 @@
 import { get, save, today, dateKey, parseKey, removeById } from '../store.js';
 import { weatherByName, EXERCISES } from '../data.js';
+import { SPECIAL } from './move.js';
 import { esc, nav, prettyDate, timeOf, hm, openSheet, closeSheet } from '../ui.js';
 import { openLog, ensureGoals } from '../goals.js';
 import { totalOf, qtyLabel } from '../nutrition.js';
@@ -137,27 +138,43 @@ function editSession(root, id) {
   if (s.noReps) { editTicked(root, s); return; }
   const typeOf = x => (EXERCISES[x.key] || st.customExercises[x.key] || {}).t || (x.sets.some(z => z.b !== '' && z.b != null) ? 'wr' : 'hold');
   const removed = new Set(), w = JSON.parse(JSON.stringify(s.exercises)); // a working copy, so Cancel changes nothing
-  const draw = () => '<h2>' + esc(s.workoutName) + '</h2><p class="muted">' + esc(prettyDate(s.date, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Fix any number, or remove a set. It still counts.</p>' +
-    w.map((x, i) => { const t = typeOf(x); return '<div class="exhead">' + esc(x.name) + '</div>' +
-      '<div class="setedit" style="font-size:11px;font-weight:800;color:var(--ink-soft)"><span></span><span style="text-align:center">' + (t === 'wr' ? 'WEIGHT' : t === 'mins' ? 'MINUTES' : 'SECONDS') + '</span><span style="text-align:center">' + (t === 'wr' ? 'REPS' : '') + '</span><span></span></div>' +
-      x.sets.map((z, j) => removed.has(i + ':' + j) ? '' : '<div class="setedit"><span class="n">' + (j + 1) + '</span><input type="text" inputmode="decimal" data-a="' + i + ':' + j + '" value="' + esc(z.a) + '" aria-label="Set ' + (j + 1) + ' ' + (t === 'wr' ? 'weight' : 'amount') + '">' +
-        (t === 'wr' ? '<input type="text" inputmode="numeric" data-b="' + i + ':' + j + '" value="' + esc(z.b) + '" aria-label="Set ' + (j + 1) + ' reps">' : '<span></span>') +
+  // a weight can be a number or a word (v43): Not noted, Bar only, Body weight
+  const KIND = '<option value="">kg</option>' + Object.keys(SPECIAL).map(v => '<option value="' + v + '">' + SPECIAL[v] + '</option>').join('');
+  const weightCell = (z, i, j) => { const sp = SPECIAL[z.a]; return '<div class="wcell' + (sp ? ' word' : '') + '"><input type="' + (sp ? 'hidden' : 'text') + '" inputmode="decimal" data-a="' + i + ':' + j + '" value="' + (sp ? '' : esc(z.a)) + '" placeholder="kg" aria-label="Set ' + (j + 1) + ' weight">' +
+    '<select data-ak="' + i + ':' + j + '" aria-label="Set ' + (j + 1) + ': kind of weight">' + KIND.replace('value="' + (sp ? z.a : '') + '"', 'value="' + (sp ? z.a : '') + '" selected') + '</select></div>'; };
+  const draw = () => '<h2>' + esc(s.workoutName) + '</h2><p class="muted">' + esc(prettyDate(s.date, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Fix any number, mark a weight as not noted, put the exercises in the order you did them, or remove a set. It still counts.</p>' +
+    w.map((x, i) => { const t = typeOf(x), wr = t === 'wr' || t === 'bw'; return '<div class="exhead"><span>' + esc(x.swap || x.name) + '</span>' + (w.length > 1 ? '<span class="exmove"><button type="button" data-exup="' + i + '" aria-label="Move earlier"' + (i ? '' : ' disabled') + '>↑</button><button type="button" data-exdown="' + i + '" aria-label="Move later"' + (i < w.length - 1 ? '' : ' disabled') + '>↓</button></span>' : '') + '</div>' +
+      '<div class="setedit" style="font-size:11px;font-weight:800;color:var(--ink-soft)"><span></span><span style="text-align:center">' + (wr ? 'WEIGHT' : t === 'mins' ? 'MINUTES' : 'SECONDS') + '</span><span style="text-align:center">' + (wr ? 'REPS' : '') + '</span><span></span></div>' +
+      x.sets.map((z, j) => removed.has(i + ':' + j) ? '' : '<div class="setedit"><span class="n">' + (j + 1) + '</span>' + (wr ? weightCell(z, i, j) : '<input type="text" inputmode="decimal" data-a="' + i + ':' + j + '" value="' + esc(z.a) + '" aria-label="Set ' + (j + 1) + ' amount">') +
+        (wr ? '<input type="text" inputmode="numeric" data-b="' + i + ':' + j + '" value="' + esc(z.b) + '" aria-label="Set ' + (j + 1) + ' reps">' : '<span></span>') +
         '<button type="button" data-rmset="' + i + ':' + j + '" aria-label="Remove set ' + (j + 1) + '">×</button></div>').join(''); }).join('') +
     '<button type="button" class="btn" data-o="save">Save changes</button><button type="button" class="btn alt" data-close>Cancel</button>';
+  const redraw = () => { const sh = sheet.querySelector('.sheet'), y = sh.scrollTop; sh.innerHTML = draw(); sh.scrollTop = y; };
   const sheet = openSheet(draw(), ev => {
     const b = ev.target.closest('[data-rmset]');
-    if (b) { keepTyped(); removed.add(b.dataset.rmset); const sh = sheet.querySelector('.sheet'), y = sh.scrollTop; sh.innerHTML = draw(); sh.scrollTop = y; return; }
+    if (b) { keepTyped(); removed.add(b.dataset.rmset); redraw(); return; }
+    // move an exercise earlier or later (the sets it had marked for removal move with it)
+    const mv = ev.target.closest('[data-exup],[data-exdown]');
+    if (mv && !mv.disabled) {
+      keepTyped();
+      const i = Number(mv.dataset.exup != null ? mv.dataset.exup : mv.dataset.exdown), m = mv.dataset.exup != null ? i - 1 : i + 1;
+      [w[i], w[m]] = [w[m], w[i]];
+      const swapped = new Set(); removed.forEach(key => { const [x, y] = key.split(':').map(Number); swapped.add((x === i ? m : x === m ? i : x) + ':' + y); });
+      removed.clear(); swapped.forEach(k => removed.add(k)); redraw(); return;
+    }
     if (!ev.target.closest('[data-o]')) return;
     keepTyped();
-    w.forEach((x, i) => { x.sets = x.sets.filter((z, j) => !removed.has(i + ':' + j) && String(z.a).trim() !== ''); });
+    // only × removes a set: an empty weight on a weight exercise means "Not noted" (v43)
+    w.forEach((x, i) => { const wr = ['wr', 'bw'].includes(typeOf(x)); x.sets = x.sets.filter((z, j) => !removed.has(i + ':' + j)).map(z => (wr && String(z.a).trim() === '' && String(z.b).trim() !== '' ? Object.assign(z, { a: 'nn' }) : z)).filter(z => String(z.a).trim() !== ''); });
     s.exercises = w.filter(x => x.sets.length);
     const n = s.exercises.reduce((a, x) => a + x.sets.length, 0);
     st.moments.forEach(m => { if (m.ref === id) m.text = s.workoutName + (n ? ' · ' + n + (n === 1 ? ' set' : ' sets') : ''); });
     save(); closeSheet(); render(root);
   });
   // carry what's been typed across redraws
+  sheet.addEventListener('change', e => { if (e.target.matches('[data-ak]')) { keepTyped(); redraw(); } });
   function keepTyped() {
-    sheet.querySelectorAll('[data-a]').forEach(inp => { const [i, j] = inp.dataset.a.split(':').map(Number); w[i].sets[j].a = inp.value.trim(); });
+    sheet.querySelectorAll('[data-a]').forEach(inp => { const [i, j] = inp.dataset.a.split(':').map(Number), sel = sheet.querySelector('[data-ak="' + inp.dataset.a + '"]'); w[i].sets[j].a = sel && sel.value ? sel.value : inp.value.trim(); });
     sheet.querySelectorAll('[data-b]').forEach(inp => { const [i, j] = inp.dataset.b.split(':').map(Number); w[i].sets[j].b = inp.value.trim(); });
   }
 }

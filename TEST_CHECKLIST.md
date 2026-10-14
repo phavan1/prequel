@@ -136,6 +136,10 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Your sessions lists the latest (newest first); Copy puts the formatted text on the clipboard (swaps, plates, seconds and ticked sessions read right).
 - [ ] [iPhone] Copy, then paste into the other app: the text looks right there.
 
+## 5d. Move: logging honestly (v43)
+- [ ] [Claude] `moveedit.js`: Not noted / Bar only log word weights; ⋯ removes an accidental exercise (today, and from the workout for next time); switching to body weight asks about old 0 kg sets and then shows only reps; Fix the order (arrows) renumbers the chips; Copy this workout on the done sheet; Move shows just Your last workout; Days fixes a past session (word ↔ number, reorder).
+- [ ] [iPhone] The weight words and ⋯ are easy to hit mid-set; the Days picker works with the iPhone wheel.
+
 ## 6. Calendar, jar and journal
 - [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins and Weather tabs switch on from ＋.
 - [ ] [Claude] The All tab has no summary line. Other tabs' summaries never say zero.

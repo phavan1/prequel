@@ -1,5 +1,5 @@
 // v42: Move remembers the real exercise order (numbered chips, saved in that order, "Last time" shown, never
-// rearranged), "Your sessions" with Copy; Rest's "Awake for a bit". Fictional data only, throwaway profiles.
+// rearranged), "Your sessions" with Copy (v43: last workout + All your sessions); Rest's "Awake for a bit". Fictional data only, throwaway profiles.
 // Run: PREQUEL_URL=http://localhost:8765/ node tools/tests/moveorder.js
 const { chromium } = require('playwright');
 const path = require('path'); const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';
@@ -41,16 +41,17 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   // 3. Your sessions + Copy (and a ticked quick session)
   await p.click('[data-quick]'); await p.waitForTimeout(300); await p.click('[data-q="tick"]'); await p.waitForTimeout(300);
   await p.click('[data-tick="plank"]'); await p.click('[data-tick="lat"]'); await p.click('[data-ticklog]'); await p.waitForTimeout(400); await p.click('#sheet [data-close]'); await p.waitForTimeout(300);
-  ok('Your sessions lists both, newest first', (await p.locator('.sesslist .sessrow').count()) === 2 && /Quick session/.test(await p.locator('.sesslist .sessrow').first().innerText()));
+  // (v43: Move shows just your last workout, plus "All your sessions")
+  ok('Your last workout shows the newest, with All your sessions', (await p.locator('.sesslist .sessrow').count()) === 1 && /Quick session/.test(await p.locator('.sesslist .sessrow').first().innerText()) && await p.locator('[data-allsess]').count() === 1);
   await p.evaluate(() => document.querySelector('.sesslist').scrollIntoView({ block: 'center' })); await p.screenshot({ path: OUT + '/mo-sessions.png' });
-  await p.click('.sesslist [data-sess]:nth-child(2)'); await p.waitForTimeout(300);
+  await p.click('[data-allsess]'); await p.waitForTimeout(300); await p.click('#sheet .sesslist [data-sess]:nth-child(2)'); await p.waitForTimeout(300);
   await p.screenshot({ path: OUT + '/mo-session-sheet.png' });
   await p.click('#sheet [data-copy]'); await p.waitForTimeout(300);
   const clip = await p.evaluate(() => navigator.clipboard.readText());
   console.log('\n----- copied -----\n' + clip + '\n------------------');
   ok('Copy puts the session on the clipboard', /^✦ Session 1 · Full Body A/.test(clip) && /1\. Chest press\n   40 kg × 10  ·  40 kg × 8/.test(clip) && /3\. Leg press\n   plate 4 × 12/.test(clip));
   await p.click('#sheet [data-close]'); await p.waitForTimeout(200);
-  await p.click('.sesslist [data-sess]:nth-child(1)'); await p.waitForTimeout(300);
+  await p.click('main .sesslist [data-sess]'); await p.waitForTimeout(300);
   ok('a ticked session copies as "done ✓"', /done ✓/.test(await p.locator('.sesstext').innerText()));
   await p.click('#sheet [data-close]');
 

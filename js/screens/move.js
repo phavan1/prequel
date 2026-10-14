@@ -4,14 +4,18 @@ import { esc, nav, backLink, dateChip, logDate, prettyDate, him, pop, openSheet,
 import { dayDate } from '../pdf.js';
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
-const TYPES = [['wr', 'Weight × reps'], ['hold', 'Seconds'], ['mins', 'Minutes']];
+const TYPES = [['wr', 'Weight × reps'], ['bw', 'Body weight × reps'], ['hold', 'Seconds'], ['mins', 'Minutes']];
 const defRange = t => t === 'hold' ? '20-60s' : t === 'mins' ? '10 min' : '8-12';
+// a weight that isn't a number (v43): you didn't note it, it was just the bar, or your own body weight
+export const SPECIAL = { nn: 'Not noted', bar: 'Bar only', bw: 'Body weight' };
 
 // ---------- library: playbook + your own additions ----------
 function EX() {
   const st = get(), out = {};
   Object.keys(EXERCISES).forEach(k => { out[k] = Object.assign({}, EXERCISES[k], { subs: EXERCISES[k].subs.concat(st.subsAdded[k] || []) }); });
   Object.keys(st.customExercises).forEach(k => { out[k] = Object.assign({ subs: [] }, st.customExercises[k], { subs: (st.customExercises[k].subs || []).concat(st.subsAdded[k] || []) }); });
+  // a playbook exercise you do with your body weight only (v43): reps, no weight box
+  Object.keys(st.measure || {}).forEach(k => { if (out[k] && out[k].t === 'wr' && st.measure[k] === 'bw') out[k] = Object.assign({}, out[k], { t: 'bw' }); });
   return out;
 }
 function workouts() {
@@ -21,7 +25,7 @@ function workouts() {
 const byId = id => workouts().find(w => w.id === id);
 function newExercise(name, t) {
   const key = 'c' + uid();
-  get().customExercises[key] = { n: name, t, m: 0, rest: t === 'wr' ? 'c' : null, subs: [] };
+  get().customExercises[key] = { n: name, t, m: 0, rest: t === 'wr' || t === 'bw' ? 'c' : null, subs: [] };
   return key;
 }
 
@@ -92,6 +96,7 @@ function prefill() {
   const k = item()[0], L = a.log[a.i] || [];
   const src = L.length ? L[L.length - 1] : (get().lifts[k] || { a: '', b: '' });
   A = src.a || ''; B = src.b || ''; field = 'a'; fresh = true; edit = -1;
+  if ((EX()[k] || {}).t === 'bw') { A = 'bw'; field = 'b'; }
 }
 function startWorkout(id) {
   const base = byId(id); if (!base) return;
@@ -110,6 +115,7 @@ function lastOrderLine(a) {
 function fmtSet(x, e, k) {
   if (e.t === 'hold') return x.a + ' s';
   if (e.t === 'mins') return x.a + ' min';
+  if (SPECIAL[x.a]) return SPECIAL[x.a] + ' × ' + x.b + (e.each ? ' each' : '');
   return (unitOf(k) === 'plate' ? 'P' + x.a : x.a + 'kg') + ' × ' + x.b + (e.each ? ' each' : '');
 }
 function setsHtml() {
@@ -127,13 +133,17 @@ function renderWk() {
   const restTxt = e.rest ? 'rest ' + REST_GUIDE[e.rest] : '';
   const one = e.t !== 'wr';
   let fields;
-  if (one) {
+  if (e.t === 'bw') {
+    fields = '<div class="fields one"><button type="button" class="field" data-f="b" aria-pressed="true"><span class="l">REPS · BODY WEIGHT' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(B) + '</span></button></div>';
+  } else if (one) {
     fields = '<div class="fields one"><button type="button" class="field" data-f="a" aria-pressed="true"><span class="l">' + (e.t === 'hold' ? 'SECONDS' : 'MINUTES') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(A) + '</span></button></div>';
   } else {
     const u = unitOf(k);
     fields = '<div class="fields">' +
-      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : 'WEIGHT · KG') + (e.m ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">kg</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + '">' + esc(A) + '</span>' + (u === 'kg' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
-      '<button type="button" class="field" data-f="b" aria-pressed="' + (field === 'b') + '"><span class="l">REPS' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh && field === 'b' ? ' fresh' : '') + '">' + esc(B) + '</span></button></div>';
+      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : 'WEIGHT · KG') + (e.m ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">kg</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + (SPECIAL[A] ? ' word' : '') + '">' + esc(SPECIAL[A] || A) + '</span>' + (SPECIAL[A] ? '' : u === 'kg' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
+      '<button type="button" class="field" data-f="b" aria-pressed="' + (field === 'b') + '"><span class="l">REPS' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh && field === 'b' ? ' fresh' : '') + '">' + esc(B) + '</span></button></div>' +
+      // when the weight isn't a number
+      '<div class="wsp">' + Object.keys(SPECIAL).map(v => '<button type="button" data-wsp="' + v + '" aria-pressed="' + (A === v) + '">' + SPECIAL[v] + '</button>').join('') + '</div>';
   }
   const nextLabel = (!one && field === 'a') ? 'Next →' : (edit >= 0 ? 'Save set ' + (edit + 1) + ' ✓' : 'Log ✓');
   const banner = a.id === 'min20' ? '<div class="banner min">If you feel better after these three, continue. If not, leave. The session still counts.</div>' : (a.light === 'yellow' ? '<div class="banner yellow">Yellow day · 2 sets is plenty, optional extras skipped.</div>' : '');
@@ -144,7 +154,7 @@ function renderWk() {
     '<div class="hscroll exs" id="exs">' + a.items.map((x, j) => { const done = (a.log[j] || []).length >= Math.min(2, baseSets(x)), n = (a.order || []).indexOf(j); return '<button type="button" data-ex="' + j + '" aria-pressed="' + (j === a.i) + '">' + (n >= 0 ? '<span class="ord' + (done ? ' done' : '') + '" aria-label="done ' + ordinal(n + 1) + '">' + (n + 1) + '</span>' : '') + esc(nameOf(j)) + (a.hinted[j] ? ' ↑' : '') + '</button>'; }).join('') + '<button type="button" class="addex" data-addex="1">+ Add</button></div>' +
     lastOrderLine(a) +
     '<div class="strip">' + him(pose, 'breathe', 'Your character, training with you').replace('class="him', 'id="him" class="him') + '<div class="say">' + esc(say) + '</div><span class="pill" id="since">' + (a.lastAt ? 'Since last set 0:00' : 'No sets yet') + '</span></div>' +
-    '<div class="info"><div class="t"><b>' + esc(nameOf(a.i)) + (a.swap[a.i] ? ' <span style="font-weight:700;color:var(--ink-soft);font-size:12px">for ' + esc(e.n.toLowerCase()) + '</span>' : '') + '</b>' + [setsLabel, it[2], restTxt].filter(Boolean).map(esc).join(' · ') + '</div>' + '<button type="button" class="busy" data-busy="1">Machine busy?</button></div>' +
+    '<div class="info"><div class="t"><b>' + esc(nameOf(a.i)) + (a.swap[a.i] ? ' <span style="font-weight:700;color:var(--ink-soft);font-size:12px">for ' + esc(e.n.toLowerCase()) + '</span>' : '') + '</b>' + [setsLabel, it[2], restTxt].filter(Boolean).map(esc).join(' · ') + '</div>' + '<div class="infobtns"><button type="button" class="busy" data-busy="1">Machine busy?</button><button type="button" class="busy more" data-exmenu="1" aria-label="More for ' + esc(nameOf(a.i)) + '">⋯</button></div></div>' +
     '<div class="hscroll" id="sets">' + setsHtml() + '</div>' +
     fields +
     '<div class="pad"><div class="keys">' + ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'].map(kk => '<button type="button" class="key" data-k="' + kk + '" aria-label="' + (kk === 'del' ? 'Delete' : kk === '.' ? 'Decimal point' : kk) + '">' + (kk === 'del' ? '⌫' : kk) + '</button>').join('') + '</div>' +
@@ -161,7 +171,7 @@ function tick() {
   el.textContent = 'Since last set ' + Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
 }
 function press(kk) {
-  const e = EX()[item()[0]], f = field; let v = fresh ? '' : (f === 'a' ? A : B);
+  const e = EX()[item()[0]], f = field; let v = fresh || (f === 'a' && SPECIAL[A]) ? '' : (f === 'a' ? A : B);
   if (kk === 'del') v = (fresh ? (f === 'a' ? A : B) : v).slice(0, -1);
   else if (kk === '.') { if (f === 'a' && e.t === 'wr' && unitOf(item()[0]) === 'kg' && !v.includes('.')) v = (v || '0') + '.'; else return; }
   else if (v.length < (f === 'a' ? 5 : 3)) v = v === '0' ? kk : v + kk;
@@ -170,8 +180,10 @@ function press(kk) {
 }
 function commit() {
   const a = act(), it = item(), e = EX()[it[0]];
-  if (!A || (e.t === 'wr' && !B)) { toast(e.t === 'wr' ? 'Type the weight and reps first' : 'Type a number first'); return; }
-  const set = { a: A, b: e.t === 'wr' ? B : '' };
+  if (e.t === 'bw') A = 'bw';
+  const reps = e.t === 'wr' || e.t === 'bw';
+  if (!A || (reps && !B)) { toast(e.t === 'wr' ? 'Type the weight and reps first' : e.t === 'bw' ? 'Type the reps first' : 'Type a number first'); return; }
+  const set = { a: A, b: reps ? B : '' };
   const L = (a.log[a.i] = a.log[a.i] || []);
   if (edit >= 0) { L[edit] = set; say = 'Fixed. Set ' + (edit + 1) + ' is right now.'; save(); prefill(); renderWk(); return; }
   L.push(set); a.lastAt = Date.now(); justLogged = true;
@@ -211,7 +223,7 @@ function finish() {
     '<div class="big">Session ' + n + ' done.</div>' +
     '<p class="muted">' + (sets ? exercises.length + (exercises.length === 1 ? ' exercise, ' : ' exercises, ') + sets + (sets === 1 ? ' set' : ' sets') + '. ' : 'You showed up. It counts. ') + (pb ? 'A new heaviest lift, so your star shines brighter.' : 'A star just went up in your sky.') + '</p>' +
     '<p class="muted" style="font-size:13px">' + n + ' of 100.' + (n >= 100 ? ' You made it. And it keeps going.' : '') + '</p>' +
-    '<button type="button" class="btn wide" data-close>Back to Move</button></div>', null);
+    '<button type="button" class="btn wide" data-copydone>Copy this workout</button><button type="button" class="btn alt wide" data-close>Back to Move</button></div>', copyDone(session));
   view = 'start'; render();
 }
 
@@ -245,6 +257,8 @@ function onClick(e) {
   if ((b = t.closest('[data-ex]'))) { a.i = Number(b.dataset.ex); save(); prefill(); const k = item()[0], last = get().lifts[k]; say = (a.log[a.i] || []).length ? 'Back to ' + nameOf(a.i).toLowerCase() + '.' : last ? 'Last time: ' + fmtSet(last, EX()[k], k) + '. Same again?' : 'First time with this one. Go easy.'; renderWk(); return; }
   if (t.closest('[data-addex]')) { openAddEx(); return; }
   if (t.closest('[data-busy]')) { openBusy(); return; }
+  if (t.closest('[data-exmenu]')) { openExMenu(); return; }
+  if ((b = t.closest('[data-wsp]'))) { A = b.dataset.wsp; field = 'b'; fresh = true; renderWk(); return; }
   if (t.closest('[data-unit]')) { const k = item()[0]; get().units[k] = unitOf(k) === 'kg' ? 'plate' : 'kg'; save(); A = ''; fresh = true; field = 'a'; renderWk(); return; }
   if ((b = t.closest('[data-n]'))) { const v = Math.max(0, (parseFloat(A) || 0) + Number(b.dataset.n)); A = String(Math.round(v * 100) / 100); fresh = false; field = 'a'; renderWk(); return; }
   if ((b = t.closest('[data-f]'))) { field = b.dataset.f; fresh = true; renderWk(); return; }
@@ -262,6 +276,88 @@ function onClick(e) {
     if (!src) { toast('Log your first set, then this repeats it'); return; }
     A = src.a; B = src.b; commit(); return;
   }
+}
+
+// ---------- ⋯ for the exercise you're on (v43): how you measure it, fix the order, remove it ----------
+function keptIn(a, k) {
+  const st = get(), cw = st.customWorkouts.find(w => w.id === a.id);
+  if (cw && cw.items.some(it => it[0] === k)) return 'custom';
+  if ((st.workoutAdds[a.id] || []).some(it => it[0] === k)) return 'add';
+  return null;
+}
+function openExMenu() {
+  const a = act(), i = a.i, k = item()[0], st = get(), e = EX()[k] || {};
+  const base = EXERCISES[k] || st.customExercises[k] || {}, canMeasure = base.t === 'wr' || base.t === 'bw';
+  const sets = (a.log[i] || []).length, kept = keptIn(a, k);
+  const draw = armed => '<h2>' + esc(nameOf(i)) + '</h2>' +
+    (canMeasure ? '<div class="lbl">How you measure it</div><div class="seg" id="measSeg"><button type="button" data-meas="wr" aria-pressed="' + (e.t === 'wr') + '">Weight × reps</button><button type="button" data-meas="bw" aria-pressed="' + (e.t === 'bw') + '">Body weight × reps</button></div>' : '') +
+    ((a.order || []).length >= 2 ? '<button type="button" class="rowlink" data-fixorder style="width:100%"><span>Fix the order you did things in</span><b>›</b></button>' : '') +
+    '<div class="lbl">Added it by mistake?</div>' +
+    '<button type="button" class="btn danger" data-rmtoday>' + (armed === 'today' ? 'Sure? ' + (sets ? 'Its ' + sets + (sets === 1 ? ' set goes' : ' sets go') + ' too' : 'Tap again') : 'Remove from today') + '</button>' +
+    (kept ? '<button type="button" class="btn alt" data-rmboth>' + (armed === 'both' ? 'Sure? Tap again' : 'Remove from today and from ' + esc(a.n) + ' for next time') + '</button>' : '') +
+    '<button type="button" class="btn ghost" data-close>Close</button>';
+  let armed = '';
+  const sheet = openSheet(draw(''), ev => {
+    const t = ev.target; let b;
+    if ((b = t.closest('[data-meas]'))) { setMeasure(k, b.dataset.meas); return; }
+    if (t.closest('[data-fixorder]')) { orderSheet(); return; }
+    if (t.closest('[data-rmtoday]')) { if (armed !== 'today') { armed = 'today'; sheet.querySelector('.sheet').innerHTML = draw(armed); return; } removeFromToday(i, false); return; }
+    if (t.closest('[data-rmboth]')) { if (armed !== 'both') { armed = 'both'; sheet.querySelector('.sheet').innerHTML = draw(armed); return; } removeFromToday(i, true); }
+  });
+}
+function removeFromToday(i, alsoSaved) {
+  const st = get(), a = act(), k = a.items[i][0], name = nameOf(i);
+  if (alsoSaved) {
+    const cw = st.customWorkouts.find(w => w.id === a.id);
+    if (cw) cw.items = cw.items.filter(it => it[0] !== k);
+    if (st.workoutAdds[a.id]) { st.workoutAdds[a.id] = st.workoutAdds[a.id].filter(it => it[0] !== k); if (!st.workoutAdds[a.id].length) delete st.workoutAdds[a.id]; }
+  }
+  // everything about the workout is kept by position, so shift what comes after it
+  const shift = o => { const out = {}; Object.keys(o || {}).forEach(x => { const n = Number(x); if (n < i) out[n] = o[x]; else if (n > i) out[n - 1] = o[x]; }); return out; };
+  a.items.splice(i, 1); a.log = shift(a.log); a.swap = shift(a.swap); a.hinted = shift(a.hinted);
+  a.order = (a.order || []).filter(n => n !== i).map(n => n > i ? n - 1 : n);
+  closeSheet();
+  if (!a.items.length) { st.active = null; save(); view = 'start'; render(); toast('That was the only one, so the workout is cleared.'); return; }
+  a.i = Math.min(i, a.items.length - 1); save(); prefill();
+  say = 'Took ' + name.toLowerCase() + ' out' + (alsoSaved ? ', today and for next time.' : ' for today.'); renderWk();
+}
+// switch between weight × reps and body weight × reps; offer to fix past 0 kg sets
+function setMeasure(k, t) {
+  const st = get();
+  if (st.customExercises[k]) st.customExercises[k].t = t;
+  else { st.measure = st.measure || {}; if (t === 'bw') st.measure[k] = 'bw'; else delete st.measure[k]; }
+  save(); closeSheet(); prefill(); renderWk();
+  if (t !== 'bw') { toast('Back to weight × reps.'); return; }
+  const zero = z => z.a !== '' && z.a != null && !SPECIAL[z.a] && Number(z.a) === 0;
+  const a = act(), live = Object.keys(a.log).filter(j => a.items[j] && a.items[j][0] === k).reduce((n, j) => n + a.log[j].filter(zero).length, 0);
+  const past = st.sessions.reduce((n, s) => n + s.exercises.filter(x => x.key === k && !x.swap).reduce((m, x) => m + x.sets.filter(zero).length, 0), 0);
+  const total = live + past, name = (EX()[k] || { n: 'this' }).n;
+  if (!total) { toast(name + ' is body weight × reps now.'); return; }
+  openSheet('<h2>Fix the old 0 kg sets?</h2><p class="muted">You have ' + total + (total === 1 ? ' set' : ' sets') + ' of ' + esc(name.toLowerCase()) + ' logged as 0 kg. Mark ' + (total === 1 ? 'it' : 'them') + ' as body weight?</p>' +
+    '<button type="button" class="btn" data-o="yes">Yes, mark ' + (total === 1 ? 'it' : 'them') + ' as body weight</button><button type="button" class="btn ghost" data-o="no">No, leave ' + (total === 1 ? 'it' : 'them') + '</button>', ev => {
+    const o = ev.target.closest('[data-o]'); if (!o) return;
+    if (o.dataset.o === 'yes') {
+      st.sessions.forEach(s => s.exercises.forEach(x => { if (x.key === k && !x.swap) x.sets.forEach(z => { if (zero(z)) z.a = 'bw'; }); }));
+      Object.keys(a.log).forEach(j => { if (a.items[j] && a.items[j][0] === k) a.log[j].forEach(z => { if (zero(z)) z.a = 'bw'; }); });
+      if (st.lifts[k] && zero(st.lifts[k])) st.lifts[k].a = 'bw';
+      save(); toast('Done. They say body weight now.');
+    }
+    closeSheet(); prefill(); renderWk();
+  });
+}
+// fix the order you did things in: arrows up and down
+function orderSheet() {
+  const a = act();
+  const draw = () => '<h2>The order you did things in</h2><p class="muted" style="margin:0">Move them into the real order. Your plan stays as it is.</p>' +
+    '<div class="ordlist">' + a.order.map((j, n) => '<div class="ordrow"><span class="ordnum">' + (n + 1) + '</span><span class="nm">' + esc(nameOf(j)) + '</span>' +
+      '<button type="button" data-up="' + n + '" aria-label="Move ' + esc(nameOf(j)) + ' earlier"' + (n === 0 ? ' disabled' : '') + '>↑</button><button type="button" data-down="' + n + '" aria-label="Move ' + esc(nameOf(j)) + ' later"' + (n === a.order.length - 1 ? ' disabled' : '') + '>↓</button></div>').join('') + '</div>' +
+    '<button type="button" class="btn" data-close>Done</button>';
+  const sheet = openSheet(draw(), ev => {
+    const b = ev.target.closest('[data-up],[data-down]'); if (!b || b.disabled) return;
+    const n = Number(b.dataset.up != null ? b.dataset.up : b.dataset.down), m = b.dataset.up != null ? n - 1 : n + 1;
+    [a.order[n], a.order[m]] = [a.order[m], a.order[n]]; save();
+    sheet.querySelector('.sheet').innerHTML = draw(); renderWk();
+  });
 }
 
 // ---------- sheets: busy machine, add exercise, new workout ----------
@@ -344,6 +440,13 @@ function openNewWk(existing) {
   });
 }
 
+// "Copy this workout" right on the Session done sheet (v43): the moment you'd paste it into your other app
+const copyDone = session => async ev => {
+  if (!ev.target.closest('[data-copydone]')) return;
+  const n = ordered().indexOf(session) + 1;
+  toast((await copyText(sessionText(session, n))) ? 'Copied. Paste it anywhere.' : 'Couldn\'t copy. Find it under Your sessions on Move.');
+};
+
 // ---------- your sessions: every workout, in words you can copy into anything ----------
 const ordered = () => get().sessions.slice().sort((x, y) => (x.date + x.ts).localeCompare(y.date + y.ts));
 const setCount = s => s.exercises.reduce((n, x) => n + x.sets.length, 0);
@@ -353,9 +456,9 @@ function sessionRow(s, n) {
 }
 function sessionsList() {
   const all = ordered(); if (!all.length) return '';
-  const recent = all.slice(-4).reverse();
-  return '<div class="lbl">Your sessions</div><div class="sesslist">' + recent.map(s => sessionRow(s, all.indexOf(s) + 1)).join('') +
-    (all.length > 4 ? '<button type="button" class="rowlink" data-allsess style="width:100%"><span>All your sessions</span><b>›</b></button>' : '') + '</div>';
+  const last = all[all.length - 1];
+  return '<div class="lbl">Your last workout</div><div class="sesslist">' + sessionRow(last, all.length) +
+    (all.length > 1 ? '<button type="button" class="rowlink" data-allsess style="width:100%"><span>All your sessions</span><b>›</b></button>' : '') + '</div>';
 }
 function allSessions() {
   const all = ordered();
@@ -369,6 +472,9 @@ function setWords(x, e, k) {
   const t = (e && e.t) || (x.b === '' || x.b == null ? 'hold' : 'wr');
   if (t === 'hold') return x.a + ' sec';
   if (t === 'mins') return x.a + ' min';
+  if (x.a === 'nn') return 'weight not noted × ' + x.b + (e && e.each ? ' each side' : '');
+  if (x.a === 'bar') return 'bar only × ' + x.b + (e && e.each ? ' each side' : '');
+  if (x.a === 'bw' || (e && e.t === 'bw')) return 'body weight × ' + x.b + (e && e.each ? ' each side' : '');
   const w = unitOf(k) === 'plate' ? 'plate ' + x.a : (Number(x.a) ? x.a + ' kg' : 'body weight');
   return w + ' × ' + x.b + (e && e.each ? ' each side' : '');
 }
@@ -488,7 +594,7 @@ function logTicked(keys) {
     '<div class="big">Session ' + n + ' done.</div>' +
     '<p class="muted">' + c + ', no numbers needed. A star just went up in your sky.</p>' +
     '<p class="muted" style="font-size:13px">' + n + ' of 100.' + (n >= 100 ? ' You made it. And it keeps going.' : '') + '</p>' +
-    '<button type="button" class="btn wide" data-close>Back to Move</button></div>', null);
+    '<button type="button" class="btn wide" data-copydone>Copy this workout</button><button type="button" class="btn alt wide" data-close>Back to Move</button></div>', copyDone(session));
   view = 'start'; render();
 }
 

@@ -344,7 +344,28 @@ body:has(.screen-sky) { background: #0B1026; overflow: hidden; }
 .mgrow small { display: block; font-weight: 700; color: var(--ink-soft); font-size: 12px; }
 .mgrow button { min-height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-weight: 800; font-size: 13px; color: var(--ink); }
 .mgrow button.x { color: var(--red); }
-.setedit { display: grid; grid-template-columns: 28px 1fr 1fr 40px; gap: 6px; align-items: center; }
+.setedit { display: grid; grid-template-columns: 28px 1.5fr 1fr 40px; gap: 6px; align-items: center; }
+.wcell { display: flex; gap: 4px; min-width: 0; }
+.wcell input { flex: 1; min-width: 0; }
+.wcell input:disabled { opacity: .55; }
+.wcell.word select { flex: 1; width: auto; font-size: 13px; }
+.wcell select { flex: none; width: 58px; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--room); color: var(--ink); font: inherit; font-size: 12px; font-weight: 800; padding: 0 4px; }
+.exhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.exmove { display: flex; gap: 4px; }
+.exmove button, .ordrow button { width: 38px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--room); color: var(--ink); font-size: 16px; font-weight: 900; }
+.exmove button:disabled, .ordrow button:disabled { opacity: .3; }
+/* v43: weights that aren't numbers, the ⋯ sheet, fixing the order */
+.wsp { display: flex; gap: 6px; padding: 8px 16px 0; flex-wrap: wrap; }
+.wsp button { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); font-size: 12.5px; font-weight: 800; }
+.wsp button[aria-pressed="true"] { background: var(--ink); color: #FFFFFF; border-color: var(--ink); }
+html[data-theme="dark"] .wsp button[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); }
+.field .v.word { font-size: 22px; line-height: 1.6; }
+.infobtns { display: flex; gap: 6px; flex: none; }
+.busy.more { width: 44px; padding: 0; font-size: 20px; font-weight: 900; letter-spacing: 1px; }
+.ordlist { display: flex; flex-direction: column; gap: 8px; }
+.ordrow { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); }
+.ordrow .ordnum { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: #FFFFFF; font-weight: 900; font-size: 13px; flex: none; }
+.ordrow .nm { flex: 1; min-width: 0; font-weight: 800; font-size: 14px; }
 .setedit input { min-height: 44px; padding: 0 10px; text-align: center; }
 .setedit .n { font-weight: 900; color: var(--ink-soft); text-align: center; }
 .setedit button { height: 40px; border: 0; background: transparent; color: var(--red); font-size: 18px; }

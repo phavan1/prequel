@@ -111,6 +111,13 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - Prequel records the order you really did exercises in, and **shows** it next time ("Last time: …"). It **never rearranges** the plan (Phavan's choice).
 - Sessions are kept on Move with a **Copy** button. Phavan's other app only has a text box and he wasn't fond of his own format, so Claude designed a cleaner one: a title line, the date with counts, then numbered exercises in the order done, each with its sets on one line.
 
+**Move: logging honestly (v43)**
+- A weight can be **"Not noted"** (Phavan's wording, chosen over "Didn't check", which sounded negative), **"Bar only"** or **"Body weight"**, instead of a made-up 0. Bar only stays a plain label for now; setting the bar's weight could come later.
+- **Body weight × reps** is a way to measure an exercise. Switching an exercise to it **asks** before changing old 0 kg sets.
+- A visible **⋯ button** (not a hidden double tap) holds an exercise's options: how it's measured, fixing the order, and removing it if added by mistake.
+- Fixing the order uses **arrows** (↑ ↓), chosen over tap-in-order.
+- **Copy this workout** right on the Session done sheet. Move shows just **Your last workout** + **All your sessions**. No extra last-workout card at the top, because the page is busy enough.
+
 **Rest (v42)**
 - The night chips ("What did you do") are **gone**. In their place is one night-only **"Awake for a bit?" → "Back to sleep"** button that logs when and how long (the option Claude recommended, approved 15 Oct 2026).
 
@@ -223,6 +230,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v43: Not noted / Bar only / Body weight, body weight × reps, ⋯ sheet (measure, fix order with arrows, remove), Copy on the done sheet, Your last workout, fixing past workouts in Days.
 - v42: real exercise order shown (never rearranged), Your sessions with Copy, "Awake for a bit" instead of night chips.
 - v41: jars of 20–40 stars, shaped jam/mason/cookie, stars of different sizes, the lid/swirl/shelf celebration (belated for old jars), lantern recall, sticky-note colours.
 - v40: "What's new" window (once after each update, kept in Settings), titled "Fresh from the workshop · A few new things".
