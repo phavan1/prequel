@@ -1,6 +1,7 @@
 import { get, save, uid, addMoment, addDays, today } from '../store.js';
 import { EXERCISES, WORKOUTS, REST_GUIDE } from '../data.js';
 import { esc, nav, backLink, dateChip, logDate, prettyDate, him, pop, openSheet, closeSheet, toast, pick, reduceMotion } from '../ui.js';
+import { dayDate } from '../pdf.js';
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
 const TYPES = [['wr', 'Weight × reps'], ['hold', 'Seconds'], ['mins', 'Minutes']];
@@ -75,6 +76,7 @@ function renderStart() {
     '<div class="grid2">' + workouts().map(w => '<button type="button" class="wbtn" data-start="' + w.id + '"><b>' + esc(w.n) + '</b><span>' + esc(w.d) + '</span></button>').join('') +
       '<button type="button" class="wbtn new" data-newwk="1"><b>+ New workout</b><span>name it, pick exercises</span></button></div>' +
     '<button type="button" class="rowlink" data-manage="1" style="width:100%"><span>Change or remove your workouts, exercises and swaps</span><b>›</b></button>' +
+    sessionsList() +
     nav('move');
 }
 
@@ -97,6 +99,13 @@ function startWorkout(id) {
   save(); view = 'wk'; prefill();
   say = id === 'min20' ? 'Three exercises. Then we decide together.' : id === 'rec' ? 'Gentle today. Nothing to prove.' : 'Let\'s go. ' + nameOf(0) + ' first.';
   render(); window.scrollTo(0, 0);
+}
+const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+// "Last time" for this workout: the order you really went in, so you know where you got to (shown, never rearranged)
+function lastOrderLine(a) {
+  const prev = get().sessions.filter(s => s.workoutId === a.id && s.exercises.length && s.date <= a.date).sort((x, y) => (x.date + x.ts).localeCompare(y.date + y.ts)).pop();
+  if (!prev) return '';
+  return '<p class="lastorder"><b>Last time · ' + esc(prettyDate(prev.date)) + '</b> ' + prev.exercises.map(x => esc(x.swap || x.name)).join(' → ') + '</p>';
 }
 function fmtSet(x, e, k) {
   if (e.t === 'hold') return x.a + ' s';
@@ -132,7 +141,8 @@ function renderWk() {
   root.innerHTML =
     '<div class="wk">' +
     '<div class="wkhead"><button type="button" class="back" data-leave="1" style="border:0;background:transparent;color:var(--blue)">‹ Move</button><h1>' + esc(a.n) + (a.date !== today() ? '<br><small class="muted" style="font-size:11px">for ' + esc(prettyDate(a.date)) + '</small>' : '') + '</h1><button type="button" class="fin" data-finish="1">Finish</button></div>' + banner +
-    '<div class="hscroll exs" id="exs">' + a.items.map((x, j) => { const done = (a.log[j] || []).length >= Math.min(2, baseSets(x)); return '<button type="button" data-ex="' + j + '" aria-pressed="' + (j === a.i) + '">' + (done ? '<span class="tick">✓</span>' : '') + esc(nameOf(j)) + (a.hinted[j] ? ' ↑' : '') + '</button>'; }).join('') + '<button type="button" class="addex" data-addex="1">+ Add</button></div>' +
+    '<div class="hscroll exs" id="exs">' + a.items.map((x, j) => { const done = (a.log[j] || []).length >= Math.min(2, baseSets(x)), n = (a.order || []).indexOf(j); return '<button type="button" data-ex="' + j + '" aria-pressed="' + (j === a.i) + '">' + (n >= 0 ? '<span class="ord' + (done ? ' done' : '') + '" aria-label="done ' + ordinal(n + 1) + '">' + (n + 1) + '</span>' : '') + esc(nameOf(j)) + (a.hinted[j] ? ' ↑' : '') + '</button>'; }).join('') + '<button type="button" class="addex" data-addex="1">+ Add</button></div>' +
+    lastOrderLine(a) +
     '<div class="strip">' + him(pose, 'breathe', 'Your character, training with you').replace('class="him', 'id="him" class="him') + '<div class="say">' + esc(say) + '</div><span class="pill" id="since">' + (a.lastAt ? 'Since last set 0:00' : 'No sets yet') + '</span></div>' +
     '<div class="info"><div class="t"><b>' + esc(nameOf(a.i)) + (a.swap[a.i] ? ' <span style="font-weight:700;color:var(--ink-soft);font-size:12px">for ' + esc(e.n.toLowerCase()) + '</span>' : '') + '</b>' + [setsLabel, it[2], restTxt].filter(Boolean).map(esc).join(' · ') + '</div>' + '<button type="button" class="busy" data-busy="1">Machine busy?</button></div>' +
     '<div class="hscroll" id="sets">' + setsHtml() + '</div>' +
@@ -165,6 +175,8 @@ function commit() {
   const L = (a.log[a.i] = a.log[a.i] || []);
   if (edit >= 0) { L[edit] = set; say = 'Fixed. Set ' + (edit + 1) + ' is right now.'; save(); prefill(); renderWk(); return; }
   L.push(set); a.lastAt = Date.now(); justLogged = true;
+  // the order you actually did things in: an exercise joins it with its first set (v42)
+  a.order = a.order || []; if (!a.order.includes(a.i)) a.order.push(a.i);
   say = pick(CHEERS);
   const t = top(it[2]);
   if (e.t === 'wr' && t && L.length >= 2 && !a.hinted[a.i] && L.every(x => Number(x.b) >= t)) { a.hinted[a.i] = true; say = 'Top of the range on every set. Next time, maybe a little heavier.'; }
@@ -175,7 +187,9 @@ function commit() {
 
 function finish() {
   const st = get(), a = act();
-  const exercises = a.items.map((x, j) => ({ key: x[0], name: nameOf(j), swap: a.swap[j] || null, sets: a.log[j] || [] })).filter(x => x.sets.length);
+  const ord = a.order || [], at = j => { const n = ord.indexOf(j); return n < 0 ? 999 + j : n; };
+  const exercises = a.items.map((x, j) => ({ j, key: x[0], name: nameOf(j), swap: a.swap[j] || null, sets: a.log[j] || [] })).filter(x => x.sets.length)
+    .sort((x, y) => at(x.j) - at(y.j)).map(({ j, ...x }) => x); // saved in the order you really did them
   const sets = exercises.reduce((n, x) => n + x.sets.length, 0);
   // a new heaviest lift makes the star brighter
   const EXL = EX();
@@ -213,6 +227,8 @@ function onClick(e) {
   if ((b = t.closest('[data-start]'))) { startWorkout(b.dataset.start); return; }
   if (t.closest('[data-newwk]')) { openNewWk(); return; }
   if (t.closest('[data-quick]')) { openQuick(); return; }
+  if ((b = t.closest('[data-sess]'))) { sessionSheet(b.dataset.sess); return; }
+  if (t.closest('[data-allsess]')) { allSessions(); return; }
   if (t.closest('[data-manage]')) { openManage(); return; }
   if (!a) return;
   if (t.closest('[data-leave]')) {
@@ -325,6 +341,63 @@ function openNewWk(existing) {
       if (at >= 0) list[at] = w; else list.push(w);
       save(); closeSheet(); renderStart(); toast('Saved ' + draft.name);
     }
+  });
+}
+
+// ---------- your sessions: every workout, in words you can copy into anything ----------
+const ordered = () => get().sessions.slice().sort((x, y) => (x.date + x.ts).localeCompare(y.date + y.ts));
+const setCount = s => s.exercises.reduce((n, x) => n + x.sets.length, 0);
+const subline = s => { const c = s.exercises.length, n = setCount(s); return c + (c === 1 ? ' exercise' : ' exercises') + (n ? ' · ' + n + (n === 1 ? ' set' : ' sets') : ' · no numbers'); };
+function sessionRow(s, n) {
+  return '<button type="button" class="sessrow" data-sess="' + s.id + '"><span class="num">' + n + '</span><span class="tx"><b>' + esc(s.workoutName) + '</b><small>' + esc(dayDate(s.date)) + ' · ' + esc(subline(s)) + '</small></span><i aria-hidden="true">›</i></button>';
+}
+function sessionsList() {
+  const all = ordered(); if (!all.length) return '';
+  const recent = all.slice(-4).reverse();
+  return '<div class="lbl">Your sessions</div><div class="sesslist">' + recent.map(s => sessionRow(s, all.indexOf(s) + 1)).join('') +
+    (all.length > 4 ? '<button type="button" class="rowlink" data-allsess style="width:100%"><span>All your sessions</span><b>›</b></button>' : '') + '</div>';
+}
+function allSessions() {
+  const all = ordered();
+  openSheet('<h2>All your sessions</h2><p class="muted" style="margin:0">Tap one to see it, or copy it into another app.</p><div class="sesslist all">' +
+    all.slice().reverse().map(s => sessionRow(s, all.indexOf(s) + 1)).join('') + '</div><button type="button" class="btn ghost" data-close>Done</button>', ev => {
+    const b = ev.target.closest('[data-sess]'); if (b) sessionSheet(b.dataset.sess);
+  });
+}
+// one set, the way you'd write it down
+function setWords(x, e, k) {
+  const t = (e && e.t) || (x.b === '' || x.b == null ? 'hold' : 'wr');
+  if (t === 'hold') return x.a + ' sec';
+  if (t === 'mins') return x.a + ' min';
+  const w = unitOf(k) === 'plate' ? 'plate ' + x.a : (Number(x.a) ? x.a + ' kg' : 'body weight');
+  return w + ' × ' + x.b + (e && e.each ? ' each side' : '');
+}
+// the copyable text: a title, the date, then each exercise in the order you did it, sets on one line
+export function sessionText(s, n) {
+  const lib = EX(), c = s.exercises.length, sets = setCount(s);
+  const lines = ['✦ Session ' + n + ' · ' + s.workoutName, dayDate(s.date) + ' · ' + c + (c === 1 ? ' exercise' : ' exercises') + (sets ? ' · ' + sets + (sets === 1 ? ' set' : ' sets') : '') + (s.light === 'yellow' ? ' · yellow day' : s.light === 'red' ? ' · gentle day' : ''), ''];
+  s.exercises.forEach((x, i) => {
+    lines.push((i + 1) + '. ' + (x.swap ? x.swap + ' (instead of ' + x.name.toLowerCase() + ')' : x.name));
+    lines.push('   ' + (x.sets.length ? x.sets.map(z => setWords(z, lib[x.key], x.key)).join('  ·  ') : 'done ✓'));
+  });
+  lines.push('', '— logged with Prequel');
+  return lines.join('\n');
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* older phones: fall back below */ }
+  const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  ta.remove(); return ok;
+}
+function sessionSheet(id) {
+  const all = ordered(), s = all.find(x => x.id === id); if (!s) return;
+  const text = sessionText(s, all.indexOf(s) + 1);
+  openSheet('<h2>Session ' + (all.indexOf(s) + 1) + '</h2><p class="muted" style="margin:0">' + esc(s.workoutName) + ' · ' + esc(dayDate(s.date)) + '. Exercises are in the order you did them.</p>' +
+    '<pre class="sesstext">' + esc(text) + '</pre>' +
+    '<button type="button" class="btn" data-copy>Copy</button><button type="button" class="btn ghost" data-close>Done</button>', async ev => {
+    if (!ev.target.closest('[data-copy]')) return;
+    toast((await copyText(text)) ? 'Copied. Paste it anywhere.' : 'Couldn\'t copy. Press and hold the text to copy it.');
   });
 }
 

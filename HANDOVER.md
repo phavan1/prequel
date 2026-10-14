@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**, **v40**, **v41**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**, **v40**, **v41**, **v42**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -61,7 +61,7 @@ js/
   app.js        router, ROUTES, theme (applyTheme), welcome screen (hello), visibilitychange
   store.js      state, IndexedDB, fresh(), save(), addMoment, removeById, export/import, reset, backupDue
   ui.js         esc, him() art helper, sheets (openSheet with iPhone keyboard fix), toast, nav, backLink, FROM, date chip
-  data.js       AREAS, EXERCISES, WORKOUTS (Project Athletic playbook), WEATHERS (13), FOOD_TAGS, FEELS, NIGHT_THINGS
+  data.js       AREAS, EXERCISES, WORKOUTS (Project Athletic playbook), WEATHERS (13), FOOD_TAGS, FEELS, NIGHT_THINGS (no longer shown since v42; kept)
   sky-model.js  seeded random, star clusters, constellation names
   goals.js      linked and own goals, units, count(), logging sheet, edit/rest/remove, checkFinished
   charts.js     hill, weather ribbon, rest clock, "noticing" line
@@ -75,7 +75,7 @@ js/
     weather.js  "How's the weather inside?" check-in
     move.js     gym logging from the playbook (keypad, Same again, swaps, add/new workout)
     food.js     search, usuals, portions/grams, labels, Make a meal, edit numbers, weight, reports
-    rest.js     going to sleep / woke up, 24-hour ring, add by hand, night chips, sleep diary
+    rest.js     going to sleep / woke up, 24-hour ring, add by hand, "Awake for a bit" (v42), sleep diary
     wins.js     THE JAR (route is still #/wins)
     mind.js     things on my mind + reminders, lanterns
     letters.js  letters from good-day you
@@ -99,7 +99,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 |---|---|---|
 | `moments` | `{id, date, ts, area, text, bright, ref?, written?}` | Every star in the sky. `area` is one of `move, food, rest, win, mind, goal`. `ref` links to the source record. **Tiny wins are moments with `area:'win'`.** `written:1` means a win he wrote himself. |
 | `weather` | `{id, date, ts, types:[name], strength}` | Uses the names in `WEATHERS`. |
-| `sessions` | `{id, date, ts, workoutId, workoutName, light, exercises:[{key,name,swap,sets:[{a,b}]}], noReps?}` | Gym. A Quick session (v37) has `workoutId:'quick'`, `workoutName:'Quick session'`. **`noReps:1`** means it was logged without reps: its exercises have empty `sets` and must be kept (Days uses its own sheet for these). |
+| `sessions` | `{id, date, ts, workoutId, workoutName, light, exercises:[{key,name,swap,sets:[{a,b}]}], noReps?}` | Gym. **Since v42 `exercises` are saved in the order you actually did them** (by first set; `active.order` tracks it during a workout). A Quick session (v37) has `workoutId:'quick'`, `workoutName:'Quick session'`. **`noReps:1`** means it was logged without reps: its exercises have empty `sets` and must be kept (Days uses its own sheet for these). |
 | `rests` | `{id, date, start, end, feel}` | `date` is **the day you woke up**. `feel` is `rested`, `okay` or `groggy`. |
 | `pendingSleep` | timestamp or null | "Going to sleep" pressed, waiting for "Woke up". |
 | `mind` | `{id, text, remindOn, created, letGo}` | Notes and lanterns. |
@@ -114,7 +114,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 | `settings` | `{name, tinyWins[], kindLines[], theme:'light'|'dark'|'auto', dayTabs[]}` | |
 | `games.skate` | `{best, runs}` | |
 | `sky` | cluster and constellation model | Built by `sky-model.js`. |
-| Other flags | `jarPlan` (v41: one size per jar, oldest first; jars full before v41 are 20, each new jar gets a secret random 20–40 when it starts), `jarsCelebrated` (v41: how many full jars have had their celebration; missing means 0, so old full jars get a belated one), `jarsSeen` and `jarSize` (**no longer used since v41**, kept for old backups), `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session; `active.quick:1` for a Quick session), `quickMode` (`'reps'` or `'tick'`, the last Quick session answer, v37), `newsSeen` (the last What's new update shown on this phone, v40; kept as-is by restore and undo), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
+| Other flags | `jarPlan` (v41: one size per jar, oldest first; jars full before v41 are 20, each new jar gets a secret random 20–40 when it starts), `jarsCelebrated` (v41: how many full jars have had their celebration; missing means 0, so old full jars get a belated one), `jarsSeen` and `jarSize` (**no longer used since v41**, kept for old backups), `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session; `active.quick:1` for a Quick session), `quickMode` (`'reps'` or `'tick'`, the last Quick session answer, v37), `awakeSince` (v42: "Awake for a bit" running since, or null), `newsSeen` (the last What's new update shown on this phone, v40; kept as-is by restore and undo), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
 
 **Rules that matter when changing data:**
 - `removeById(list, id)` also removes moments whose `ref` is that id, which takes the star out of the sky.
@@ -154,6 +154,21 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
   - **Same as last time:** repeats the last session's exercises (and swaps), tracked the same way as last time.
   - It counts toward the road to 100, like any session.
 - The "add an exercise" sheet shows Recent exercises first (v37).
+- **Real order (v42):** the order you do exercises in is recorded from each one's first set. The exercise chips show numbers 1, 2, 3… (filled when the exercise is done). The plan's order is **never rearranged**. The session is saved in your real order, and next time the same workout shows **"Last time · <day>: Chest press → Shoulder press → …"** under the chips.
+- **Your sessions (v42):** the Move start screen lists the latest 4 sessions (number, name, date, exercises and sets), plus "All your sessions". Tapping one opens its text and a **Copy** button (clipboard, with a fallback for older phones). The text format (`sessionText` in `move.js`):
+  ```
+  ✦ Session 10 · Full Body B
+  Thursday, October 15 · 7 exercises · 15 sets
+
+  1. Leg extension
+     5 kg × 12  ·  12 kg × 10
+  …
+  7. Plank
+     40 sec  ·  50 sec
+
+  — logged with Prequel
+  ```
+  Swaps read "Pec deck (instead of chest press)", plates "plate 4 × 12", and ticked Quick sessions "done ✓".
 - The Project Athletic playbook's 12 workouts.
 - Custom keypad, "Same again", machine-busy swaps, kg or plate number, add or new workouts, light sessions.
 - The `legday` and `cheer` pictures.
@@ -189,7 +204,8 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 
 ### Rest (`rest.js`, `reports.js`)
 - Going to sleep / Woke up. A 24-hour ring for the day. Add a rest by hand. How you felt.
-- Night chips: "Awake for a bit? What did you do" (`NIGHT_THINGS`). **Their future is undecided.**
+- **Awake for a bit (v42, replaced the night chips):** from 9pm to 6am (only on today), a card "🌙 Awake for a bit?". Tap it to start (`st.awakeSince`); it becomes "Awake since 11:10 pm" with **Back to sleep** and Cancel. Back to sleep logs a moment `Awake in the night: 25 m from 11:10 pm` dated today, which the sleep diary already shows as a night note. Old chip notes stay in the diary.
+- Your quilt row shows the patch count only above zero (v42).
 - Link to the quilt (`?from=rest`).
 - **Sleep diary (PDF):** last 2 weeks, last 4 weeks, everything, or any month. **Empty states (v37):** no rests at all shows "Your sleep diary starts with one rest" (him asleep); empty ranges are greyed. The card no longer says "0 logged so far".
   - At a glance: days logged, typical sleep, usually asleep and up around (medians)
@@ -377,7 +393,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | 10 | A long single file (`food.js` ~38 KB) and string-built HTML make edits risky. **Always re-test edited sheets.** In v25 a text replacement silently broke the goal sheet until v35. | Process risk |
 | 11 | Food search ranking is heuristic. Some names (seeraga samba, sona masoori, ponni) aren't recognised. | Open, offered |
 | 12 | Backup restore issues B1–B5 (section 5b). | B1, B2, B3, B5 **fixed in v38**; B4 open (rare) |
-| 15 | Rest shows "Your quilt · 0 patches" when nothing is logged yet: a zero on screen (found 14 Oct 2026 while testing v37; not changed). | Open, ask him |
+| 15 | Rest showed "Your quilt · 0 patches" when nothing was logged yet. | **Fixed in v42** |
 | 14 | `DEFAULT_COMFORT` in `store.js` holds old comfort-menu examples, and they're in the public repo even though no screen shows them. | Left untouched on purpose (14 Oct 2026); to discuss |
 | 13 | The script that built `data/foods.json` was never saved. | Can't be recovered; method in `DECISIONS.md` |
 
@@ -386,7 +402,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 **Done in v38:** B1, B2, B3 and B5 (section 5b). B4 is still open.
 
 **Waiting for his decision (don't build until he chooses):**
-1. **Night chips on Rest** ("Awake for a bit?"). Options: remove; one night-only "I'm awake for a bit / Back to sleep" button that logs the time and length (Claude's pick); or keep but show only 10pm–6am.
+1. ~~Night chips on Rest~~ **Done in v42:** replaced by one night-only "Awake for a bit" button that logs the time and length.
 2. **Weather in the sleep diary:** a weather row under "Hours each day". Offered.
 3. **Goal-completion celebration:** count-up and confetti screen, gold shooting star in the sky, trophy landing on the shelf, optional note to future you, "Share this" milestone card, optional chime. Also: loud or quiet and warm? Never answered.
 4. **Mind page redesign:** he asked to keep it in mind; not started.
@@ -419,6 +435,7 @@ Everything in `tools/` is **development only**. It isn't in `sw.js` `SHELL`, isn
 | `tools/tests/usuals.js` | written 14 Oct 2026 for v37 | New: usuals, "All your usuals", report empty states, no future dates | 16/16 passed |
 | `tools/tests/saving.js` | written 15 Oct 2026 for v39 | New: Android vs iPhone saving and sharing (PDF, card, backup), whole quilt card mid-month | 12/12 passed |
 | `tools/tests/jars.js` | written 15 Oct 2026 for v41 | New: belated celebration, 20–40 sizes, the celebration, shapes on the shelf, lantern recall, dark sticky notes, no zeros | 15/15 passed |
+| `tools/tests/moveorder.js` | written 15 Oct 2026 for v42 | New: real exercise order, "Last time", Your sessions + Copy (reads the clipboard), Awake for a bit, no "0 patches" | 12/12 passed |
 | `tools/tests/news.js` | written 15 Oct 2026 for v40 | New: What's new once after an update, never for a new user, missed updates, Settings list | 9/9 passed |
 | `tools/tests/quick.js` | written 14 Oct 2026 for v37 | New: Quick session both ways, "Same as last time", Days sheet for ticked sessions, planned workouts unchanged | 17/17 passed |
 | `tools/tests/sample-backup.json` | session `sample-backup.json` | `settings.name` changed to `'Sam'`; everything else was already made up | Checked: no real personal data |
@@ -430,11 +447,11 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 ## 11. Status right now
 
-- **Last completed:** **v41** (15 Oct 2026, not yet committed): jars of 20–40 stars in three shapes, stars of different sizes, the lid/swirl/shelf celebration (belated for old jars), calling lanterns back, readable sticky notes in Cosy dark. Before that, **v40** (committed as `fa7976c`): a "What's new" window after each update (once), also in Settings → What's new. Before that, **v39** (committed as `25f64ec`): "Save to this phone" on Android and computers (PDFs and share cards), and a whole quilt on the share card mid-month. Before that, **v38** (committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
+- **Last completed:** **v42** (15 Oct 2026, not yet committed): Move records the real exercise order (numbered chips, "Last time", never rearranged), "Your sessions" with Copy, and Rest's "Awake for a bit" instead of the night chips. Before that, **v41** (committed as `23554fa`): jars of 20–40 stars in three shapes, stars of different sizes, the lid/swirl/shelf celebration (belated for old jars), calling lanterns back, readable sticky notes in Cosy dark. Before that, **v40** (committed as `fa7976c`): a "What's new" window after each update (once), also in Settings → What's new. Before that, **v39** (committed as `25f64ec`): "Save to this phone" on Android and computers (PDFs and share cards), and a whole quilt on the share card mid-month. Before that, **v38** (committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
 - **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
 - **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
-- **Next:** Phavan commits v41 and watches his belated jar celebration. Then, in the agreed order: Move (workout order, a session log with Copy), then Move reports. The "phone breaks" question stays **shelved** (`DECISIONS.md` H).
+- **Next:** Phavan commits v42 and tries the order and Copy at the gym. Then, in the agreed order: **Move reports** (to design together). The "phone breaks" question stays **shelved** (`DECISIONS.md` H).
 
 ## 12. Instructions for a new Claude conversation
 

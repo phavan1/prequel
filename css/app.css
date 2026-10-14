@@ -174,6 +174,22 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .exs .tick { color: var(--green); font-weight: 900; }
 .exs button[aria-pressed="true"] .tick { color: #9FE0B8; }
 .exs button.addex { border-style: dashed; background: transparent; color: var(--blue); }
+.exs .ord { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--green); color: var(--green); font-size: 11px; font-weight: 900; }
+.exs .ord.done { background: var(--green); color: #FFFFFF; }
+.exs button[aria-pressed="true"] .ord { border-color: #9FE0B8; color: #9FE0B8; }
+.exs button[aria-pressed="true"] .ord.done { background: #9FE0B8; color: #23262F; }
+.lastorder { margin: -2px 0 0; padding: 0 16px; font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); }
+.lastorder b { color: var(--ink); font-weight: 800; }
+/* your sessions (v42) */
+.sesslist { display: flex; flex-direction: column; gap: 8px; }
+.sesslist.all { max-height: 56vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.sessrow { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px; padding: 8px 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); text-align: left; font: inherit; }
+.sessrow .num { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--blue-soft, #E4ECFF); color: var(--blue); font-weight: 900; font-size: 14px; }
+.sessrow .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.sessrow b { font-size: 14px; font-weight: 800; }
+.sessrow small { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.sessrow i { font-style: normal; color: var(--blue); font-weight: 900; }
+.sesstext { margin: 0; padding: 14px; border-radius: 14px; background: var(--room); border: 1px solid var(--line); font-family: var(--font-body, inherit); font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-height: 46vh; overflow-y: auto; -webkit-user-select: text; user-select: text; }
 .strip { margin: 6px 16px 0 16px; height: 66px; border-radius: 16px; background: var(--room-2); position: relative; overflow: hidden; flex: none; }
 .strip .him { position: absolute; left: 6px; bottom: -4px; height: 70px; width: auto; }
 .strip .say { position: absolute; left: 92px; right: 10px; top: 26px; font-size: 18px; line-height: 1.02; }
@@ -704,3 +720,10 @@ html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 .newsday ul { margin: 4px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 .newsday li { font-size: 15px; line-height: 1.4; }
 .newsday li::marker { content: '✦  '; color: var(--blue); }
+
+/* awake for a bit (v42) */
+.awakecard { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border-radius: 18px; border: 1px dashed var(--line); background: var(--paper); color: var(--ink); text-align: left; font: inherit; }
+.awakecard > span { font-size: 26px; }
+.awakecard b { display: block; font-size: 15px; font-weight: 800; }
+.awakecard small { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+.awakecard.on { flex-direction: column; align-items: stretch; border-style: solid; }

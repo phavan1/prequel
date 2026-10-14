@@ -1,10 +1,10 @@
 # START HERE
 
-_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 15 October 2026 (v41). This file doesn't depend on any earlier conversation._
+_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 15 October 2026 (v42). This file doesn't depend on any earlier conversation._
 
 ## 1. What this is
 **Prequel** is Phavan's personal iPhone web app (PWA): a kind, offline, private lifestyle companion. Logs of moving, food, rest, feelings and small wins become a night sky, quilts, a jar of stars, share cards and PDF reports.
-**Version: v41** (`const VERSION = 'prequel-v41'` in `sw.js`). v41 (15 Oct 2026): jars of 20–40 stars in three shapes with a real celebration, calling lanterns back, readable sticky notes. v40: a "What's new" window after each update, also kept in Settings. v39: "Save to this phone" on Android and computers, and a whole quilt on the share card. v38: a safer backup restore with a 7-day undo. v37: no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for the food report and sleep diary, and Quick session on Move. See the tracker's version table for the history.
+**Version: v42** (`const VERSION = 'prequel-v42'` in `sw.js`). v42 (15 Oct 2026): Move shows your real exercise order and keeps your sessions with Copy; Rest's "Awake for a bit". v41: jars of 20–40 stars in three shapes with a real celebration, calling lanterns back, readable sticky notes. v40: a "What's new" window after each update, also kept in Settings. v39: "Save to this phone" on Android and computers, and a whole quilt on the share card. v38: a safer backup restore with a 7-day undo. v37: no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for the food report and sleep diary, and Quick session on Move. See the tracker's version table for the history.
 
 ## 2. Where it lives
 - **Code:** `C:\Users\Phava\Documents\companion-app` on Phavan's Windows laptop (a git repo, branch `main`). Claude reaches it through the Claude desktop app link, when the conversation is linked to his computer.
@@ -32,7 +32,7 @@ _For Phavan and for any new Claude conversation. Written on 12 October 2026; las
 
 ## 6. Preserved development tools (in `tools/`)
 - `tools/art/`: `clean_art.py`, `defringe.py`, `holes.py`. They turn a ChatGPT picture into a clean 640 px webp cut-out.
-- `tools/tests/`: Playwright scripts (`backup`, `share`, `reports`, `jar`, `quilt`, `meal`, `units`, v37's `usuals` and `quick`, v39's `saving`, v40's `news`, and v41's `jars`) and `sample-backup.json` (**made-up data**).
+- `tools/tests/`: Playwright scripts (`backup`, `share`, `reports`, `jar`, `quilt`, `meal`, `units`, v37's `usuals` and `quick`, v39's `saving`, v40's `news`, v41's `jars`, and v42's `moveorder`) and `sample-backup.json` (**made-up data**).
 - Not recoverable: the script that built `data/foods.json`, and the exact ChatGPT character prompt (the look is described in `DECISIONS.md` D).
 
 ## 7. Rules that matter most
@@ -80,14 +80,13 @@ When Phavan says we're preparing to move to another conversation, do a **focused
 **Starting a new conversation:** read the docs in section 3, look at the relevant code, verify the version and git status, point out anything that doesn't match, and then **wait for Phavan's instructions** before changing anything.
 
 ## 9. Waiting on Phavan
-- **Agreed order (15 Oct 2026):** ~~a "What's changed" window~~ (done, v40) → ~~the jar~~ (done, v41) → Move (real exercise order, a session log with Copy) → Move reports. See `DECISIONS.md` H.
+- **Agreed order (15 Oct 2026):** ~~a "What's changed" window~~ (done, v40) → ~~the jar~~ (done, v41) → ~~Move order and session log~~ (done, v42) → **Move reports** (next; design together). See `DECISIONS.md` H.
 - **Check v39 on Android** (his friend): "Save to this phone" on a PDF, "Save image" on a card.
 - **Check v38 on the iPhone:** restore a backup from Files (comparison sheet, undo card, undo).
 - **Check v37 on the iPhone:** a future day on the date wheel snaps back to today; usuals and the "All your usuals" sheet; Quick session both ways.
-- **Pin on usuals** (offered, not answered) and **"Your quilt · 0 patches"** on Rest with nothing logged (a zero on screen, found 14 Oct).
+- **Pin on usuals** (offered, not answered). ("Your quilt · 0 patches" was fixed in v42.)
 - **Backup restore fixed in v38** (B1, B2, B3, B5): stricter check, comparison sheet, save-first, 7-day undo. **B4 is still open** (rare; not discussed). 
 - **Shelved until the next session (Phavan, 14 Oct 2026): what happens to the data if the phone breaks or is replaced.** Today: reinstall from Safari, then Settings → Restore from the latest backup file; anything after that backup is lost. Three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified).
-- **Night chips on Rest:** remove, replace with one "awake for a bit" button, or show them only at night.
 - **Weather row** in the sleep diary.
 - **Goal celebration** (and loud or quiet?).
 - **Mind page redesign** (not designed yet).

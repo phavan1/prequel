@@ -107,6 +107,13 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - A lantern let go can always be **called back**: "Bring it back" right after letting go, and "Bring back" in the lantern list any time.
 - Sticky notes keep their paper colours in Cosy dark.
 
+**Move: order and sessions (v42)**
+- Prequel records the order you really did exercises in, and **shows** it next time ("Last time: …"). It **never rearranges** the plan (Phavan's choice).
+- Sessions are kept on Move with a **Copy** button. Phavan's other app only has a text box and he wasn't fond of his own format, so Claude designed a cleaner one: a title line, the date with counts, then numbered exercises in the order done, each with its sets on one line.
+
+**Rest (v42)**
+- The night chips ("What did you do") are **gone**. In their place is one night-only **"Awake for a bit?" → "Back to sleep"** button that logs when and how long (the option Claude recommended, approved 15 Oct 2026).
+
 **Logging dates**
 - **Nothing can be logged for a future day (v37)**, on any screen. A future pick snaps back to today with a gentle note. **Exception:** Mind reminders, where looking ahead is the point.
 
@@ -193,7 +200,6 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 
 | Proposal | Where it came from | State |
 |---|---|---|
-| Night chips: replace with one night-only "I'm awake for a bit / Back to sleep" button (Claude's pick), remove them, or show them only 10pm–6am | After v36 | **Waiting for his choice** |
 | A weather row in the sleep diary under "Hours each day" | After v36 | Offered |
 | A richer goal celebration: count-up and confetti, gold shooting star, trophy on the shelf, note to future you, share card, optional chime | Earlier conversation | Offered; "loud or quiet?" never answered |
 | Mind page redesign | His own idea ("keep it in mind") | **Not designed yet** |
@@ -203,11 +209,10 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | Light motion lines on dark share cards | v23 | Offered |
 | Fix the bottom tab bar so it highlights the section you came from (mainly Quilt, opened from Me and Rest; see HANDOVER section 8, issue 2) | Found during this handover; described more accurately 14 Oct 2026 | Not discussed yet |
 | A pin on usuals, so a favourite always stays in the top five | v37 discussion | Offered; not answered, so not built |
-| "Your quilt · 0 patches" on Rest with nothing logged (a zero on screen) | Found while testing v37 | Not discussed yet |
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Protecting data if the phone breaks or is replaced: three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified) | Phavan's question, 14 Oct 2026 | **Shelved** until the next session |
-| **Move:** record the real exercise order (from first sets), a session log on Move with Copy, Move PDF reports | Phavan, 14–15 Oct 2026 | Agreed in principle; to design |
+| **Move PDF reports** (order and the session log are done, v42) | Phavan, 14–15 Oct 2026 | Agreed in principle; to design |
 | Backup B4: prefer the newer copy on load | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Still open.** (B1, B2, B3 and B5 were approved and built in v38, see section C.) Earlier note: On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
 
 ### Done during the handover (approved by Phavan, 12 Oct 2026)
@@ -218,6 +223,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v42: real exercise order shown (never rearranged), Your sessions with Copy, "Awake for a bit" instead of night chips.
 - v41: jars of 20–40 stars, shaped jam/mason/cookie, stars of different sizes, the lid/swirl/shelf celebration (belated for old jars), lantern recall, sticky-note colours.
 - v40: "What's new" window (once after each update, kept in Settings), titled "Fresh from the workshop · A few new things".
 - v39: Save to this phone on Android, and a whole quilt on the share card.

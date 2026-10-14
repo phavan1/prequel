@@ -97,6 +97,8 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [iPhone] Typing decimals on the iPhone keypad (a "." or "," keyboard) works in every number field.
 
 ## 4. Sleep and reports
+- [ ] [Claude] **Awake for a bit (v42):** `moveorder.js`: no night chips; the card shows only 9pm–6am (today); start → "Awake since …" → Back to sleep logs "Awake in the night: N m from …" today; it appears in the sleep diary as a night note.
+- [ ] [iPhone] At night, Awake for a bit → Back to sleep feels easy half-asleep.
 - [ ] [Claude] Going to sleep, then Woke up, saves one rest dated **the day you woke up**.
 - [ ] [Claude] A rest added by hand that crosses midnight is dated correctly.
 - [ ] [Claude] **Sleep diary PDF** for 2 weeks, 4 weeks, everything, and a month:
@@ -128,6 +130,11 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] **Same as last time** starts with the last session's exercises (and swaps), in the same tracking style.
 - [ ] [Claude] Planned workouts still start the same way, and their "add exercise" sheet still has the "keep it" box.
 - [ ] [iPhone] The Quick session sheets feel quick when tired: big targets, little scrolling.
+
+## 5c. Move: order and sessions (v42)
+- [ ] [Claude] `moveorder.js`: doing exercises out of order numbers the chips 1, 2, 3; the plan isn't rearranged; the session saves in the real order; "Last time" shows it next time.
+- [ ] [Claude] Your sessions lists the latest (newest first); Copy puts the formatted text on the clipboard (swaps, plates, seconds and ticked sessions read right).
+- [ ] [iPhone] Copy, then paste into the other app: the text looks right there.
 
 ## 6. Calendar, jar and journal
 - [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins and Weather tabs switch on from ＋.

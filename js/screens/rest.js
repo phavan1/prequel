@@ -1,5 +1,5 @@
 import { get, save, uid, addMoment, removeById, dateKey, parseKey, today } from '../store.js';
-import { FEELS, NIGHT_THINGS } from '../data.js';
+import { FEELS } from '../data.js';
 import { openSleepDiary } from '../reports.js';
 import { esc, nav, backLink, dateChip, logDate, him, timeOf, hm, prettyDate, toast, openSheet, closeSheet } from '../ui.js';
 
@@ -15,7 +15,15 @@ export function mount(root) {
       return;
     }
     if (t.closest('[data-manual]')) { openManual(root, null); return; }
-    if ((b = t.closest('[data-awake]'))) { addMoment('rest', 'Awake in the night: ' + b.dataset.awake.toLowerCase(), logDate()); toast('Noted. Night hours count too.'); render(root); return; }
+    // awake for a bit (v42): one tap when you're up in the night, one when you head back to sleep
+    if (t.closest('[data-awakestart]')) { st.awakeSince = Date.now(); save(); toast('Okay. I\'ll keep the lamp on.'); render(root); return; }
+    if (t.closest('[data-awakecancel]')) { st.awakeSince = null; save(); render(root); return; }
+    if (t.closest('[data-awakeend]')) {
+      const from = st.awakeSince, mins = Math.max(1, Math.round((Date.now() - from) / 60000));
+      const day = today(); // the day it happened (never a future day)
+      addMoment('rest', 'Awake in the night: ' + hm(mins) + ' from ' + timeOf(from), day);
+      st.awakeSince = null; save(); toast('Noted. Night hours count too. Sleep well.'); render(root); return;
+    }
     if ((b = t.closest('[data-del]'))) { removeById('rests', b.dataset.del); render(root); return; }
     if (t.closest('[data-diary]')) { openSleepDiary(); }
   });
@@ -86,7 +94,7 @@ function ring(rests, date) {
 function render(root) {
   const st = get(), date = logDate(), hour = new Date().getHours();
   const rests = st.rests.filter(r => r.date === date).sort((a, b) => a.start - b.start);
-  const night = hour < 5 || hour >= 22;
+  const night = hour < 5 || hour >= 22, awakeTime = hour < 6 || hour >= 21;
   root.innerHTML =
     '<div class="top">' + backLink() + dateChip() + '</div>' +
     '<div class="night-hero">' + him(night ? 'nightwatch' : 'asleep', 'breathe', 'Your character resting') + '<p class="say">' + (night ? 'Awake too? I\'ll keep the lamp on.' : 'Rest counts in any shape. One piece or three.') + '</p></div>' +
@@ -96,9 +104,11 @@ function render(root) {
     '<div class="ring">' + ring(rests, date) + '</div>' +
     (rests.length ? '<div class="card">' + rests.map(r => '<div class="entry"><span class="t">' + timeOf(r.start) + '</span><span>to ' + timeOf(r.end) + ' · ' + hm(Math.round((r.end - r.start) / 60000)) + (r.feel ? ' · ' + esc(r.feel) : '') + '</span><button type="button" class="x" data-del="' + r.id + '" aria-label="Remove this rest">×</button></div>').join('') + '</div>' : '') +
     '<button type="button" class="btn alt wide" data-manual>+ Add a rest by hand</button>' +
-    '<a class="rowlink" href="#/quilt?from=rest"><span>Your quilt · ' + new Set(st.rests.map(r => r.date)).size + ' patches</span><b>›</b></a>' +
-    '<div class="lbl">Awake for a bit? What did you do</div>' +
-    '<div class="chips">' + NIGHT_THINGS.map(n => '<button type="button" class="chip small" data-awake="' + esc(n) + '">' + esc(n) + '</button>').join('') + '</div>' +
+    (() => { const p = new Set(st.rests.map(r => r.date)).size; return '<a class="rowlink" href="#/quilt?from=rest"><span>Your quilt' + (p ? ' · ' + p + (p === 1 ? ' patch' : ' patches') : '') + '</span><b>›</b></a>'; })() +
+    // night only (9pm to 6am), or while it's running
+    (st.awakeSince
+      ? '<div class="card awakecard on"><div><b>Awake since ' + timeOf(st.awakeSince) + '</b><small>Tap when you\'re heading back to sleep.</small></div><div class="sleepbtns"><button type="button" class="btn b1" data-awakeend>Back to sleep</button><button type="button" class="btn ghost" data-awakecancel>Cancel</button></div></div>'
+      : (awakeTime && date === today() ? '<button type="button" class="awakecard" data-awakestart><span>🌙</span><div><b>Awake for a bit?</b><small>Tap now, and again when you head back to sleep.</small></div></button>' : '')) +
     '<div class="card"><div class="lbl">For your doctor</div><p class="muted" style="font-size:14px">Your rests as a tidy PDF sleep diary, ready to save or send.' + (st.rests.length ? ' ' + st.rests.length + ' logged so far.' : '') + '</p><button type="button" class="btn alt" data-diary>Make a sleep diary</button></div>' +
     nav('home');
 }

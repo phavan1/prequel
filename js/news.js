@@ -4,6 +4,13 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 42, date: '2026-10-15', items: [
+    'Move remembers the order you really did your exercises in. The exercise buttons get little numbers as you go.',
+    'Next time you do the same workout, you\'ll see "Last time" with the order you went in. Nothing gets rearranged.',
+    'Your sessions now live on Move. Tap one to see it, and Copy it to paste into any other app.',
+    'Rest has one "Awake for a bit?" button at night instead of the list of chips. Tap it when you\'re up, and again when you head back to sleep. It shows up in your sleep diary.',
+    'No more "0 patches" on Rest before your first night.'
+  ] },
   { v: 41, date: '2026-10-15', items: [
     'Every new jar secretly holds 20 to 40 stars, so you never quite know when it will fill.',
     'Jars come in shapes now: a little jam jar, a tall mason jar or a big cookie jar. The bigger the jar, the more stars it holds.',

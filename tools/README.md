@@ -31,6 +31,7 @@ Each script opens the app in a phone-sized Chromium window, loads fictional data
 | `usuals.js` | (v37) Food usuals top 5 + "All your usuals" sheet, report empty states, no future dates. Prints PASS/FAIL lines. |
 | `saving.js` | (v39) Saving and sharing as an Android phone vs an iPhone (PDF, card, backup), whole quilt card mid-month. Prints PASS/FAIL lines. |
 | `jars.js` | (v41) Jars of 20–40, shapes, the celebration (incl. belated), lantern recall, dark sticky notes. Prints PASS/FAIL lines. |
+| `moveorder.js` | (v42) Real exercise order, "Last time", Your sessions + Copy, Rest's Awake for a bit. Prints PASS/FAIL lines and the copied text. |
 | `news.js` | (v40) What's new: once after an update, never for a new user, missed updates, Settings list. Prints PASS/FAIL lines. |
 | `quick.js` | (v37) Move Quick session with and without reps, "Same as last time", the Days sheet for ticked sessions. Prints PASS/FAIL lines. |
 
@@ -49,4 +50,4 @@ node tools/tests/backup.js              # in another
 - The scripts click specific buttons (`[data-…]` attributes). If a screen changes, its script may need updating. That's expected.
 - In Claude's cloud workspace, Playwright may already be installed globally: run with `NODE_PATH=$(npm root -g) node tools/tests/<script>.js`.
 
-**Last run (15 Oct 2026, v41, Claude's workspace):** all twelve scripts ran with no page errors; `backup.js` 40/40, `usuals.js` 16/16, `quick.js` 17/17, `saving.js` 12/12, `news.js` 9/9, `jars.js` 15/15 passed. (`jar.js` now closes the belated celebration first.)
+**Last run (15 Oct 2026, v42, Claude's workspace):** all thirteen scripts ran with no page errors; `backup.js` 40/40, `usuals.js` 16/16, `quick.js` 17/17, `saving.js` 12/12, `news.js` 9/9, `jars.js` 15/15, `moveorder.js` 12/12 passed. (`jar.js` now closes the belated celebration first.)
