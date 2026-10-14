@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**, **v40**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**, **v40**, **v41**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -114,7 +114,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 | `settings` | `{name, tinyWins[], kindLines[], theme:'light'|'dark'|'auto', dayTabs[]}` | |
 | `games.skate` | `{best, runs}` | |
 | `sky` | cluster and constellation model | Built by `sky-model.js`. |
-| Other flags | `jarsSeen`, `jarSize`, `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session; `active.quick:1` for a Quick session), `quickMode` (`'reps'` or `'tick'`, the last Quick session answer, v37), `newsSeen` (the last What's new update shown on this phone, v40; kept as-is by restore and undo), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
+| Other flags | `jarPlan` (v41: one size per jar, oldest first; jars full before v41 are 20, each new jar gets a secret random 20–40 when it starts), `jarsCelebrated` (v41: how many full jars have had their celebration; missing means 0, so old full jars get a belated one), `jarsSeen` and `jarSize` (**no longer used since v41**, kept for old backups), `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session; `active.quick:1` for a Quick session), `quickMode` (`'reps'` or `'tick'`, the last Quick session answer, v37), `newsSeen` (the last What's new update shown on this phone, v40; kept as-is by restore and undo), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
 
 **Rules that matter when changing data:**
 - `removeById(list, id)` also removes moments whose `ref` is that id, which takes the star out of the sky.
@@ -197,8 +197,10 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
   - Sleep chart, 6pm to 6pm
   - **Every rest**, with a **Total for the day** row (v36) and night notes
 
-### The jar (`wins.js`, route `#/wins`; v26–v30)
-- A drawn glass jar fills with paper stars, one per tiny win. **20 stars fill a jar.**
+### The jar (`wins.js`, route `#/wins`; v26–v30, reshaped in v41)
+- A drawn glass jar fills with paper stars, one per tiny win. **Each jar holds a secret 20–40 stars (v41)**, picked when the jar starts and stored in `jarPlan`. Jars that were full before v41 stay 20.
+- **The size picks the shape (v41):** 20–26 a short round **jam jar**, 27–33 a tall **mason jar** with a screw band, 34–40 a big **cookie jar** with a glass lid and knob (`SHAPES`, `shapeOf`).
+- **Stars come in different sizes (v41).** `layout()` piles them from the bottom up and scales them so the pile reaches the top exactly on the last star (seeded per jar, so they never move).
 - No numbers are shown: "Filling up, one star at a time."
 - Tap the jar to shake out a slip with a little stat, for example:
   - "You got out of bed 9 times this month."
@@ -208,11 +210,13 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 - **Each chip goes in once per day.** A done chip turns dark and gets ★. Tapping it again just says "Already in the jar today."
 - "Or write your own…" wins have no daily limit.
 - **In the jar today** pills under the jar, with × then "Remove?". This is the **only** way to remove a star.
-- A full jar gets a celebration sheet, then goes onto the **Full jars** shelf. Tap a shelf jar for its dates and three slips.
-- If the jar size changes, old full jars are shelved quietly.
+- **The celebration (v41):** when the last star goes in, a sheet plays three steps: **the lid screws on**, **the stars swirl and glow**, and **the jar floats up onto a little shelf** next to the previous three jars. Then "Your jar is full. N tiny wins, from … to …" and **Lovely** appear. Reduced motion skips the animation. A full jar that never had its moment (e.g. filled before v41) is **celebrated belatedly the next time the Jar page opens**; if several are waiting, only the newest plays and the sheet mentions the rest. Then it goes onto the **Full jars** shelf, where each jar shows its own shape. Tap a shelf jar for its dates and three slips.
+- Taking out the star that filled a jar lowers `jarsCelebrated` again.
 
 ### Mind (`mind.js`) and Letters (`letters.js`)
 - Things on my mind with gentle reminders (tomorrow, the weekend, next week, or a picked date). Let go as lanterns.
+- **Calling a lantern back (v41):** right after "Let it go", a bar offers **Bring it back** for about 7 seconds. Later, every row in "Lanterns you've let go · call one back any time" has a **Bring back** button (the lantern's sheet also has one). Bringing it back makes it a note again and takes its star out of the sky.
+- **Sticky notes in Cosy dark (v41 fix):** a dark-mode rule meant for the Me "noticing" card was repainting the green sticky dark, with dark text. Stickies are now excluded (`:not(.sticky)`). No more "0 lanterns" line, and the Letters row shows a count only above zero.
 - Letters from good-day you, sealed and opened on soft days.
 - **The Mind page redesign is pending.**
 
@@ -296,7 +300,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 | Weather check-ins | Yes | Yes | Automated |
 | Mind notes and reminders, letters (incl. `opened`) | Yes | Yes | Automated |
 | Goals (units, `amount`, `paused`, `finished`), goal logs (`amt`) | Yes | Yes | Automated |
-| Jar (`jarsSeen`, `jarSize`), sky (`sky`), quilt (`quiltSeen`) | Yes | Yes | Automated (created by visiting the screens) |
+| Jar (`jarPlan`, `jarsCelebrated`; older `jarsSeen`, `jarSize`), sky (`sky`), quilt (`quiltSeen`) | Yes | Yes | Automated (created by visiting the screens) |
 | Soft days (`heavy`) | Yes | Yes | Automated |
 | Settings (name, kind lines, tiny-win list, theme, `dayTabs`), `comfort` | Yes | Yes | Automated |
 | Skate (`games.skate`) | Yes | Yes | Automated |
@@ -414,6 +418,7 @@ Everything in `tools/` is **development only**. It isn't in `sw.js` `SHELL`, isn
 | `tools/tests/backup.js` | written 12 Oct 2026 for the audit; extended 14 Oct 2026 for v38 (damaged files, kind messages, comparison, older warning, undo and its 7-day expiry, empty-app restore, B3, B5) | New | 40/40 passed (v38) |
 | `tools/tests/usuals.js` | written 14 Oct 2026 for v37 | New: usuals, "All your usuals", report empty states, no future dates | 16/16 passed |
 | `tools/tests/saving.js` | written 15 Oct 2026 for v39 | New: Android vs iPhone saving and sharing (PDF, card, backup), whole quilt card mid-month | 12/12 passed |
+| `tools/tests/jars.js` | written 15 Oct 2026 for v41 | New: belated celebration, 20–40 sizes, the celebration, shapes on the shelf, lantern recall, dark sticky notes, no zeros | 15/15 passed |
 | `tools/tests/news.js` | written 15 Oct 2026 for v40 | New: What's new once after an update, never for a new user, missed updates, Settings list | 9/9 passed |
 | `tools/tests/quick.js` | written 14 Oct 2026 for v37 | New: Quick session both ways, "Same as last time", Days sheet for ticked sessions, planned workouts unchanged | 17/17 passed |
 | `tools/tests/sample-backup.json` | session `sample-backup.json` | `settings.name` changed to `'Sam'`; everything else was already made up | Checked: no real personal data |
@@ -425,11 +430,11 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 ## 11. Status right now
 
-- **Last completed:** **v40** (15 Oct 2026, not yet committed): a "What's new" window after each update (once), also in Settings → What's new. Before that, **v39** (committed as `25f64ec`): "Save to this phone" on Android and computers (PDFs and share cards), and a whole quilt on the share card mid-month. Before that, **v38** (committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
+- **Last completed:** **v41** (15 Oct 2026, not yet committed): jars of 20–40 stars in three shapes, stars of different sizes, the lid/swirl/shelf celebration (belated for old jars), calling lanterns back, readable sticky notes in Cosy dark. Before that, **v40** (committed as `fa7976c`): a "What's new" window after each update (once), also in Settings → What's new. Before that, **v39** (committed as `25f64ec`): "Save to this phone" on Android and computers (PDFs and share cards), and a whole quilt on the share card mid-month. Before that, **v38** (committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
 - **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
 - **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
-- **Next:** Phavan commits v40; his friend checks "Save to this phone" on Android. Then, in the agreed order: the jar (20–40 stars, a real celebration), Move (workout order, a session log with Copy), then Move reports. The "phone breaks" question stays **shelved** (`DECISIONS.md` H).
+- **Next:** Phavan commits v41 and watches his belated jar celebration. Then, in the agreed order: Move (workout order, a session log with Copy), then Move reports. The "phone breaks" question stays **shelved** (`DECISIONS.md` H).
 
 ## 12. Instructions for a new Claude conversation
 

@@ -133,7 +133,10 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins and Weather tabs switch on from ＋.
 - [ ] [Claude] The All tab has no summary line. Other tabs' summaries never say zero.
 - [ ] [Claude] Day card: rows collapse; × deletes; "Add to this day" logs to that date.
-- [ ] [Claude] **The jar:** a chip adds one star once per day ("Already in the jar today" after). Written wins have no limit. Removal works only from "In the jar today". The 20th star brings the celebration and the shelf. Shaking gives a slip with a sensible stat.
+- [ ] [Claude] **The jar:** a chip adds one star once per day ("Already in the jar today" after). Written wins have no limit. Removal works only from "In the jar today". Shaking gives a slip with a sensible stat.
+- [ ] [Claude] **Jars (v41), `jars.js`:** an old full jar of 20 gets its belated celebration once; a new jar gets a size from 20 to 40; the star that fills it plays the lid → swirl → shelf celebration and the words appear after; the shelf shows jam/mason/cookie by size; a shelf jar shows its own size.
+- [ ] [iPhone] The celebration plays smoothly and feels good.
+- [ ] [Claude] **Mind (v41):** "Bring it back" right after letting go and "Bring back" in the lantern list both return the note and remove its star. The green sticky is readable in Cosy dark. No "0 lanterns".
 - [ ] [Claude] Mind: add, remind, let go (lantern). Letters: write, seal, open on a soft day.
 - [ ] [Claude] Weather check-in adds a star and shows on Home.
 - [ ] [Claude] **Quilt:** the current month has a needle; a past month is whole; tapping a patch flips it; swiping or ‹ › changes months; Share this quilt opens the card for that month.

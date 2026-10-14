@@ -4,6 +4,14 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 41, date: '2026-10-15', items: [
+    'Every new jar secretly holds 20 to 40 stars, so you never quite know when it will fill.',
+    'Jars come in shapes now: a little jam jar, a tall mason jar or a big cookie jar. The bigger the jar, the more stars it holds.',
+    'The paper stars come in different sizes.',
+    'A full jar gets a proper moment: the lid screws on, the stars swirl, and it floats onto your shelf. Jars that filled before this get theirs the next time you open the jar.',
+    'Let a lantern go by mistake? Tap "Bring it back" straight away, or call it back any time from "Lanterns you\'ve let go".',
+    'Sticky notes on Mind are readable again in Cosy dark.'
+  ] },
   { v: 40, date: '2026-10-15', items: [
     'This little window. After each update, Prequel tells you what\'s new, just once.',
     'You can read it all again any time in Settings → What\'s new.'

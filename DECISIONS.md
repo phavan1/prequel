@@ -50,7 +50,9 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The soft-day prompt icon is 🍵. Blanket and mug icons were rejected.
 
 **The jar**
-- **20 stars** fill a jar. 50 was rejected as too slow.
+- ~~20 stars fill a jar~~ (50 was rejected as too slow). **Since v41 each jar secretly holds 20–40 stars**, picked when it starts, so filling it is a surprise (Phavan, 15 Oct 2026). Jars already full stay 20.
+- **The jar's shape hints at its size** (jam jar, mason jar, cookie jar), chosen over a fully hidden size because it makes the shelf a quirky collection. **Stars come in different sizes** (his idea).
+- **Celebration:** the lid screws on, the stars swirl, and the jar floats onto the shelf (his picks; "then we'll think of ways to improve"). Jars that filled without a celebration get a **belated** one.
 - **No numbers** under the jar.
 - Each chip counts **once per day**. Written wins have no limit.
 - Stars can be removed **only** from "In the jar today". The remove-by-chip idea was rejected.
@@ -100,6 +102,10 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - After each update, a window shows **once**, then never again until the next update. It covers **real features and small fixes**, in plain, friendly words.
 - Title: a combination, "Fresh from the workshop" over "A few new things". It's also kept in **Settings → What's new**.
 - New users don't see it. Which updates were seen belongs to the phone, so restoring a backup doesn't bring old "seen" marks back.
+
+**Mind (v41)**
+- A lantern let go can always be **called back**: "Bring it back" right after letting go, and "Bring back" in the lantern list any time.
+- Sticky notes keep their paper colours in Cosy dark.
 
 **Logging dates**
 - **Nothing can be logged for a future day (v37)**, on any screen. A future pick snaps back to today with a gentle note. **Exception:** Mind reminders, where looking ahead is the point.
@@ -175,7 +181,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - Kind wording; "soft day", never "heavy".
 - Offline for everything; no backend; data stays on the phone.
 - Dates in words; colour never alone.
-- A jar of 20, no numbers under it, once per chip per day.
+- A jar of 20–40 stars (secret, shaped by size), no numbers under it, once per chip per day.
 - Back buttons follow `?from=`.
 - Finished quilts are whole.
 - Food: blanks are unknown not zero, cooked grains first, and past logs only change when he ticks the box.
@@ -201,7 +207,6 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Protecting data if the phone breaks or is replaced: three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified) | Phavan's question, 14 Oct 2026 | **Shelved** until the next session |
-| **Jar of 20–40 stars** (random per jar) and a **real jar-full celebration** (his first jar filled silently because jars full at the v28 size change were shelved quietly) | Phavan, 14–15 Oct 2026 | Agreed in principle; details to design (hidden size vs shaped jars; loud vs quiet) |
 | **Move:** record the real exercise order (from first sets), a session log on Move with Copy, Move PDF reports | Phavan, 14–15 Oct 2026 | Agreed in principle; to design |
 | Backup B4: prefer the newer copy on load | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Still open.** (B1, B2, B3 and B5 were approved and built in v38, see section C.) Earlier note: On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
 
@@ -213,6 +218,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v41: jars of 20–40 stars, shaped jam/mason/cookie, stars of different sizes, the lid/swirl/shelf celebration (belated for old jars), lantern recall, sticky-note colours.
 - v40: "What's new" window (once after each update, kept in Settings), titled "Fresh from the workshop · A few new things".
 - v39: Save to this phone on Android, and a whole quilt on the share card.
 - v38: safer restore (B1, B2, B3, B5), with the comparison sheet, the older warning, save-first, a 7-day undo with a transparent message, and whole-file refusal.
