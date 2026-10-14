@@ -3,7 +3,7 @@
 import { get, parseKey, dateKey, today } from './store.js';
 import { AREAS, weatherByName } from './data.js';
 import { updateSky, starPos, mulberry32, hashStr } from './sky-model.js';
-import { patches, PAT, byMonth, drawQuiltMonth, monthName as ymName, QCOLS } from './screens/quilt.js';
+import { patches, PAT, byMonth, drawQuiltMonth, monthName as ymName, QCOLS, fullLayout } from './screens/quilt.js';
 import { count, unitOf, ensureGoals } from './goals.js';
 
 export const W = 1080, H = 1920;
@@ -260,8 +260,10 @@ export function drawQuiltCard(g, look, imgs, ym) {
   text(g, 'MY QUILT', W / 2, 170, '900 34px ' + BODY, look.soft, 'center');
   text(g, ymName(ym), W / 2, 300, '700 150px ' + HAND, look.ink, 'center', W - 120);
   text(g, n + (n === 1 ? ' night' : ' nights') + ' of rest, sewn in by hand', W / 2, 370, '800 38px ' + BODY, look.soft, 'center', W - 140);
-  const rows = Math.max(1, Math.ceil((n + (cur ? 1 : 0)) / QCOLS)), avail = 1110, wq = Math.min(860, (avail - 120) / rows * QCOLS + 60);
-  drawQuiltMonth(g, (W - wq) / 2, 420, wq, list, { current: cur, now: 1e15, dpr: 2, binding: look.binding, backing: look.backing, still: true, soft: new Set(Object.keys(get().heavy || {})) });
+  // the card always shows a whole quilt, even mid-month (the Quilt page itself keeps the needle and the growing quilt)
+  const whole = n > 0, lay = whole ? fullLayout(n) : { cols: QCOLS, rows: 1 };
+  const rows = lay.rows, cols = lay.cols, avail = 1110, wq = Math.min(860, (avail - 120) / rows * cols + 60);
+  drawQuiltMonth(g, (W - wq) / 2, 420, wq, list, { current: whole ? false : cur, now: 1e15, dpr: 2, binding: look.binding, backing: look.backing, still: true, soft: new Set(Object.keys(get().heavy || {})) });
   drawFit(g, imgs.sewing, W - 260, H - 165, 470, 390);
   grain(g, 0.05, 55);
   footer(g, look.soft);

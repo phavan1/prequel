@@ -192,7 +192,7 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   ok('no undo card after restoring into an empty app', await F.p.locator('.undocard').count() === 0);
   await F.ctx.close();
   // B3: closing the share sheet without saving doesn't count as a backup
-  const G = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const G = await b.newContext({ viewport: { width: 390, height: 844 }, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' }); // v39: only iPhones use the share sheet for backups
   await G.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.reject(new DOMException('cancelled', 'AbortError')); });
   const gp = await G.newPage(); await gp.clock.install({ time: new Date('2026-10-12T10:00:00') });
   await gp.goto(BASE + '#/settings'); await gp.waitForTimeout(2600); await gp.mouse.click(5, 5); await gp.waitForTimeout(400);

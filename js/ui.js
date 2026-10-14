@@ -79,18 +79,29 @@ export function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+// ---------- saving and sharing files ----------
+// iPhone and iPad (an iPad can say it's a Mac): their share sheet has "Save to Files" and "Save Image", so one
+// "Share or save" button does both. Android's share sheet usually has no way to save to the phone, so Android
+// (and computers) get a real "Save to this phone" download next to Share.
+export const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+export function canShareFile(file) { try { return !!(navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) { return false; } }
+export function saveToDevice(file) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  return 'downloaded';
+}
+export const SAVED_NOTE = 'Saved. Look in your Downloads.';
+
 // save a file: the share sheet on iPhone (Save to Files), a normal download elsewhere.
 // Says what happened: 'shared', 'downloaded', or 'cancelled' (the share sheet was closed without saving)
 export async function downloadFile(name, text, type) {
-  const blob = new Blob([text], { type });
-  try {
-    const file = new File([blob], name, { type });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return 'shared'; }
-  } catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
-  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  return 'downloaded';
+  const file = new File([new Blob([text], { type })], name, { type });
+  if (IOS) {
+    try { if (canShareFile(file)) { await navigator.share({ files: [file], title: name }); return 'shared'; } }
+    catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; }
+  }
+  return saveToDevice(file);
 }
 
 export function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }

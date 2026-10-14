@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, then **v38**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -31,6 +31,7 @@ Prequel is Phavan's personal iPhone web app. Its tagline is *"the behind-the-sce
 | Food data | `data/foods.json`: 9,105 foods, 12 nutrients per 100 g, and serving sizes. Sources: INDB (Indian Nutrient Databank, about 1,014 recipes; licence never confirmed, so credit it) and USDA SR27 (public domain). Fields: kcal, protein, carbs, fat, satfat, fibre, sugar, sodium, iron, calcium, b12, vitd. |
 | PDFs | `js/pdf.js`: each A4 page (1240×1754, 150 dpi) is drawn on a canvas with the app's fonts, saved as JPEG and packed into a hand-written PDF. No library. Text in the PDF can't be selected. |
 | Share cards | `js/cards.js`: 1080×1920 story-sized canvas drawings, shared with the Web Share API. The picture file is prepared before the tap so iOS allows the share sheet to open. |
+| Saving files (v39) | `ui.js` `IOS`, `canShareFile`, `saveToDevice`. **iPhone/iPad:** one "Share or save" button opens the share sheet (it has Save to Files / Save Image). **Android and computers:** Android's share sheet usually has **no way to save to the phone** (found from a friend's report: PDFs "didn't save"), so PDFs and cards get **"Save to this phone" / "Save image"** (a real download) next to **Share**, and backups download directly. |
 | Hosting | GitHub Pages from repo `phavan1/prequel`, branch `main`, root folder. **[from history]** |
 | Backend | **None.** No servers, no API keys, no analytics. |
 
@@ -245,7 +246,8 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 - **Milestone:** Comic, Sunny, Cream, Night. Works for any goal or app count above zero, and uses the unit.
 - **My month:** Journal, Cosy dark, Hoodie.
 - **My quilt:** Linen, Night, Sunny, with a month picker.
-- Swipe through looks, then one "Share or save" button.
+- Swipe through looks, then one "Share or save" button on iPhone, or "Save image" + "Share" on Android and computers (v39).
+- **My quilt is always a whole quilt on the card (v39)**, even mid-month: it uses the finished-month layout (`fullLayout`), while the Quilt page itself keeps the needle and the growing quilt.
 
 ### Settings (`settings.js`) and everywhere
 - Name, kind lines and tiny-win list. Look: Light, Cosy dark or Match my phone. Backup and restore. Start fresh (a Reset card that asks twice and offers a backup first).
@@ -361,7 +363,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | 6 | `README.md` was out of date (Stage 1). | **Rewritten 12 Oct 2026** |
 | 7 | Home's date line and `prettyDate` use the Australian order ("Saturday 10 October", "Fri 9 Oct"). They're in words, but not the "October 10" order he asked for in reports. | Open, ask him |
 | 8 | `comfort` (comfort menu) is stored but has no screen any more. `waving`, `lying` and `stickynote` art are unused. | Harmless |
-| 9 | All testing has been desktop Chromium. iPhone-only behaviour (keyboard, share sheet, Add to Home Screen updates, storage) needs his phone. | Ongoing |
+| 9 | All testing has been desktop Chromium (since v39 `saving.js` also pretends to be an Android phone and an iPhone, but it can't open a real share sheet). iPhone-only behaviour (keyboard, share sheet, Add to Home Screen updates, storage) needs his phone. | Ongoing |
 | 10 | A long single file (`food.js` ~38 KB) and string-built HTML make edits risky. **Always re-test edited sheets.** In v25 a text replacement silently broke the goal sheet until v35. | Process risk |
 | 11 | Food search ranking is heuristic. Some names (seeraga samba, sona masoori, ponni) aren't recognised. | Open, offered |
 | 12 | Backup restore issues B1–B5 (section 5b). | B1, B2, B3, B5 **fixed in v38**; B4 open (rare) |
@@ -405,6 +407,7 @@ Everything in `tools/` is **development only**. It isn't in `sw.js` `SHELL`, isn
 | `tools/tests/{share,reports,jar,quilt,meal,units}.js` | session `share.js`, `reports.js`, `jar4.js`, `q2.js`, `meal.js`, `units.js` | Server address, sample file and screenshot folder made configurable. A test name `'Phavan'` changed to `'Sam'`. Steps unchanged. | All ran against v36 with no page errors |
 | `tools/tests/backup.js` | written 12 Oct 2026 for the audit; extended 14 Oct 2026 for v38 (damaged files, kind messages, comparison, older warning, undo and its 7-day expiry, empty-app restore, B3, B5) | New | 40/40 passed (v38) |
 | `tools/tests/usuals.js` | written 14 Oct 2026 for v37 | New: usuals, "All your usuals", report empty states, no future dates | 16/16 passed |
+| `tools/tests/saving.js` | written 15 Oct 2026 for v39 | New: Android vs iPhone saving and sharing (PDF, card, backup), whole quilt card mid-month | 12/12 passed |
 | `tools/tests/quick.js` | written 14 Oct 2026 for v37 | New: Quick session both ways, "Same as last time", Days sheet for ticked sessions, planned workouts unchanged | 17/17 passed |
 | `tools/tests/sample-backup.json` | session `sample-backup.json` | `settings.name` changed to `'Sam'`; everything else was already made up | Checked: no real personal data |
 | `tools/art/requirements.txt`, `tools/tests/package.json`, `tools/tests/.gitignore` | new | Dependencies: Python OpenCV, NumPy, Pillow; Node Playwright 1.56.0. Screenshots are ignored. | |
@@ -415,11 +418,11 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 ## 11. Status right now
 
-- **Last completed:** **v38** (14 Oct 2026, not yet committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
+- **Last completed:** **v39** (15 Oct 2026, not yet committed): "Save to this phone" on Android and computers (PDFs and share cards), and a whole quilt on the share card mid-month. Before that, **v38** (committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
 - **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
 - **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
-- **Next:** Phavan commits v38 and checks the restore on his iPhone (picking a file, the comparison sheet, undo). Then: what happens to the data if the phone breaks or is replaced. **Shelved by Phavan until the next session**; options are listed in `DECISIONS.md` H.
+- **Next:** Phavan commits v39; his friend checks "Save to this phone" on Android. Then, in the agreed order: a "What's changed" window (being designed), the jar (20–40 stars, a real celebration), Move (workout order, a session log with Copy), then Move reports. The "phone breaks" question stays **shelved** (`DECISIONS.md` H).
 
 ## 12. Instructions for a new Claude conversation
 

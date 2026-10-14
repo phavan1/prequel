@@ -1,6 +1,6 @@
 // Reports as PDFs: the sleep diary (for your doctor) and the weekly / monthly food report.
 import { get, today, addDays, parseKey, dateKey } from './store.js';
-import { esc, openSheet, closeSheet, toast, him } from './ui.js';
+import { esc, openSheet, closeSheet, toast, him, IOS, canShareFile, saveToDevice, SAVED_NOTE } from './ui.js';
 import { loadArt, fontsReady } from './cards.js';
 import { NUTRIENTS, totalOf, sumDay, qtyLabel, myFoods } from './nutrition.js';
 import { Doc, PW, PH, M, INK, SOFT, LINE, CARD, BLUE, SUN, HAND, BODY, txt, rr, wrap, longDate, dayDate, shortDay, range, clock, dur, shareFile } from './pdf.js';
@@ -266,9 +266,12 @@ export async function foodReport(from, to, label) {
 // ---------- the sheets that ask which dates, then hand you the file ----------
 function ready(file, doc, what) {
   openSheet('<h2>Your ' + esc(what) + ' is ready</h2><p class="muted">' + esc(file.name.replace(/\.pdf$/, '')) + ' · ' + Math.max(1, Math.round(file.size / 1024)) + ' KB</p>' +
-    '<button type="button" class="btn" data-sharepdf>Share or save the PDF</button><button type="button" class="btn alt" data-close>Done</button>', async e => {
+    (IOS ? '<button type="button" class="btn" data-sharepdf>Share or save the PDF</button>'
+      : '<button type="button" class="btn" data-savepdf>Save to this phone</button>' + (canShareFile(file) ? '<button type="button" class="btn alt" data-sharepdf>Share it</button>' : '')) +
+    '<button type="button" class="btn ' + (IOS ? 'alt' : 'ghost') + '" data-close>Done</button>', async e => {
+    if (e.target.closest('[data-savepdf]')) { saveToDevice(file); toast(SAVED_NOTE); return; }
     if (!e.target.closest('[data-sharepdf]')) return;
-    const r = await shareFile(file); if (r === 'saved') toast('Saved. Look in your downloads or Files.');
+    const r = await shareFile(file); if (r === 'saved') toast(SAVED_NOTE);
   });
 }
 async function build(fn, what) {

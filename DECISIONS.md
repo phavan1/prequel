@@ -92,6 +92,10 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - **Transparency:** the undo card says plainly that Prequel stored the app's data from before the restore, just in case, asks whether to undo, and says until when it's kept.
 - Kind refusal messages that always say nothing was changed. "Last backup" only counts once the file was really saved. A restore is saved straight away.
 
+**Saving and sharing (v39)**
+- iPhone keeps **one "Share or save" button** (its share sheet can save). Android and computers get **"Save to this phone" / "Save image"** plus **"Share"**, because Android's share sheet usually can't save to the phone. Backups download directly there.
+- **The quilt share card always shows a whole quilt**, even mid-month (Phavan, 15 Oct 2026). The Quilt page itself keeps the in-progress quilt with the needle.
+
 **Logging dates**
 - **Nothing can be logged for a future day (v37)**, on any screen. A future pick snaps back to today with a gentle note. **Exception:** Mind reminders, where looking ahead is the point.
 
@@ -192,6 +196,9 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Protecting data if the phone breaks or is replaced: three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified) | Phavan's question, 14 Oct 2026 | **Shelved** until the next session |
+| **"What's changed" window** after an update (shown once per update, closed for good) | Phavan, 15 Oct 2026 | Liked; design being discussed |
+| **Jar of 20–40 stars** (random per jar) and a **real jar-full celebration** (his first jar filled silently because jars full at the v28 size change were shelved quietly) | Phavan, 14–15 Oct 2026 | Agreed in principle; details to design (hidden size vs shaped jars; loud vs quiet) |
+| **Move:** record the real exercise order (from first sets), a session log on Move with Copy, Move PDF reports | Phavan, 14–15 Oct 2026 | Agreed in principle; to design |
 | Backup B4: prefer the newer copy on load | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Still open.** (B1, B2, B3 and B5 were approved and built in v38, see section C.) Earlier note: On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
 
 ### Done during the handover (approved by Phavan, 12 Oct 2026)

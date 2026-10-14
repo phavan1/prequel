@@ -1,7 +1,7 @@
 // Share: story-sized cards made from your own data. Pick a card, swipe through its looks, share or save.
 // Nothing is uploaded by the app; the picture only goes where you send it.
 import { get } from '../store.js';
-import { esc, nav, backLink, toast } from '../ui.js';
+import { esc, nav, backLink, toast, IOS, saveToDevice, SAVED_NOTE } from '../ui.js';
 import { shareFile } from '../pdf.js';
 import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, drawQuiltCard, quiltMonths, milestones, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS, QUILT_LOOKS } from '../cards.js';
 import { monthLabel } from './quilt.js';
@@ -32,8 +32,9 @@ export function mount(root, params = {}) {
       '<canvas id="card" width="' + W + '" height="' + H + '" aria-label="Preview of your card"></canvas>' +
       '<button type="button" class="sharenav next" data-step="1" aria-label="Next look">›</button></div>' +
     '<div class="lookdots" aria-live="polite"></div>' +
-    '<button type="button" class="btn wide" data-share>Share or save</button>' +
-    '<p class="muted sharenote">Swipe the card for another look. To keep it, pick Save Image. Only this picture leaves your phone, and only where you send it.</p>' +
+    (IOS ? '<button type="button" class="btn wide" data-share>Share or save</button>'
+      : '<div class="sharebtns"><button type="button" class="btn" data-saveimg>Save image</button><button type="button" class="btn alt" data-share>Share</button></div>') +
+    '<p class="muted sharenote">Swipe the card for another look. ' + (IOS ? 'To keep it, pick Save Image. ' : 'Save image puts it in your Downloads. ') + 'Only this picture leaves your phone, and only where you send it.</p>' +
     nav('me');
 
   const cv = root.querySelector('#card'), g = cv.getContext('2d');
@@ -74,11 +75,12 @@ export function mount(root, params = {}) {
     if ((b = t.closest('[data-qm]'))) { qym = b.dataset.qm; ui(); return; }
     if ((b = t.closest('[data-look-i]'))) { lookIx[kind] = Number(b.dataset.lookI); ui(); return; }
     if ((b = t.closest('[data-step]'))) { step(Number(b.dataset.step)); return; }
-    if (t.closest('[data-share]')) {
+    if (t.closest('[data-share]') || t.closest('[data-saveimg]')) {
       if (!ready) return;
       if (!file) { toast('One moment, still drawing.'); return; }
+      if (t.closest('[data-saveimg]')) { saveToDevice(file); toast(SAVED_NOTE); return; }
       const r = await shareFile(file);
-      if (r === 'saved') toast('Saved. Look in your downloads or Files.');
+      if (r === 'saved') toast(SAVED_NOTE);
     }
   });
   // swipe for the next look

@@ -67,6 +67,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [iPhone] Before a phone change: save a backup, then restore it on the new phone (or after deleting and re-adding the app). **Only do this with a fresh backup in Files first.**
 - [ ] [Claude] **B3:** a cancelled share (AbortError) says "No backup saved this time." and doesn't set "Last backup".
 - [ ] [iPhone] Cancelling the share sheet doesn't change "Last backup"; saving to Files does.
+- [ ] [Android] Save a backup downloads the file (no share sheet).
 
 ## 2b. Offline and updates
 - [ ] [Claude] Every file the app uses is in `SHELL` (compare `SHELL` against the folder; `tools/` must **not** be in it).
@@ -102,6 +103,8 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] PDFs build with no network (Playwright offline mode).
 - [ ] [iPhone] Tapping a report opens the share sheet. "Save to Files" works and the PDF opens and reads well.
 - [ ] [iPhone] Reports work in **airplane mode**.
+- [ ] [Claude] **Saving (v39):** `saving.js`: Android gets "Save to this phone" (downloads) + "Share it" on PDFs and "Save image" + "Share" on cards; iPhone keeps one "Share or save".
+- [ ] [Android] "Save to this phone" puts the PDF in Downloads, and "Save image" puts the card in Downloads.
 - [ ] [Claude] **Empty states (v37):** with nothing logged, Food → Reports and Rest → Make a sleep diary show the warm "not yet" sheet, never an empty PDF. With older data only, "the last 7 days" (or 2/4 weeks) is greyed and can't be picked, while months with data are offered. The sleep diary card never says "0 logged".
 
 ## 5. Goals
@@ -135,6 +138,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Home pose by hour: 7am `sitting`, 2pm `afternoon`, 9pm `nightwatch`, soft day `asleep`. The window shows daytime sky from 6am to 7pm.
 - [ ] [Claude] No white halo or trapped cream patches around any character, in **light and dark** mode (zoom the screenshots).
 - [ ] [Claude] Every share-card type and look draws with the right pose. Text doesn't overflow.
+- [ ] [Claude] **My quilt card is a whole quilt even for the current month** (v39), while the Quilt page shows the needle.
 - [ ] [Claude] Dark mode: every page readable and nothing left bright white.
 - [ ] [Claude] Every image loads offline.
 - [ ] [iPhone] The art looks crisp, not blurry, on the Retina screen.
