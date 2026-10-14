@@ -96,6 +96,11 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - iPhone keeps **one "Share or save" button** (its share sheet can save). Android and computers get **"Save to this phone" / "Save image"** plus **"Share"**, because Android's share sheet usually can't save to the phone. Backups download directly there.
 - **The quilt share card always shows a whole quilt**, even mid-month (Phavan, 15 Oct 2026). The Quilt page itself keeps the in-progress quilt with the needle.
 
+**What's new (v40)**
+- After each update, a window shows **once**, then never again until the next update. It covers **real features and small fixes**, in plain, friendly words.
+- Title: a combination, "Fresh from the workshop" over "A few new things". It's also kept in **Settings → What's new**.
+- New users don't see it. Which updates were seen belongs to the phone, so restoring a backup doesn't bring old "seen" marks back.
+
 **Logging dates**
 - **Nothing can be logged for a future day (v37)**, on any screen. A future pick snaps back to today with a gentle note. **Exception:** Mind reminders, where looking ahead is the point.
 
@@ -196,7 +201,6 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Protecting data if the phone breaks or is replaced: three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified) | Phavan's question, 14 Oct 2026 | **Shelved** until the next session |
-| **"What's changed" window** after an update (shown once per update, closed for good) | Phavan, 15 Oct 2026 | Liked; design being discussed |
 | **Jar of 20–40 stars** (random per jar) and a **real jar-full celebration** (his first jar filled silently because jars full at the v28 size change were shelved quietly) | Phavan, 14–15 Oct 2026 | Agreed in principle; details to design (hidden size vs shaped jars; loud vs quiet) |
 | **Move:** record the real exercise order (from first sets), a session log on Move with Copy, Move PDF reports | Phavan, 14–15 Oct 2026 | Agreed in principle; to design |
 | Backup B4: prefer the newer copy on load | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Still open.** (B1, B2, B3 and B5 were approved and built in v38, see section C.) Earlier note: On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
@@ -209,6 +213,8 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v40: "What's new" window (once after each update, kept in Settings), titled "Fresh from the workshop · A few new things".
+- v39: Save to this phone on Android, and a whole quilt on the share card.
 - v38: safer restore (B1, B2, B3, B5), with the comparison sheet, the older warning, save-first, a 7-day undo with a transparent message, and whole-file refusal.
 - v37: no future dates, top-5 usuals + "All your usuals" sheet, report empty states, Quick session (all approved by Phavan and built).
 

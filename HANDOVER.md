@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**, **v40**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -69,6 +69,7 @@ js/
   cards.js      share-card drawings: sky, milestone, month, quilt + looks + POSES
   pdf.js        Doc class (pages, headings, tables, tiles), makePDF, shareFile, date formatters
   reports.js    sleep diary PDF, food report PDF, date-range and month pickers
+  news.js       What's new (v40): NEWS entries (one per release, newest first), the window and the Settings list
   screens/
     home.js     the room (window sky, quilt hoop, him by time of day), quick buttons, soft day
     weather.js  "How's the weather inside?" check-in
@@ -113,7 +114,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 | `settings` | `{name, tinyWins[], kindLines[], theme:'light'|'dark'|'auto', dayTabs[]}` | |
 | `games.skate` | `{best, runs}` | |
 | `sky` | cluster and constellation model | Built by `sky-model.js`. |
-| Other flags | `jarsSeen`, `jarSize`, `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session; `active.quick:1` for a Quick session), `quickMode` (`'reps'` or `'tick'`, the last Quick session answer, v37), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
+| Other flags | `jarsSeen`, `jarSize`, `quiltSeen[]`, `lastBackup`, `lastHello`, `lastSeen`, `goalsSeeded`, `active` (open gym session; `active.quick:1` for a Quick session), `quickMode` (`'reps'` or `'tick'`, the last Quick session answer, v37), `newsSeen` (the last What's new update shown on this phone, v40; kept as-is by restore and undo), `lifts`, `units`, `customExercises`, `customWorkouts`, `workoutAdds`, `subsAdded`, `comfort` | `comfort` (the comfort menu) is **no longer shown anywhere** but is still stored. |
 
 **Rules that matter when changing data:**
 - `removeById(list, id)` also removes moments whose `ref` is that id, which takes the star out of the sky.
@@ -249,6 +250,11 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 - Swipe through looks, then one "Share or save" button on iPhone, or "Save image" + "Share" on Android and computers (v39).
 - **My quilt is always a whole quilt on the card (v39)**, even mid-month: it uses the finished-month layout (`fullLayout`), while the Quilt page itself keeps the needle and the growing quilt.
 
+### What's new (`news.js`, `app.js` `whatsNew()`, v40)
+- After an update, once, as soon as the welcome hello has gone: a sheet with him holding a note, "Fresh from the workshop · A few new things", the update(s) you haven't seen (newest first, at most 3, each headed with its date in words and update number), and "Got it". Showing it marks it seen (`newsSeen`).
+- A brand-new user never gets it (marked seen on first open). Someone updating from before v40 sees the latest update.
+- Settings → About → **What's new** lists every entry, with the current version.
+
 ### Settings (`settings.js`) and everywhere
 - Name, kind lines and tiny-win list. Look: Light, Cosy dark or Match my phone. Backup and restore. Start fresh (a Reset card that asks twice and offers a backup first).
 - Dark mode via `html[data-theme="dark"]`.
@@ -316,7 +322,7 @@ Everything lives in one state object (`store.js`, `fresh()`), plus fields that s
 ## 6. Deployment and versioning workflow [verified + from history]
 
 1. Claude edits files in a working copy and tests them in desktop Chromium (Playwright) with screenshots, **before** pushing.
-2. **Every release bumps** `const VERSION = 'prequel-vN'` in `sw.js`. Any **new file must be added to `SHELL`**, or it won't work offline.
+2. **Every release bumps** `const VERSION = 'prequel-vN'` in `sw.js`. Any **new file must be added to `SHELL`**, or it won't work offline. **Every release also adds a `NEWS` entry** (same number) at the top of `js/news.js`: plain, friendly lines for each change, small fixes included.
 3. Claude writes the changed files to the laptop folder, then reads them back and compares byte for byte (images pixel by pixel) to confirm.
 4. Claude gives a commit message in the form `vN: short description`.
 5. **Phavan commits and syncs in VS Code** (Source Control, then Commit and Sync). GitHub Pages redeploys.
@@ -408,6 +414,7 @@ Everything in `tools/` is **development only**. It isn't in `sw.js` `SHELL`, isn
 | `tools/tests/backup.js` | written 12 Oct 2026 for the audit; extended 14 Oct 2026 for v38 (damaged files, kind messages, comparison, older warning, undo and its 7-day expiry, empty-app restore, B3, B5) | New | 40/40 passed (v38) |
 | `tools/tests/usuals.js` | written 14 Oct 2026 for v37 | New: usuals, "All your usuals", report empty states, no future dates | 16/16 passed |
 | `tools/tests/saving.js` | written 15 Oct 2026 for v39 | New: Android vs iPhone saving and sharing (PDF, card, backup), whole quilt card mid-month | 12/12 passed |
+| `tools/tests/news.js` | written 15 Oct 2026 for v40 | New: What's new once after an update, never for a new user, missed updates, Settings list | 9/9 passed |
 | `tools/tests/quick.js` | written 14 Oct 2026 for v37 | New: Quick session both ways, "Same as last time", Days sheet for ticked sessions, planned workouts unchanged | 17/17 passed |
 | `tools/tests/sample-backup.json` | session `sample-backup.json` | `settings.name` changed to `'Sam'`; everything else was already made up | Checked: no real personal data |
 | `tools/art/requirements.txt`, `tools/tests/package.json`, `tools/tests/.gitignore` | new | Dependencies: Python OpenCV, NumPy, Pillow; Node Playwright 1.56.0. Screenshots are ignored. | |
@@ -418,11 +425,11 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 ## 11. Status right now
 
-- **Last completed:** **v39** (15 Oct 2026, not yet committed): "Save to this phone" on Android and computers (PDFs and share cards), and a whole quilt on the share card mid-month. Before that, **v38** (committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
+- **Last completed:** **v40** (15 Oct 2026, not yet committed): a "What's new" window after each update (once), also in Settings → What's new. Before that, **v39** (committed as `25f64ec`): "Save to this phone" on Android and computers (PDFs and share cards), and a whole quilt on the share card mid-month. Before that, **v38** (committed): a safer restore (B1, B2, B3, B5) with a comparison sheet, a 7-day undo and kind messages. Before that, **v37** (committed as `ebc05b3`): no future dates, top-5 usuals, report empty states, Quick session. Tested in desktop Chromium only.
 - **Last discussion:** the night chips, weather in the sleep diary, and what weather connects to. Answered; waiting on his choices.
 - **Handover finished on 12 Oct 2026:** tools preserved, backup audited, docs updated, `README.md` rewritten, `START_HERE.md` added. Phavan committed and pushed these as `609bbc9` (verified 14 Oct 2026).
 - **14 Oct 2026, new conversation:** reviewed the project (v36, clean, matches GitHub; 27 JS modules pass the syntax check; `backup.js` 21/21 on a copy). Docs cleanup: stale "not committed" notes fixed, reading order made consistent, test-server instructions corrected, the tab-bar issue described accurately, B1 set as the next priority, and the ongoing docs and conversation-change workflow added (`START_HERE.md` 8b and 8c).
-- **Next:** Phavan commits v39; his friend checks "Save to this phone" on Android. Then, in the agreed order: a "What's changed" window (being designed), the jar (20–40 stars, a real celebration), Move (workout order, a session log with Copy), then Move reports. The "phone breaks" question stays **shelved** (`DECISIONS.md` H).
+- **Next:** Phavan commits v40; his friend checks "Save to this phone" on Android. Then, in the agreed order: the jar (20–40 stars, a real celebration), Move (workout order, a session log with Copy), then Move reports. The "phone breaks" question stays **shelved** (`DECISIONS.md` H).
 
 ## 12. Instructions for a new Claude conversation
 

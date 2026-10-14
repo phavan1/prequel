@@ -188,8 +188,10 @@ export async function restoreBackup(data, { withoutCopy = false } = {}) {
     catch (e) { if (!withoutCopy) return 'nocopy'; }
   }
   const d = JSON.parse(JSON.stringify(data)); delete d.exported;
+  const seen = state.newsSeen; // which updates this phone has shown belongs to the app here, not to the backup
   state = Object.assign(fresh(), d);
   state.settings = Object.assign(fresh().settings, d.settings || {});
+  if (seen != null) state.newsSeen = seen;
   await saveNow();
   return 'ok';
 }
@@ -197,8 +199,10 @@ export async function restoreBackup(data, { withoutCopy = false } = {}) {
 export async function undoRestore() {
   let u = null; try { u = await readUndo(); } catch (e) { /* unreadable */ }
   if (!u || !u.state) { undoAt = null; return false; }
+  const seen = state.newsSeen;
   state = Object.assign(fresh(), u.state);
   state.settings = Object.assign(fresh().settings, u.state.settings || {});
+  if (seen != null) state.newsSeen = seen;
   await saveNow();
   try { await writeUndo(null); } catch (e) { /* it expires anyway */ }
   undoAt = null; return true;

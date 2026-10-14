@@ -1,4 +1,5 @@
-import { load, get, save, today, dateKey } from './store.js';
+import { load, get, save, today, dateKey, hasData } from './store.js';
+import { NEWS, LATEST, openNews } from './news.js';
 import * as home from './screens/home.js';
 import * as weather from './screens/weather.js';
 import * as move from './screens/move.js';
@@ -82,11 +83,25 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') hello(); else { st.lastSeen = Date.now(); save(); }
 });
 
+// What's new: once, after an update, as soon as the hello has gone. A brand-new user has nothing "new", so they
+// skip it. Someone updating from before this window existed sees the latest update. Showing it counts as seen.
+function whatsNew() {
+  const st = get();
+  if (st.newsSeen == null && !hasData()) { st.newsSeen = LATEST; save(); return; }
+  const seen = st.newsSeen == null ? LATEST - 1 : st.newsSeen;
+  const fresh = NEWS.filter(n => n.v > seen).slice(0, 3);
+  if (!fresh.length) return;
+  if (document.querySelector('.hello') || document.getElementById('sheet')) { setTimeout(whatsNew, 500); return; }
+  st.newsSeen = LATEST; save();
+  openNews(fresh);
+}
+
 load().then(() => {
   window.addEventListener('hashchange', route);
   applyTheme();
   route();
   hello();
+  setTimeout(whatsNew, 300);
   document.documentElement.classList.add('ready');
 });
 

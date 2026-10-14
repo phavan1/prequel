@@ -30,6 +30,7 @@ Each script opens the app in a phone-sized Chromium window, loads fictional data
 | `units.js` | Own goals with km and custom units, logging amounts, milestone card |
 | `usuals.js` | (v37) Food usuals top 5 + "All your usuals" sheet, report empty states, no future dates. Prints PASS/FAIL lines. |
 | `saving.js` | (v39) Saving and sharing as an Android phone vs an iPhone (PDF, card, backup), whole quilt card mid-month. Prints PASS/FAIL lines. |
+| `news.js` | (v40) What's new: once after an update, never for a new user, missed updates, Settings list. Prints PASS/FAIL lines. |
 | `quick.js` | (v37) Move Quick session with and without reps, "Same as last time", the Days sheet for ticked sessions. Prints PASS/FAIL lines. |
 
 `sample-backup.json` is **made-up data** (about two months, from the first week's format, so it also tests old-backup compatibility).
@@ -47,4 +48,4 @@ node tools/tests/backup.js              # in another
 - The scripts click specific buttons (`[data-…]` attributes). If a screen changes, its script may need updating. That's expected.
 - In Claude's cloud workspace, Playwright may already be installed globally: run with `NODE_PATH=$(npm root -g) node tools/tests/<script>.js`.
 
-**Last run (15 Oct 2026, v39, Claude's workspace):** all ten scripts ran with no page errors; `backup.js` 40/40, `usuals.js` 16/16, `quick.js` 17/17, `saving.js` 12/12 passed.
+**Last run (15 Oct 2026, v40, Claude's workspace):** all eleven scripts ran with no page errors; `backup.js` 40/40, `usuals.js` 16/16, `quick.js` 17/17, `saving.js` 12/12, `news.js` 9/9 passed.

@@ -2,6 +2,7 @@
 import { get, save, exportJSON, isPersisted, today, reset, backupDue, dateKey, checkBackup, BACKUP_PROBLEMS, restoreBackup, hasData, undoInfo, undoRestore } from '../store.js';
 import { esc, nav, backLink, toast, openSheet, closeSheet, downloadFile } from '../ui.js';
 import { dayDate, clock } from '../pdf.js';
+import { NEWS, LATEST, openNews } from '../news.js';
 
 export function mount(root) {
   render(root);
@@ -12,7 +13,8 @@ export function mount(root) {
     if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
     if (t.closest('[data-words]')) { wordsSheet(root); return; }
-    if (t.closest('[data-undo]')) { undoSheet(root); }
+    if (t.closest('[data-undo]')) { undoSheet(root); return; }
+    if (t.closest('[data-news]')) { openNews(NEWS, true); }
   });
   root.addEventListener('change', e => {
     if (e.target.id !== 'importFile' || !e.target.files[0]) return;
@@ -130,6 +132,8 @@ function render(root) {
     '<div class="card"><p class="muted" style="font-size:14px;line-height:1.45;margin:0">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive), especially before changing phones.</p><p class="muted" style="font-size:12px;margin:0" id="persist"></p>' +
       '<div class="grid2"><button type="button" class="btn" data-export>Save a backup</button><button type="button" class="btn alt" data-import>Restore</button></div><input type="file" id="importFile" accept="application/json,.json" hidden>' +
       '<p class="muted" style="font-size:12px;margin:0">' + (st.lastBackup ? 'Last backup: ' + new Date(st.lastBackup).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'No backup saved yet.') + '</p></div>' +
+    '<div class="lbl">About</div>' +
+    '<button type="button" class="rowlink" data-news style="width:100%"><span>What\'s new<small class="rowsub">Every update, in plain words · this is version ' + LATEST + '</small></span><b>›</b></button>' +
     '<div class="lbl">Reset</div>' +
     '<div class="card"><b>Start fresh</b><p class="muted" style="font-size:13px;margin:0">Clears everything in the app and takes it back to day one. It asks twice, and offers a backup first.</p><button type="button" class="btn danger wide" data-fresh>Start fresh…</button></div>' +
     nav('me');

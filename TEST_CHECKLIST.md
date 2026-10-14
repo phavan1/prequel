@@ -36,6 +36,11 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. R
 - [ ] [Claude] The Me gear opens Settings, and its back goes to Me.
 - [ ] [iPhone] Swiping back with the iPhone gesture behaves sensibly.
 
+## 1c. What's new (v40)
+- [ ] [Claude] `news.js`: a new user never sees it; after an update it shows once, after the hello; missed updates each show (newest first, max 3); Settings → What's new lists them all.
+- [ ] [Claude] Every release has a `NEWS` entry whose number matches `VERSION` in `sw.js`.
+- [ ] [iPhone] After Commit and Sync, closing and reopening the app shows the window once.
+
 ## 1b. No future dates (v37)
 - [ ] [Claude] A future `?d=` in the address goes back to today with "Can't log ahead. Back to today." (Food, Move, Rest, Weather, Jar.)
 - [ ] [Claude] Picking a future day in the date chip, the goal "Logging for" box, the weight date or Rest's "add by hand" snaps back to today.
