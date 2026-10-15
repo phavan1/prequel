@@ -101,6 +101,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 **What's new (v40)**
 - After each update, a window shows **once**, then never again until the next update. It covers **real features and small fixes**, in plain, friendly words.
 - Title: a combination, "Fresh from the workshop" over "A few new things". It's also kept in **Settings → What's new**.
+- **Only the latest update shows (v44)**, so it never feels like a pile of pop-ups. If more were missed, one **See all updates** button opens the full list in the same window (Phavan's idea; Claude suggested opening it in place rather than sending people to Settings).
 - New users don't see it. Which updates were seen belongs to the phone, so restoring a backup doesn't bring old "seen" marks back.
 
 **Mind (v41)**
@@ -230,6 +231,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v44: What's new shows only the latest update, plus "See all updates".
 - v43: Not noted / Bar only / Body weight, body weight × reps, ⋯ sheet (measure, fix order with arrows, remove), Copy on the done sheet, Your last workout, fixing past workouts in Days.
 - v42: real exercise order shown (never rearranged), Your sessions with Copy, "Awake for a bit" instead of night chips.
 - v41: jars of 20–40 stars, shaped jam/mason/cookie, stars of different sizes, the lid/swirl/shelf celebration (belated for old jars), lantern recall, sticky-note colours.

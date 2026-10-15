@@ -1,10 +1,10 @@
 # START HERE
 
-_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 15 October 2026 (v43). This file doesn't depend on any earlier conversation._
+_For Phavan and for any new Claude conversation. Written on 12 October 2026; last updated 15 October 2026 (v44). This file doesn't depend on any earlier conversation._
 
 ## 1. What this is
 **Prequel** is Phavan's personal iPhone web app (PWA): a kind, offline, private lifestyle companion. Logs of moving, food, rest, feelings and small wins become a night sky, quilts, a jar of stars, share cards and PDF reports.
-**Version: v43** (`const VERSION = 'prequel-v43'` in `sw.js`). v43 (15 Oct 2026): Not noted / Bar only / Body weight, body weight × reps, the ⋯ sheet, Copy on the done sheet, fixing past workouts. v42: Move shows your real exercise order and keeps your sessions with Copy; Rest's "Awake for a bit". v41: jars of 20–40 stars in three shapes with a real celebration, calling lanterns back, readable sticky notes. v40: a "What's new" window after each update, also kept in Settings. v39: "Save to this phone" on Android and computers, and a whole quilt on the share card. v38: a safer backup restore with a 7-day undo. v37: no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for the food report and sleep diary, and Quick session on Move. See the tracker's version table for the history.
+**Version: v44** (`const VERSION = 'prequel-v44'` in `sw.js`). v44 (15 Oct 2026): What's new shows only the latest update, with "See all updates". v43: Not noted / Bar only / Body weight, body weight × reps, the ⋯ sheet, Copy on the done sheet, fixing past workouts. v42: Move shows your real exercise order and keeps your sessions with Copy; Rest's "Awake for a bit". v41: jars of 20–40 stars in three shapes with a real celebration, calling lanterns back, readable sticky notes. v40: a "What's new" window after each update, also kept in Settings. v39: "Save to this phone" on Android and computers, and a whole quilt on the share card. v38: a safer backup restore with a 7-day undo. v37: no logging on future dates, top-5 usuals with an "All your usuals" sheet, kind empty states for the food report and sleep diary, and Quick session on Move. See the tracker's version table for the history.
 
 ## 2. Where it lives
 - **Code:** `C:\Users\Phava\Documents\companion-app` on Phavan's Windows laptop (a git repo, branch `main`). Claude reaches it through the Claude desktop app link, when the conversation is linked to his computer.

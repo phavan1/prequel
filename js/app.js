@@ -89,7 +89,7 @@ function whatsNew() {
   const st = get();
   if (st.newsSeen == null && !hasData()) { st.newsSeen = LATEST; save(); return; }
   const seen = st.newsSeen == null ? LATEST - 1 : st.newsSeen;
-  const fresh = NEWS.filter(n => n.v > seen).slice(0, 3);
+  const fresh = NEWS.filter(n => n.v > seen); // newest first; the window shows the latest and offers the rest
   if (!fresh.length) return;
   if (document.querySelector('.hello') || document.getElementById('sheet')) { setTimeout(whatsNew, 500); return; }
   st.newsSeen = LATEST; save();

@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 44, date: '2026-10-15', items: [
+    'This window now shows just the latest update. If you missed a few, "See all updates" opens the whole list right here.'
+  ] },
   { v: 43, date: '2026-10-15', items: [
     'Forgot to check the weight? Tap "Not noted" under the weight box. There\'s also "Bar only" and "Body weight".',
     'Exercises you do with your own body weight can be set to "Body weight × reps", so you only type reps. Prequel offers to fix your old 0 kg sets too.',
@@ -53,9 +56,17 @@ export const LATEST = NEWS[0].v;
 export function newsHtml(entries) {
   return entries.map(n => '<div class="newsday"><div class="lbl">' + esc(dayDate(n.date)) + ' · update ' + n.v + '</div><ul>' + n.items.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></div>').join('');
 }
-// the window: "Fresh from the workshop · A few new things"
+// the window: "Fresh from the workshop · A few new things". After an update it shows only the latest one (v44);
+// if more were missed, one "See all updates" button turns the same window into the full list. Never a chain of windows.
+const head = title => '<div class="newshead">' + him('letter', 'pop', 'Your character holding a note') + '<div><div class="k">Fresh from the workshop</div><h2>' + title + '</h2></div></div>';
+const fullList = () => head('What\'s new') + '<div class="newslist">' + newsHtml(NEWS) + '</div><button type="button" class="btn" data-close>Done</button>';
 export function openNews(entries, all) {
-  openSheet('<div class="newshead">' + him('letter', 'pop', 'Your character holding a note') + '<div><div class="k">Fresh from the workshop</div><h2>' + (all ? 'What\'s new' : 'A few new things') + '</h2></div></div>' +
-    '<div class="newslist">' + newsHtml(entries) + '</div>' +
-    '<button type="button" class="btn" data-close>' + (all ? 'Done' : 'Got it') + '</button>');
+  if (all) { openSheet(fullList()); return; }
+  const missed = entries.length - 1;
+  const sheet = openSheet(head('A few new things') + '<div class="newslist">' + newsHtml(entries.slice(0, 1)) + '</div>' +
+    (missed > 0 ? '<div class="newsmore"><p>You also missed ' + missed + (missed === 1 ? ' earlier update.' : ' earlier updates.') + '</p><button type="button" class="btn alt" data-allnews>See all updates</button></div>' : '') +
+    '<p class="muted newswhere">Every update stays in Settings → What\'s new.</p>' +
+    '<button type="button" class="btn" data-close>Got it</button>', ev => {
+    if (ev.target.closest('[data-allnews]')) { const sh = sheet.querySelector('.sheet'); sh.innerHTML = fullList(); sh.scrollTop = 0; }
+  });
 }

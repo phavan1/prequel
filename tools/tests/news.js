@@ -1,4 +1,4 @@
-// v40: the "What's new" window. Shown once after an update (after the hello), never to a brand-new user, and kept
+// v40: the "What's new" window (v44: latest only + "See all updates"). Shown once after an update (after the hello), never to a brand-new user, and kept
 // in Settings → What's new. Fictional data only, in throwaway profiles. Run: PREQUEL_URL=http://localhost:8765/ node tools/tests/news.js
 const { chromium } = require('playwright');
 const path = require('path'); const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';
@@ -31,9 +31,17 @@ const open = async (p, hash) => { await p.goto(BASE + hash); await p.reload(); a
   // 3. skipping updates shows each missed one, newest first (at most 3)
   await p.evaluate(async l => { const s = await import('./js/store.js'); s.get().newsSeen = l - 2; await s.saveNow(); }, latest);
   await open(p, '#/home');
+  // (v44: only the latest shows, with "See all updates" for the rest, in the same window)
   const days = await p.locator('.newslist .newsday').count();
-  ok('two missed updates show two blocks', days === 2, String(days));
-  await p.click('#sheet [data-close]');
+  ok('two missed updates: only the latest shows', days === 1, String(days));
+  ok('...with "You also missed 1 earlier update"', /You also missed 1 earlier update/.test(await p.locator('#sheet').innerText()));
+  await p.screenshot({ path: OUT + '/n-missed.png' });
+  await p.click('#sheet [data-allnews]'); await p.waitForTimeout(200);
+  const allN = await p.evaluate(async () => (await import('./js/news.js')).NEWS.length);
+  ok('"See all updates" turns the same window into the full list', (await p.locator('.newslist .newsday').count()) === allN && await p.locator('#sheet').count() === 1);
+  await p.screenshot({ path: OUT + '/n-all.png' });
+  await p.click('#sheet [data-close]'); await p.waitForTimeout(300);
+  ok('closing it is the end: no second window', await p.locator('#sheet').count() === 0);
   // 4. Settings keeps all of it
   await p.goto(BASE + '#/settings'); await p.waitForTimeout(400);
   ok('Settings has a "What\'s new" row with the version', /What's new/.test(await p.locator('[data-news]').innerText()) && new RegExp('version ' + latest).test(await p.locator('[data-news]').innerText()));

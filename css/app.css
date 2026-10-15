@@ -748,3 +748,8 @@ html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 .awakecard b { display: block; font-size: 15px; font-weight: 800; }
 .awakecard small { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
 .awakecard.on { flex-direction: column; align-items: stretch; border-style: solid; }
+
+/* What's new (v44): latest only, with a way to see the rest */
+.newsmore { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: var(--room); border: 1px dashed var(--line); }
+.newsmore p { margin: 0; font-size: 14px; font-weight: 800; }
+.newswhere { margin: 0; font-size: 12.5px; text-align: center; }
