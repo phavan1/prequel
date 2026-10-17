@@ -54,6 +54,45 @@ export async function sleepDiary(from, to) {
   doc.tiles(tiles, { big: 48 });
   if (naps) doc.para('Daytime rests (between 9 am and 6 pm): ' + naps + '.', '700 22px ' + BODY, SOFT);
 
+  // week by week (v47): is it changing? One row per week (Monday to Sunday) that has sleep logged, only when there are two or more
+  const mondayOf = d => { const x = parseKey(d); return addDays(d, -((x.getDay() + 6) % 7)); };
+  const weeks = []; dKeys.forEach((d, i) => { const w = mondayOf(d); let k = weeks.find(z => z.w === w); if (!k) weeks.push(k = { w, days: [], nights: [] }); k.days.push(totals[i]); const n = byDay[d].filter(r => { const h = new Date(r.start).getHours(); return h < 9 || h >= 18; }).reduce((a, r) => a + (r.end - r.start) / 60000, 0); if (n) k.nights.push(n); });
+  if (weeks.length > 1) {
+    const woke = new Set(st.moments.filter(m => m.area === 'rest' && /^Awake in the night: /.test(m.text) && m.date >= from && m.date <= to).map(m => m.date));
+    doc.heading('Week by week', 'each week runs Monday to Sunday', 140 + weeks.length * 74);
+    const x0 = M, w = PW - 2 * M, rh = 74, cols = [262, 150, 150, 170], bx = x0 + cols.reduce((a, b) => a + b, 0) + 18, bw = x0 + w - 24 - bx;
+    const mx = Math.max(10, Math.ceil(Math.max(...totals) / 60 / 2) * 2), X = mins => bx + bw * Math.min(1, mins / 60 / mx);
+    const head = () => {
+      const g = doc.need(rh * 2); g.fillStyle = INK; rr(g, x0, doc.y, w, 52, 14); g.fill();
+      let x = x0 + 22; ['Week', 'Typical rest', 'Typical night', 'Woke at night'].forEach((h, i) => { txt(g, h, x, doc.y + 34, '800 19px ' + BODY, '#FFFFFF'); x += cols[i]; });
+      txt(g, 'Shortest to longest day', bx, doc.y + 34, '800 19px ' + BODY, '#FFFFFF'); doc.y += 52;
+    };
+    head();
+    weeks.forEach((k, i) => {
+      if (doc.y + rh > PH - M - 90) { doc.newPage(); head(); }
+      const g = doc.g, y = doc.y, wd = woke.size ? [...woke].filter(d => mondayOf(d) === k.w).length : 0;
+      if (i % 2 === 0) { g.fillStyle = CARD; g.fillRect(x0, y, w, rh); }
+      g.fillStyle = LINE; g.fillRect(x0, y + rh - 1, w, 1);
+      let x = x0 + 22;
+      txt(g, 'Week of ' + shortDay(k.w), x, y + 33, '800 21px ' + BODY, INK, 'left', cols[0] - 26);
+      txt(g, plural(k.days.length, 'day', 'days') + ' logged', x, y + 58, '700 17px ' + BODY, SOFT); x += cols[0];
+      txt(g, dur(median(k.days)), x, y + 45, '800 24px ' + BODY, BLUE); x += cols[1];
+      txt(g, k.nights.length ? dur(median(k.nights)) : 'naps only', x, y + 45, '700 22px ' + BODY, INK); x += cols[2];
+      txt(g, wd ? plural(wd, 'night', 'nights') : 'none noted', x, y + 45, '700 22px ' + BODY, wd ? INK : SOFT);
+      // the range: a soft bar from the shortest to the longest day, a dot for the typical one, and the hours in words above it
+      const lo = Math.min(...k.days), hi = Math.max(...k.days), mid = median(k.days), cy = y + 50;
+      g.fillStyle = '#E4ECFF'; rr(g, bx, cy - 5, bw, 10, 5); g.fill();
+      g.fillStyle = '#9DB8F2'; rr(g, X(lo) - 8, cy - 8, Math.max(16, X(hi) - X(lo) + 16), 16, 8); g.fill();
+      g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(X(mid), cy, 11, 0, 7); g.fill(); g.fillStyle = BLUE; g.beginPath(); g.arc(X(mid), cy, 8, 0, 7); g.fill();
+      txt(g, lo === hi ? dur(lo) : dur(lo) + ' – ' + dur(hi), bx, y + 28, '700 17px ' + BODY, SOFT);
+      doc.y += rh;
+    });
+    // a little scale under the bars, so the bar has numbers to it
+    const g = doc.need(40); [0, mx / 2, mx].forEach(h => txt(g, h + ' h', Math.min(X(h * 60), bx + bw - 4), doc.y + 24, '700 15px ' + BODY, SOFT, h === 0 ? 'left' : h === mx ? 'right' : 'center'));
+    doc.y += 34;
+    doc.para('“Typical” is the middle day of the week. The dot on each bar is that typical day.', '600 19px ' + BODY, SOFT);
+  }
+
   // hours each day: night sleep and daytime rest stacked, with the typical day as a dashed line
   if (dKeys.length) {
     const all = days(dKeys[0], dKeys[dKeys.length - 1]), isDay = r => { const h = new Date(r.start).getHours(); return h >= 9 && h < 18; };

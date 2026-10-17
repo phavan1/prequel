@@ -126,6 +126,16 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const chk = await p.evaluate(async () => { const S = await import('./js/store.js'); return [!!S.checkBackup(JSON.stringify({ v: 1, moments: [], doctorNotes: [{ id: 'x', date: '2026-10-16', ts: 1, text: 'hi' }] })).data, S.checkBackup(JSON.stringify({ v: 1, moments: [], doctorNotes: 'oops' })).problem]; });
   ok('backups: doctor notes are checked like everything else', chk[0] === true && chk[1] === 'damaged', JSON.stringify(chk));
 
+  // 14. v47: the sleep diary's Week by week, only when two or more weeks have sleep
+  const wk = await p.evaluate(async () => {
+    const S = await import('./js/store.js'), st = S.get(), T = (d, h) => new Date(d + 'T00:00:00').getTime() + h * 3600000;
+    st.rests = ['2026-10-06', '2026-10-07', '2026-10-13', '2026-10-14'].map((d, i) => ({ id: 'w' + i, date: d, start: T(d, 1), end: T(d, 5 + i), feel: 'okay' })); S.save();
+    const run = async (a, z) => { const said = [], orig = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...r) { said.push(String(t)); return orig.call(this, t, ...r); }; await (await import('./js/reports.js')).sleepDiary(a, z); CanvasRenderingContext2D.prototype.fillText = orig; return said.join(' | '); };
+    return [await run('2026-10-05', '2026-10-16'), await run('2026-10-12', '2026-10-16')];
+  });
+  ok('Week by week: one row per week with typical rest and the range', /Week by week/.test(wk[0]) && /Week of Mon, Oct 5/.test(wk[0]) && /Week of Mon, Oct 12/.test(wk[0]) && /4 h 30 m/.test(wk[0]) && /6 h – 7 h/.test(wk[0]));
+  ok('a single week has no Week by week', !/Week by week/.test(wk[1]));
+
   await b.close();
   results.forEach(r => console.log(r.join('  ')));
   console.log(results.filter(r => r[0] === 'FAIL').length + ' failed of ' + results.length);

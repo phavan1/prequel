@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 47, date: '2026-10-17', items: [
+    'The sleep diary has a new "Week by week" table: typical rest, typical night, nights you woke, and your shortest to longest day, for each week. Handy for seeing if things are changing.'
+  ] },
   { v: 46, date: '2026-10-17', items: [
     'New, and only if you want it: a private period tracker. Turn it on in Days → ＋ → Cycle.',
     'Tap a day to mark it as a period day. How much and how you felt are there if you want them.',

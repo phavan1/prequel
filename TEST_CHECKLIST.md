@@ -102,6 +102,8 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] **Sleep, gently (v45):** `sleep.js`: the awake card offers Back to sleep, Breathe with me and Put it down; Breathe alternates in (4 s) and out (6 s); Put it down makes a Mind note for the morning and keeps you awake; Goodnight saves what woke you (or nothing); six feelings, one tap saves; own words save with the rest; doctor notes keep day and time, can be removed, and appear with the other words in the diary's Notes; restless sews a wavy pattern; the care label names all six; Move suggests Yellow after a restless wake-up or under 5 h, not after 3 h + 3 h that felt okay; backups check `doctorNotes`.
 - [ ] [iPhone] The awake card feels calm in the dark, Breathe with me is soothing (not too fast), and typing what woke you is easy half-asleep.
 - [ ] [iPhone] Make a sleep diary with notes: the Notes section reads well and long notes wrap.
+- [ ] [Claude] **Week by week (v47):** `sleep.js`: two weeks give one row each with typical rest and the range; a single week shows no table.
+- [ ] [iPhone] A 4-week sleep diary: Week by week is easy to read on the phone and printed.
 - [ ] [Claude] Going to sleep, then Woke up, saves one rest dated **the day you woke up**.
 - [ ] [Claude] A rest added by hand that crosses midnight is dated correctly.
 - [ ] [Claude] **Sleep diary PDF** for 2 weeks, 4 weeks, everything, and a month:
