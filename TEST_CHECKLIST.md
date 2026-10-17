@@ -99,6 +99,9 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 ## 4. Sleep and reports
 - [ ] [Claude] **Awake for a bit (v42):** `moveorder.js`: no night chips; the card shows only 9pm–6am (today); start → "Awake since …" → Back to sleep logs "Awake in the night: N m from …" today; it appears in the sleep diary as a night note.
 - [ ] [iPhone] At night, Awake for a bit → Back to sleep feels easy half-asleep.
+- [ ] [Claude] **Sleep, gently (v45):** `sleep.js`: the awake card offers Back to sleep, Breathe with me and Put it down; Breathe alternates in (4 s) and out (6 s); Put it down makes a Mind note for the morning and keeps you awake; Goodnight saves what woke you (or nothing); six feelings, one tap saves; own words save with the rest; doctor notes keep day and time, can be removed, and appear with the other words in the diary's Notes; restless sews a wavy pattern; the care label names all six; Move suggests Yellow after a restless wake-up or under 5 h, not after 3 h + 3 h that felt okay; backups check `doctorNotes`.
+- [ ] [iPhone] The awake card feels calm in the dark, Breathe with me is soothing (not too fast), and typing what woke you is easy half-asleep.
+- [ ] [iPhone] Make a sleep diary with notes: the Notes section reads well and long notes wrap.
 - [ ] [Claude] Going to sleep, then Woke up, saves one rest dated **the day you woke up**.
 - [ ] [Claude] A rest added by hand that crosses midnight is dated correctly.
 - [ ] [Claude] **Sleep diary PDF** for 2 weeks, 4 weeks, everything, and a month:

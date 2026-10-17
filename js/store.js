@@ -38,7 +38,8 @@ function fresh() {
     moments: [],      // {id, date, ts, area, text, bright}
     weather: [],      // {id, date, ts, types:[name], strength}
     sessions: [],     // {id, date, ts, workoutId, workoutName, light, exercises:[{key, name, swap, sets:[{a,b}]}]}
-    rests: [],        // {id, date, start, end, feel}   date = the day you woke up
+    rests: [],        // {id, date, start, end, feel, words?}   date = the day you woke up
+    doctorNotes: [],  // {id, date, ts, text}  notes for your doctor (v45), in the sleep diary
     pendingSleep: null,
     mind: [],         // {id, text, remindOn, created, letGo}
     letters: [],      // {id, text, ts, weather, opened}
@@ -132,8 +133,8 @@ export function exportJSON() { return JSON.stringify(Object.assign({ exported: n
 // Checking a backup before it's used. Missing parts are fine (older backups don't have newer fields, and get them
 // filled in). A part that's there but the wrong shape means the whole file is refused: no half-restores.
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
-const RECORDS = ['moments', 'weather', 'sessions', 'rests', 'mind', 'letters', 'foods', 'comfort', 'customWorkouts', 'myFoods', 'meals', 'weights', 'goals', 'goalLogs'];
-const DATED = ['moments', 'weather', 'sessions', 'rests', 'foods', 'meals', 'weights', 'goalLogs'];
+const RECORDS = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'mind', 'letters', 'foods', 'comfort', 'customWorkouts', 'myFoods', 'meals', 'weights', 'goals', 'goalLogs'];
+const DATED = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'foods', 'meals', 'weights', 'goalLogs'];
 const MAPS = ['heavy', 'lifts', 'units', 'customExercises', 'workoutAdds', 'subsAdded', 'settings', 'sky', 'games'];
 export const BACKUP_PROBLEMS = {
   unreadable: 'That file couldn\'t be read, so Prequel can\'t use it. Nothing was changed.',

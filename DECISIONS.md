@@ -122,6 +122,14 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 **Rest (v42)**
 - The night chips ("What did you do") are **gone**. In their place is one night-only **"Awake for a bit?" → "Back to sleep"** button that logs when and how long (the option Claude recommended, approved 15 Oct 2026).
 
+**Sleep, gently (v45, agreed 17 Oct 2026)**
+- **Minimal and warm, never overwhelming.** A helping hand, not pressure (Phavan; friends using the app said the same). One main button, quiet extras, nothing extra on screen unless you open it.
+- **Nothing is detected or guessed.** Breathe with me and Put it down for the morning are simply offered while you're awake.
+- **"What woke you?" is a free text box with no preset options**, and always optional.
+- **Six wake feelings:** Refreshed, Rested, Okay, Tired, Groggy, Restless, **mapped onto the three existing quilt pattern families**, so the quilt stays readable. Plus an optional "in your own words". Old nights keep their meaning.
+- **Notes for your doctor:** plain text only, stamped with day and time, into the sleep diary. Named generally so it suits anyone.
+- **Move's Yellow hint** uses only what you told Rest: a groggy or restless wake-up, or under 5 hours of rest in the last 24 hours (naps count, so split sleep isn't punished). It's a suggestion; you still choose, and it steps aside once you pick a light.
+
 **Logging dates**
 - **Nothing can be logged for a future day (v37)**, on any screen. A future pick snaps back to today with a gentle note. **Exception:** Mind reminders, where looking ahead is the point.
 
@@ -231,6 +239,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v45: gentler nights: awake card extras, what woke you, six feelings + own words, doctor notes in the diary, Move's Yellow hint.
 - v44: What's new shows only the latest update, plus "See all updates".
 - v43: Not noted / Bar only / Body weight, body weight × reps, ⋯ sheet (measure, fix order with arrows, remove), Copy on the done sheet, Your last workout, fixing past workouts in Days.
 - v42: real exercise order shown (never rearranged), Your sessions with Copy, "Awake for a bit" instead of night chips.

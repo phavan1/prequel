@@ -256,7 +256,7 @@ function dayCard(d) {
   if (D.rests.length || D.restNotes.length) {
     const mins = D.rests.reduce((a, r) => a + (r.end - r.start) / 60000, 0);
     row('rest', 'rest', mins ? 'Rested ' + hm(mins) : 'Rest', D.rests.length > 1 ? 'in ' + D.rests.length + ' parts' : (D.restNotes.length ? D.restNotes.length + ' night note' + (D.restNotes.length > 1 ? 's' : '') : ''),
-      st.moments.filter(m => m.date === d && m.area === 'rest').map(m => '<div class="ditem"><span>' + esc(m.text) + '</span>' + x('moments:' + m.id, m.text) + '</div>').join(''));
+      st.moments.filter(m => m.date === d && m.area === 'rest').map(m => '<div class="ditem"><span>' + esc(m.text) + (m.woke ? '<small>What woke you: ' + esc(m.woke) + '</small>' : '') + '</span>' + x('moments:' + m.id, m.text) + '</div>').join(''));
   }
   if (D.wins.length) row('win', 'win', D.wins.length + (D.wins.length === 1 ? ' tiny win' : ' tiny wins'), esc(D.wins.map(m => m.text).join(', ')),
     D.wins.map(m => '<div class="ditem"><span>' + esc(m.text) + (m.bright ? ' ✦' : '') + '</span>' + x('moments:' + m.id, m.text) + '</div>').join(''));

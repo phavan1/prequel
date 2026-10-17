@@ -72,5 +72,9 @@ export const WEATHERS = [
 export const weatherByName = n => WEATHERS.find(w => w[0] === n);
 
 export const FOOD_TAGS = ['Proper meal', 'Snack', 'Cooked it myself', 'Tried something new', 'Breakfast', 'Fruit', 'Drank water', 'Protein-y'];
-export const FEELS = [['rested', 'Rested'], ['okay', 'Okay'], ['groggy', 'Groggy']];
+// how you woke up (v45: six words). The third item is the quilt pattern family it sews with:
+// rested = soft round patterns, okay = tidy ones, groggy = wavy ones. Old nights keep their word and their patch.
+export const FEELS = [['refreshed', 'Refreshed', 'rested'], ['rested', 'Rested', 'rested'], ['okay', 'Okay', 'okay'], ['tired', 'Tired', 'okay'], ['groggy', 'Groggy', 'groggy'], ['restless', 'Restless', 'groggy']];
+export const feelFamily = k => (FEELS.find(f => f[0] === k) || [0, 0, 'okay'])[2];
+export const feelLabel = k => (FEELS.find(f => f[0] === k) || [k, k ? k[0].toUpperCase() + k.slice(1) : ''])[1];
 export const NIGHT_THINGS = ['Washed the dishes', 'Laptop work', 'Read', 'Just lay there', 'Had a snack', 'Scrolled for a bit'];

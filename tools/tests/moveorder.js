@@ -64,7 +64,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.click('[data-awakestart]'); await p.waitForTimeout(300);
   await p.screenshot({ path: OUT + '/mo-awake-on.png' });
   await p.clock.setSystemTime(new Date('2026-10-15T23:35:00'));
-  await p.click('[data-awakeend]'); await p.waitForTimeout(300);
+  await p.click('[data-awakeend]'); await p.waitForTimeout(300); await p.click('[data-goodnight]'); await p.waitForTimeout(300); // v45: a Goodnight step with an optional "What woke you?"
   s = await st();
   const m = s.moments.find(x => /^Awake in the night: /.test(x.text));
   ok('it logs "Awake in the night: 25 m from 11:10 pm" on that day', m && /25 m from 11:10 pm/.test(m.text) && m.date === '2026-10-15' && !s.awakeSince, m && m.text);

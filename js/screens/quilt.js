@@ -1,6 +1,7 @@
 import { get, save, parseKey } from '../store.js';
 import { esc, nav, backLink, him, hm, timeOf, reduceMotion, openSheet, FROM } from '../ui.js';
 import { mulberry32, hashStr } from '../sky-model.js';
+import { feelFamily, feelLabel } from '../data.js';
 
 // ---------- fabrics: palette from how long you rested, pattern family from how it felt ----------
 const COOL = [['#1F55D0', '#DCE7FF'], ['#8FB0D9', '#F1F5FC'], ['#6CC2B4', '#E2F4F1'], ['#B07CC6', '#F1E6F6'], ['#3C4A8A', '#E6E9F7']];
@@ -25,7 +26,7 @@ export const PAT = {
 };
 function fabricFor(r, hours, feel) {
   const pal = hours < 6 ? COOL : hours >= 8 ? WARM : MID;
-  const [a, b] = pal[Math.floor(r() * pal.length)], pats = FEEL_PATTERNS[feel] || FEEL_PATTERNS.okay;
+  const [a, b] = pal[Math.floor(r() * pal.length)], pats = FEEL_PATTERNS[feelFamily(feel)];
   return { a, b, pat: pats[Math.floor(r() * pats.length)], seed: Math.floor(r() * 1e9) };
 }
 
@@ -38,11 +39,11 @@ export function patches() {
     const isNap = r => { const h = new Date(r.start).getHours(); return (r.end - r.start) < 120 * 60000 && h >= 11 && h < 20; };
     const main = rests.filter(r => !isNap(r)), naps = rests.filter(isNap);
     const hours = rests.reduce((n, r) => n + (r.end - r.start), 0) / 3600000;
-    const feel = (rests.find(r => r.feel) || {}).feel || 'okay';
+    const feel = (rests.find(r => r.feel) || {}).feel || 'okay', words = (rests.find(r => r.words) || {}).words || '';
     const pr = mulberry32(hashStr(date + '|' + rests.length + '|' + feel));
     const f0 = fabricFor(pr, hours, feel); let f1 = fabricFor(pr, hours, feel);
     if (f1.a === f0.a && f1.pat === f0.pat) f1 = fabricFor(pr, hours, feel);
-    return { date, rests, main, naps, parts: Math.max(1, Math.min(2, main.length)), hours, feel, fabrics: [f0, f1], split: pr() < 0.5 ? 'diag' : 'vert', button: ['#E2402F', '#1F55D0', '#F4C430', '#5DAE7E'][Math.floor(pr() * 4)] };
+    return { date, rests, main, naps, parts: Math.max(1, Math.min(2, main.length)), hours, feel, words, fabrics: [f0, f1], split: pr() < 0.5 ? 'diag' : 'vert', button: ['#E2402F', '#1F55D0', '#F4C430', '#5DAE7E'][Math.floor(pr() * 4)] };
   });
 }
 
@@ -261,7 +262,7 @@ export function mount(root, params = {}) {
     const cx = Math.max(10, Math.min(wrap.clientWidth - lw - 10, spot.x + spot.w / 2 - lw / 2)), cy = Math.max(10, spot.y + spot.S / 2 - lh / 2);
     box.style.setProperty('--fx', (spot.x - cx) + 'px'); box.style.setProperty('--fy', (spot.y - cy) + 'px'); box.style.setProperty('--fs', String(spot.w / lw)); box.style.setProperty('--fsy', String(spot.S / lh));
     box.style.left = cx + 'px'; box.style.top = cy + 'px'; box.style.width = lw + 'px'; box.style.height = lh + 'px';
-    box.innerHTML = '<div class="flipin"><div class="face front"></div><div class="face back"><small>' + esc(dayWords(d.date)) + '</small><b>Rested ' + esc(hm(mins)) + (d.main.length > 1 ? ', in ' + d.main.length + ' parts' : '') + (d.naps.length ? ' + a nap' : '') + '</b><p>' + esc(d.rests.map(r => timeOf(r.start) + ' to ' + timeOf(r.end)).join(', then ')) + '</p><p>Felt ' + esc(d.feel) + '.' + (soft.has(d.date) ? ' A soft day, and you still rested.' : '') + (d.parts === 2 ? ' Two halves, stitched into one.' : '') + '</p></div></div>';
+    box.innerHTML = '<div class="flipin"><div class="face front"></div><div class="face back"><small>' + esc(dayWords(d.date)) + '</small><b>Rested ' + esc(hm(mins)) + (d.main.length > 1 ? ', in ' + d.main.length + ' parts' : '') + (d.naps.length ? ' + a nap' : '') + '</b><p>' + esc(d.rests.map(r => timeOf(r.start) + ' to ' + timeOf(r.end)).join(', then ')) + '</p><p>Felt ' + esc(feelLabel(d.feel).toLowerCase()) + '.' + (d.words ? ' “' + esc(d.words) + '”' : '') + (soft.has(d.date) ? ' A soft day, and you still rested.' : '') + (d.parts === 2 ? ' Two halves, stitched into one.' : '') + '</p></div></div>';
     box.querySelector('.front').style.backgroundImage = 'url(' + fc.toDataURL() + ')';
     box.hidden = false; box.classList.remove('open'); void box.offsetWidth;
     paint(); requestAnimationFrame(() => box.classList.add('open'));
@@ -295,7 +296,7 @@ function careSheet() {
   openSheet('<div class="carelabel"><h2>Care label</h2><p class="muted">How to read your quilt</p>' +
     '<dl><dt>Each patch</dt><dd>One day you rested.</dd>' +
     '<dt>The colours</dt><dd>Cool blues and lilacs for shorter rest, in-between colours for a middling night, warm sunny ones for a full night.</dd>' +
-    '<dt>The pattern</dt><dd>How you felt. Stars, flowers and dots: rested. Stripes, checks and plaid: okay. Waves and zigzags: groggy.</dd>' +
+    '<dt>The pattern</dt><dd>How you woke up. Stars, flowers and dots: refreshed or rested. Stripes, checks and plaid: okay or tired. Waves and zigzags: groggy or restless.</dd>' +
     '<dt>Two halves stitched together</dt><dd>A night that came in two parts. Still a whole night of rest.</dd>' +
     '<dt>A little button</dt><dd>A nap that day.</dd>' +
     '<dt>A sparkle</dt><dd>A soft day. You rested anyway.</dd>' +

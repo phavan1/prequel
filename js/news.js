@@ -4,6 +4,14 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 45, date: '2026-10-17', items: [
+    'Awake in the night? The Awake card now has "Breathe with me", a slow in-and-out to follow for as long as you like.',
+    '"Put it down for the morning": write down what\'s on your mind, and it waits on Mind until morning, so your head doesn\'t have to hold it.',
+    'When you head back to sleep, you can say what woke you, in your own words. Only if you want to.',
+    'Six ways to say how you woke up: Refreshed, Rested, Okay, Tired, Groggy or Restless. Add a few words of your own if you like. Your quilt still sews them in.',
+    '"Notes for your doctor" on Rest: jot things down, and they go into your sleep diary with the day and time.',
+    'After a rough night, Move might gently suggest a Yellow day. You still choose.'
+  ] },
   { v: 44, date: '2026-10-15', items: [
     'This window now shows just the latest update. If you missed a few, "See all updates" opens the whole list right here.'
   ] },

@@ -753,3 +753,31 @@ html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 .newsmore { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: var(--room); border: 1px dashed var(--line); }
 .newsmore p { margin: 0; font-size: 14px; font-weight: 800; }
 .newswhere { margin: 0; font-size: 12.5px; text-align: center; }
+
+/* sleep, gently (v45): the awake card, breathing, own words, doctor notes, Move's soft hint */
+.awakecard.on { gap: 12px; }
+.awaketop { display: flex; align-items: flex-start; gap: 10px; }
+.awaketop > div { flex: 1; }
+.awakex { border: 0; background: none; color: var(--ink-soft); font-size: 13px; font-weight: 800; min-height: 36px; padding: 0 4px; }
+.awakecard.on > .btn { min-height: 54px; color: #141A33; background: #9FC0FF; }
+.awakeextras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.awakeextras button { min-height: 48px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--room); color: var(--ink); font-size: 13.5px; font-weight: 800; line-height: 1.2; }
+.ownwords { align-self: flex-start; border: 0; background: none; color: var(--blue); font-size: 14px; font-weight: 800; min-height: 40px; padding: 0 2px; }
+.ownwords[hidden], #fWords[hidden], [data-savefeel][hidden] { display: none; }
+.docbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.docbtns .btn { margin: 0; font-size: 14px; }
+.docnotes { display: flex; flex-direction: column; gap: 2px; max-height: 38vh; overflow-y: auto; }
+.docnotes .entry { align-items: flex-start; padding: 8px 0; border-top: 1px dashed var(--line); font-weight: 600; }
+.docnotes .entry > span { flex: 1; white-space: pre-wrap; overflow-wrap: anywhere; }
+.docnotes small { display: block; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
+.ditem small { display: block; }
+.flip .back { overflow: hidden; }
+.breathe { display: grid; place-items: center; height: 240px; }
+.bcircle { width: 200px; height: 200px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle, #DCE7FF 0 55%, #B9CCF6 100%); transform: scale(.55); transition: transform 4s ease-in-out; }
+.breathe.in .bcircle { transform: scale(1); }
+.breathe.out .bcircle { transform: scale(.55); transition-duration: 6s; }
+.breathe.still .bcircle { transform: none; transition: none; }
+.bword { font-family: var(--font-hand); font-size: 30px; color: #1F2A55; }
+.resthint { display: flex; align-items: center; gap: 10px; width: 100%; margin: 10px 0 2px; padding: 10px 14px; border-radius: 16px; border: 1px dashed #E3B000; background: #FFF8DD; color: #4A3E10; text-align: left; font-size: 13.5px; font-weight: 700; line-height: 1.35; }
+.resthint > span:first-child { font-size: 18px; }
+html[data-theme="dark"] .resthint { background: #3A3320; color: #F3EEDF; }

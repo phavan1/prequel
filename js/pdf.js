@@ -81,7 +81,7 @@ export class Doc {
       else if (opts.byShade ? r.shade : i % 2 === 0) { g.fillStyle = CARD; g.fillRect(x0, this.y, w, rh); }
       g.fillStyle = LINE; g.fillRect(x0, this.y + rh - 1, w, 1);
       let x = x0 + 18;
-      cols.forEach((c, j) => { const v = r.cells[j]; if (v != null && v !== '') txt(g, String(v), c.right ? x + c.w - 24 : x, this.y + rh * 0.66, (r.total ? '900 ' : j === 0 && opts.boldFirst ? '800 ' : '600 ') + (opts.fs || 21) + 'px ' + BODY, r.total ? BLUE : r.soft && r.soft[j] ? SOFT : INK, c.right ? 'right' : 'left', c.w - 28); x += c.w; });
+      cols.forEach((c, j) => { const v = r.cells[j]; if (v != null && v !== '') txt(g, String(v), c.right ? x + c.w - 24 : x, this.y + rh * 0.66, (r.total ? '900 ' : j === 0 && opts.boldFirst ? '800 ' : '600 ') + (opts.fs || 21) + 'px ' + BODY, r.total ? BLUE : r.soft && r.soft[j] ? SOFT : INK, c.right ? 'right' : 'left', r.span === j ? x0 + w - x - 28 : c.w - 28); x += c.w; });
       this.y += rh;
     });
     this.y += 16;

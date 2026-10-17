@@ -1,5 +1,5 @@
 import { get, save, uid, addMoment, addDays, today } from '../store.js';
-import { EXERCISES, WORKOUTS, REST_GUIDE } from '../data.js';
+import { EXERCISES, WORKOUTS, REST_GUIDE, feelFamily, feelLabel } from '../data.js';
 import { esc, nav, backLink, dateChip, logDate, prettyDate, him, pop, openSheet, closeSheet, toast, pick, reduceMotion } from '../ui.js';
 import { dayDate } from '../pdf.js';
 
@@ -30,7 +30,7 @@ function newExercise(name, t) {
 }
 
 // ---------- live state (the workout in progress is saved, so closing the app never loses it) ----------
-let view = 'start', light = 'green', field = 'a', fresh = true, A = '', B = '', edit = -1, say = '', justLogged = false, timer = null, root = null;
+let hintGone = false, view = 'start', light = 'green', field = 'a', fresh = true, A = '', B = '', edit = -1, say = '', justLogged = false, timer = null, root = null;
 const act = () => get().active;
 
 export function mount(r, params) {
@@ -65,6 +65,18 @@ function suggestion() {
   if (light === 'yellow') { s.k = 'YELLOW DAY'; s.note = 'Keep it to 2 sets and skip the optional extras. Or do the 20-Minute Minimum.'; s.btns.push(['min20', '20-Minute Minimum']); }
   return s;
 }
+// a gentle nudge toward Yellow (v45), only from what you told Rest: how you last woke up, and all your rest in the
+// last 24 hours (naps count, so split sleep isn't punished). Never a verdict: you still pick the light.
+function restHint() {
+  if (hintGone || light !== 'green' || logDate() !== today()) return '';
+  const now = Date.now(), since = now - 24 * 3600000;
+  const recent = get().rests.filter(r => r.end > since && r.end <= now);
+  if (!recent.length) return '';
+  const last = recent.reduce((a, b) => b.end > a.end ? b : a);
+  const hours = recent.reduce((n, r) => n + (r.end - Math.max(r.start, since)), 0) / 3600000;
+  const why = last.feel && feelFamily(last.feel) === 'groggy' ? 'You woke up ' + feelLabel(last.feel).toLowerCase() + '.' : hours < 5 ? 'Not much rest in the last day.' : '';
+  return why ? '<button type="button" class="resthint" data-light="yellow"><span aria-hidden="true">🌙</span><span>' + why + ' Yellow might be kinder today. Lighter still counts.</span></button>' : '';
+}
 function renderStart() {
   const st = get(), s = suggestion();
   const L = [['green', 'Green', 'awake, normal', '#2E8B57'], ['yellow', 'Yellow', 'tired, a bit sore', '#E3B000'], ['red', 'Red', 'unwell, faint, pain', '#C2412D']];
@@ -72,7 +84,7 @@ function renderStart() {
     '<div class="top"><div class="lbl">Session ' + (st.sessions.length + 1) + ' · road to 100</div>' + dateChip() + '</div>' +
     '<button type="button" class="quickgo" data-quick="1"><b>Quick session</b><span>No plan needed. Just go.</span><i aria-hidden="true">›</i></button>' +
     '<h1>How\'s the body?</h1>' +
-    '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' +
+    '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' + restHint() +
     '<div class="card sug"><div class="k">' + s.k + '</div><h2>' + s.h + '</h2><p>' + s.p + '</p>' +
       (s.note ? '<div class="note-y">' + s.note + '</div>' : '') + (s.red ? '<div class="note-r">' + s.red + '</div>' : '') +
       '<div class="chips">' + s.btns.map((b, i) => '<button type="button" class="btn' + (i ? ' alt' : '') + '" data-start="' + b[0] + '">' + b[1] + '</button>').join('') + '</div></div>' +
@@ -235,7 +247,7 @@ function onKey(e) {
 function onClick(e) {
   const t = e.target, a = act();
   let b;
-  if ((b = t.closest('[data-light]'))) { light = b.dataset.light; renderStart(); return; }
+  if ((b = t.closest('[data-light]'))) { light = b.dataset.light; hintGone = true; renderStart(); return; }
   if ((b = t.closest('[data-start]'))) { startWorkout(b.dataset.start); return; }
   if (t.closest('[data-newwk]')) { openNewWk(); return; }
   if (t.closest('[data-quick]')) { openQuick(); return; }

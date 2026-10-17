@@ -2,6 +2,7 @@
 import { get, today, addDays, parseKey, dateKey } from './store.js';
 import { esc, openSheet, closeSheet, toast, him, IOS, canShareFile, saveToDevice, SAVED_NOTE } from './ui.js';
 import { loadArt, fontsReady } from './cards.js';
+import { feelLabel } from './data.js';
 import { NUTRIENTS, totalOf, sumDay, qtyLabel, myFoods } from './nutrition.js';
 import { Doc, PW, PH, M, INK, SOFT, LINE, CARD, BLUE, SUN, HAND, BODY, txt, rr, wrap, longDate, dayDate, shortDay, range, clock, dur, shareFile } from './pdf.js';
 
@@ -112,14 +113,27 @@ export async function sleepDiary(from, to) {
   const rows = []; let last = null, par = 1;
   rests.forEach(r => {
     const first = r.date !== last; last = r.date; if (first) par = 1 - par;
-    rows.push({ shade: !par, cells: [first ? dayDate(r.date) : '', clock(r.start), clock(r.end), dur((r.end - r.start) / 60000), r.feel ? r.feel[0].toUpperCase() + r.feel.slice(1) : ''] });
+    rows.push({ shade: !par, cells: [first ? dayDate(r.date) : '', clock(r.start), clock(r.end), dur((r.end - r.start) / 60000), r.feel ? feelLabel(r.feel) : ''] });
     const isLast = rests.filter(x => x.date === r.date).pop() === r;
-    if (isLast && notes[r.date]) rows.push({ cells: ['', 'Awake in the night: ' + notes[r.date].join(', ').toLowerCase(), '', '', ''], soft: [0, 1], shade: !par });
+    if (isLast && notes[r.date]) rows.push({ cells: ['', 'Awake in the night: ' + notes[r.date].join(', ').toLowerCase(), '', '', ''], soft: [0, 1], shade: !par, span: 1 }); // the night note runs across the row
     if (isLast) { const ds = byDay[r.date], tot = ds.reduce((n, x) => n + (x.end - x.start) / 60000, 0); rows.push({ total: true, cells: ['', 'Total for the day', '', dur(tot), ds.length > 1 ? ds.length + ' rests' : ''] }); }
   });
   if (rows.length) doc.table(cols, rows, { boldFirst: true, byShade: true });
   else doc.para('Nothing logged in these dates yet.');
   doc.space(10);
+
+  // in my own words (v45): what woke me, how I woke up, and my notes for the doctor, each with its day and time
+  const said = [];
+  st.moments.filter(m => m.area === 'rest' && m.woke && m.date >= from && m.date <= to).forEach(m => said.push({ date: m.date, ts: m.ts, text: 'What woke me: ' + m.woke }));
+  rests.filter(r => r.words).forEach(r => said.push({ date: r.date, ts: r.end, text: 'How I woke up: ' + r.words }));
+  (st.doctorNotes || []).filter(n => n.date >= from && n.date <= to).forEach(n => said.push({ date: n.date, ts: n.ts, text: n.text }));
+  if (said.length) {
+    doc.heading('Notes', 'in my own words, with the day and time', 160);
+    said.sort((a, b) => a.ts - b.ts).forEach(n => {
+      doc.para(dayDate(n.date) + ' · ' + clock(n.ts), '800 19px ' + BODY, SOFT);
+      doc.para(n.text, '600 23px ' + BODY, INK); doc.space(12);
+    });
+  }
   doc.para('Logged by me in the Prequel app. Times are when I tapped “going to sleep” and “woke up”, or added by hand.', '600 20px ' + BODY, SOFT);
   return doc.finish('Sleep diary ' + longDate(from) + ' to ' + longDate(to) + '.pdf', 'Sleep diary · ' + range(from, to));
 }
