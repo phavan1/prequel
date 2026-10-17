@@ -143,6 +143,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 
 ## 5e. Move for every kind of moving (v48)
 - [ ] [Claude] `movehub.js`: the first-time picker (nothing preselected for a new person; Gym preselected and the road-to-100 question for a gym-goer); same-size tiles; your own activity; a sport's own fields and highlight; the timer survives leaving; Stop fills the minutes; milestones count up on the tile and Me; the gym page has no lights but shows the day's light; Days removal; backup checks.
+- [ ] [Claude] **Edit and remove on Move (v50):** `movehub.js`: an activity's recent logs, Edit filled in, the change saved with its star, Remove asks twice, gym sessions fixed or removed from Lately.
 - [ ] [iPhone] The hub feels calm, not crowded; the tiles are easy to hit; the timer keeps going after closing the app; the gym is one tap further but still quick.
 
 ## 5d. Move: logging honestly (v43)

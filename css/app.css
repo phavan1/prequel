@@ -845,3 +845,10 @@ html[data-theme="dark"] .cal2.cy .d[aria-pressed="true"] { background: #C2577A; 
 .card.acttimer { flex-direction: row; align-items: center; text-align: left; padding: 12px 14px; }
 .card.acttimer .awakex { flex: none; }
 .pickhead .him { width: auto; height: 118px; }
+/* v50: change or remove a log on Move */
+.actrecent { display: flex; flex-direction: column; gap: 6px; }
+.actrecent .mgrow { width: 100%; text-align: left; padding: 6px 14px; }
+.actrecent .mgrow b { color: var(--ink-soft); }
+.latelylist .entry { width: 100%; display: flex; gap: 10px; border: 0; border-top: 1px dashed var(--line); background: transparent; color: var(--ink); text-align: left; font: inherit; font-weight: 600; }
+.latelylist .entry > span { flex: 1; }
+.latelylist .entry > b { color: var(--ink-soft); align-self: center; }

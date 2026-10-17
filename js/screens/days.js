@@ -122,7 +122,7 @@ function confirmDelete(root, key) {
 }
 
 // a quick session logged without reps: see what you did, take off anything you didn't mean to tick
-function editTicked(root, s) {
+function editTicked(root, s, done) {
   const st = get(), keep = s.exercises.slice();
   const draw = () => '<h2>' + esc(s.workoutName) + '</h2><p class="muted">' + esc(prettyDate(s.date, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Logged without numbers. It counts.</p>' +
     keep.map((x, i) => '<div class="ditem"><span>' + esc(x.name) + '</span>' + (keep.length > 1 ? '<button type="button" class="x" data-tkrm="' + i + '" aria-label="Take off ' + esc(x.name) + '">×</button>' : '') + '</div>').join('') +
@@ -134,14 +134,15 @@ function editTicked(root, s) {
     s.exercises = keep;
     const c = keep.length + (keep.length === 1 ? ' exercise' : ' exercises');
     st.moments.forEach(m => { if (m.ref === s.id) m.text = s.workoutName + ' · ' + c; });
-    save(); closeSheet(); render(root);
+    save(); closeSheet(); done ? done() : render(root);
   });
 }
 
 // a finished workout: fix any number, or remove a set you didn't mean to log
-function editSession(root, id) {
+// also used from Move (v50), with `done` to refresh Move instead of Days
+export function editSession(root, id, done) {
   const st = get(), s = st.sessions.find(x => x.id === id); if (!s) return;
-  if (s.noReps) { editTicked(root, s); return; }
+  if (s.noReps) { editTicked(root, s, done); return; }
   const typeOf = x => (EXERCISES[x.key] || st.customExercises[x.key] || {}).t || (x.sets.some(z => z.b !== '' && z.b != null) ? 'wr' : 'hold');
   const removed = new Set(), w = JSON.parse(JSON.stringify(s.exercises)); // a working copy, so Cancel changes nothing
   // a weight can be a number or a word (v43): Not noted, Bar only, Body weight
@@ -175,7 +176,7 @@ function editSession(root, id) {
     s.exercises = w.filter(x => x.sets.length);
     const n = s.exercises.reduce((a, x) => a + x.sets.length, 0);
     st.moments.forEach(m => { if (m.ref === id) m.text = s.workoutName + (n ? ' · ' + n + (n === 1 ? ' set' : ' sets') : ''); });
-    save(); closeSheet(); render(root);
+    save(); closeSheet(); done ? done() : render(root);
   });
   // carry what's been typed across redraws
   sheet.addEventListener('change', e => { if (e.target.matches('[data-ak]')) { keepTyped(); redraw(); } });

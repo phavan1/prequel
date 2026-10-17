@@ -106,6 +106,34 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const kb = await p2.evaluate(async () => (await import('./js/store.js')).get().activities.find(a => a.type === 'kickboxing'));
   ok('kickboxing saves pads, rounds, round length and focus', kb && kb.f.kind === 'Pads' && kb.f.rounds === 8 && kb.f.roundlen === '3 min' && kb.f.focus === 'teeps', JSON.stringify(kb));
 
+  // 7c. v50: change or remove a log right on Move (no trip to Days)
+  await p2.click('[data-act="kickboxing"]'); await p2.waitForTimeout(200);
+  await p2.screenshot({ path: OUT + '/mh-recent.png' });
+  ok('an activity\'s sheet lists its recent logs', await p2.locator('#sheet [data-entry]').count() === 1);
+  await p2.click('#sheet [data-entry]'); await p2.waitForTimeout(200);
+  await p2.screenshot({ path: OUT + '/mh-entry.png' });
+  await p2.click('#sheet [data-o="edit"]'); await p2.waitForTimeout(200);
+  ok('Edit opens the log with everything filled in', await p2.locator('[data-fld="rounds"]').inputValue() === '8' && await p2.locator('[data-seg="roundlen"][data-v="3 min"][aria-pressed="true"]').count() === 1 && await p2.locator('[data-fld="focus"]').inputValue() === 'teeps');
+  await p2.fill('[data-fld="rounds"]', '10'); await p2.click('[data-mins="45"]'); await p2.click('[data-alsave]'); await p2.waitForTimeout(300);
+  let s3 = await p2.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
+  const kb2 = s3.activities.find(a => a.type === 'kickboxing');
+  ok('the change is saved, and its star follows', kb2.f.rounds === 10 && kb2.mins === 45 && kb2.f.focus === 'teeps' && s3.activities.filter(a => a.type === 'kickboxing').length === 1 && s3.moments.some(m => m.ref === kb2.id && m.text === 'Kickboxing · 45 min'));
+  await p2.click('[data-lately]'); await p2.waitForTimeout(200);
+  await p2.click('#sheet [data-lt="a:' + kb2.id + '"]'); await p2.waitForTimeout(200);
+  await p2.click('#sheet [data-o="rm"]'); await p2.waitForTimeout(100);
+  ok('Remove asks once more', /Sure\? Tap again/.test(await p2.locator('#sheet [data-o="rm"]').innerText()));
+  await p2.click('#sheet [data-o="rm"]'); await p2.waitForTimeout(300);
+  s3 = await p2.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
+  ok('removed from Lately: the log and its star are gone', !s3.activities.some(a => a.type === 'kickboxing') && !s3.moments.some(m => m.ref === kb2.id));
+  // a gym session, from Lately: fix it or remove it
+  await p2.click('[data-lately]'); await p2.waitForTimeout(200);
+  await p2.click('#sheet [data-lt="s:s3"]'); await p2.waitForTimeout(300);
+  await p2.screenshot({ path: OUT + '/mh-session.png' });
+  ok('a gym session can be fixed or removed from Move', await p2.locator('#sheet [data-fixs]').count() === 1 && await p2.locator('#sheet [data-rms]').count() === 1);
+  await p2.click('#sheet [data-rms]'); await p2.click('#sheet [data-rms]'); await p2.waitForTimeout(300);
+  s3 = await p2.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
+  ok('the session is removed', !s3.sessions.some(x => x.id === 's3') && s3.sessions.length === 4);
+
   // 8. backups carry activities and check them
   const chk = await p.evaluate(async () => { const S = await import('./js/store.js'); return [!!S.checkBackup(JSON.stringify({ v: 1, moments: [], activities: [{ id: 'x', date: '2026-10-01', ts: 1, type: 'walk', f: {} }] })).data, S.checkBackup(JSON.stringify({ v: 1, moments: [], activities: [{ id: 'x', date: 'later' }] })).problem]; });
   ok('backups: activities are checked like everything else', chk[0] === true && chk[1] === 'damaged', JSON.stringify(chk));

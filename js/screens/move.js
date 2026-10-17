@@ -3,6 +3,8 @@ import { EXERCISES, WORKOUTS, REST_GUIDE, feelFamily, feelLabel } from '../data.
 import { esc, nav, backLink, dateChip, logDate, prettyDate, him, pop, openSheet, closeSheet, toast, pick, reduceMotion } from '../ui.js';
 import { dayDate } from '../pdf.js';
 import { hubHtml, hubClick, hubTick, milestoneOf, milestoneSheet } from './movehub.js';
+import { editSession } from './days.js';
+import { removeEntry } from '../activities.js';
 import { count as goalCount, unitOf as goalUnit } from '../goals.js';
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
@@ -256,7 +258,7 @@ function onClick(e) {
   const t = e.target, a = act();
   let b;
   if ((b = t.closest('[data-light]'))) { light = b.dataset.light; hintGone = true; render(); return; }
-  if (view === 'hub' && hubClick(e, root, render, () => { view = 'start'; render(); window.scrollTo(0, 0); })) return;
+  if (view === 'hub' && hubClick(e, root, render, () => { view = 'start'; render(); window.scrollTo(0, 0); }, sessionSheet)) return;
   if (t.closest('[data-hub]')) { view = 'hub'; render(); window.scrollTo(0, 0); return; }
   if (t.closest('[data-gymmile]')) { milestoneSheet('gym', render); return; }
   if ((b = t.closest('[data-start]'))) { startWorkout(b.dataset.start); return; }
@@ -524,7 +526,13 @@ function sessionSheet(id) {
   const text = sessionText(s, all.indexOf(s) + 1);
   openSheet('<h2>Session ' + (all.indexOf(s) + 1) + '</h2><p class="muted" style="margin:0">' + esc(s.workoutName) + ' · ' + esc(dayDate(s.date)) + '. Exercises are in the order you did them.</p>' +
     '<pre class="sesstext">' + esc(text) + '</pre>' +
-    '<button type="button" class="btn" data-copy>Copy</button><button type="button" class="btn ghost" data-close>Done</button>', async ev => {
+    '<button type="button" class="btn" data-copy>Copy</button>' +
+    // change or remove it right here (v50), no trip to Days
+    '<div class="actbtns"><button type="button" class="btn alt" data-fixs>Fix this workout</button><button type="button" class="btn danger" data-rms>Remove</button></div>' +
+    '<button type="button" class="btn ghost" data-close>Done</button>', async ev => {
+    if (ev.target.closest('[data-fixs]')) { closeSheet(); editSession(root, id, render); return; }
+    const rmb = ev.target.closest('[data-rms]');
+    if (rmb) { if (!rmb.dataset.armed) { rmb.dataset.armed = '1'; rmb.textContent = 'Sure? Tap again'; return; } removeEntry('sessions', id); closeSheet(); toast('Removed.'); render(); return; }
     if (!ev.target.closest('[data-copy]')) return;
     toast((await copyText(text)) ? 'Copied. Paste it anywhere.' : 'Couldn\'t copy. Press and hold the text to copy it.');
   });

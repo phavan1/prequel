@@ -2,7 +2,7 @@
 // Gym opens the gym page (move.js). Every other activity logs in one sheet, now or with a timer.
 import { get, save, uid } from '../store.js';
 import { esc, him, prettyDate, dateChip, logDate, openSheet, closeSheet, toast } from '../ui.js';
-import { CATALOG, FEELS_MOVE, MINS, actDef, picked, logsOf, measures, logActivity, summary } from '../activities.js';
+import { CATALOG, FEELS_MOVE, MINS, actDef, picked, logsOf, measures, logActivity, updateActivity, removeEntry, summary } from '../activities.js';
 import { count, unitOf, checkFinished, openEditGoal, ensureGoals } from '../goals.js';
 
 // the milestone an activity has right now (gym's old "road to 100" is a sessions goal, so it counts too)
@@ -56,7 +56,9 @@ function pickerHtml(first) {
 
 // ---------- logging one ----------
 function logSheet(type, opts, done) {
-  const d = actDef(type), day = (opts && opts.date) || logDate(), v = { mins: opts && opts.mins ? opts.mins : null, feel: '', f: {} };
+  // opts.edit: change a log you already saved (v50); everything starts filled in
+  const ed = opts && opts.edit, d = actDef(type), day = ed ? ed.date : (opts && opts.date) || logDate();
+  const v = ed ? { mins: ed.mins || null, feel: ed.feel || '', f: Object.assign({}, ed.f || {}), hl: ed.hl || '', note: ed.note || '' } : { mins: opts && opts.mins ? opts.mins : null, feel: '', f: {} };
   const seg = (k, opts2) => '<div class="chips">' + opts2.map(o => '<button type="button" class="chip small" data-seg="' + k + '" data-v="' + esc(o) + '" aria-pressed="' + (v.f[k] === o) + '">' + esc(o) + '</button>').join('') + '</div>';
   const draw = () => '<h2><span aria-hidden="true">' + d.e + '</span> ' + esc(d.n) + '</h2><p class="muted">' + esc(prettyDate(day, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Everything here is optional.</p>' +
     '<div class="lbl">How long</div><div class="chips">' + MINS.map(m => '<button type="button" class="chip small" data-mins="' + m + '" aria-pressed="' + (v.mins === m) + '">' + (m < 60 ? m + ' min' : m === 60 ? '1 hour' : '1½ hours') + '</button>').join('') + '</div>' +
@@ -65,7 +67,7 @@ function logSheet(type, opts, done) {
     d.f.map(x => '<div class="lbl">' + esc(x.l) + '</div>' + (x.seg ? seg(x.k, x.seg) : '<input type="text" data-fld="' + x.k + '"' + (x.num ? ' inputmode="decimal" placeholder="' + esc(x.u) + '"' : ' placeholder="' + esc(x.text) + '"') + ' value="' + esc(v.f[x.k] || '') + '" aria-label="' + esc(x.l) + '">')).join('') +
     '<label class="field-label" for="alHl">HIGHLIGHT OF THE DAY</label><input id="alHl" type="text" maxlength="80" placeholder="' + esc(type === 'badminton' ? 'that cross-court smash…' : type === 'football' ? 'first goal in months…' : 'a moment you want to keep…') + '">' +
     '<label class="field-label" for="alNote">A NOTE</label><textarea id="alNote" rows="2" maxlength="500"></textarea>' +
-    '<button type="button" class="btn" data-alsave>Save</button><button type="button" class="btn alt" data-close>Cancel</button>';
+    '<button type="button" class="btn" data-alsave>' + (ed ? 'Save changes' : 'Save') + '</button><button type="button" class="btn alt" data-close>Cancel</button>';
   const keep = sh => { sh.querySelectorAll('[data-fld]').forEach(i => { v.f[i.dataset.fld] = i.value.trim(); }); const m = sh.querySelector('#alMins'); if (m && m.value.trim()) v.mins = parseInt(m.value, 10) || null; v.hl = (sh.querySelector('#alHl') || {}).value; v.note = (sh.querySelector('#alNote') || {}).value; };
   const redraw = sh => { keep(sh); const s = sh.querySelector('.sheet'), y = s.scrollTop, hl = v.hl, note = v.note; s.innerHTML = draw(); s.querySelector('#alHl').value = hl || ''; s.querySelector('#alNote').value = note || ''; s.scrollTop = y; };
   const sheet = openSheet(draw(), ev => {
@@ -77,9 +79,27 @@ function logSheet(type, opts, done) {
     keep(sheet);
     const f = {}; d.f.forEach(x => { const val = v.f[x.k]; if (val == null || val === '') return; if (x.num) { const n = parseFloat(String(val).replace(',', '.')); if (n > 0) f[x.k] = Math.round(n * 100) / 100; } else f[x.k] = val; });
     const data = { f }; if (v.mins > 0) data.mins = v.mins; if (v.feel) data.feel = v.feel; if (v.hl && v.hl.trim()) data.hl = v.hl.trim(); if (v.note && v.note.trim()) data.note = v.note.trim();
+    if (ed) { updateActivity(ed.id, data); closeSheet(); toast('Saved.'); if (done) done(); checkFinished(); return; }
     logActivity(type, day, data);
     closeSheet(); toast(d.n + ' logged.' + (data.mins ? ' ' + data.mins + ' minutes of moving.' : ' It counts.'));
     if (done) done(); checkFinished();
+  });
+  if (ed) { sheet.querySelector('#alHl').value = v.hl; sheet.querySelector('#alNote').value = v.note; }
+}
+
+// ---------- one log you already saved (v50): see it, change it, or remove it, right here on Move ----------
+export function entrySheet(id, done) {
+  const a = (get().activities || []).find(x => x.id === id); if (!a) return;
+  const d = actDef(a.type);
+  openSheet('<h2><span aria-hidden="true">' + d.e + '</span> ' + esc(d.n) + '</h2><p class="muted" style="margin:0">' + esc(prettyDate(a.date, { weekday: 'long', day: 'numeric', month: 'long' })) + '</p>' +
+    (summary(a) ? '<p style="margin:0;font-weight:700">' + esc(summary(a)) + '</p>' : '') +
+    (a.hl ? '<p class="say" style="margin:0">“' + esc(a.hl) + '”</p>' : '') + (a.note ? '<p class="muted" style="margin:0;white-space:pre-wrap">' + esc(a.note) + '</p>' : '') +
+    '<div class="actbtns"><button type="button" class="btn alt" data-o="edit">Edit</button><button type="button" class="btn danger" data-o="rm">Remove</button></div>' +
+    '<button type="button" class="btn ghost" data-close>Close</button>', ev => {
+    const o = ev.target.closest('[data-o]'); if (!o) return;
+    if (o.dataset.o === 'edit') { closeSheet(); logSheet(a.type, { edit: a }, done); return; }
+    if (!o.dataset.armed) { o.dataset.armed = '1'; o.textContent = 'Sure? Tap again'; return; }
+    removeEntry('activities', a.id); closeSheet(); toast('Removed.'); if (done) done();
   });
 }
 
@@ -107,11 +127,12 @@ export function milestoneSheet(id, done) {
 function actSheet(id, done) {
   const st = get(), d = actDef(id), last = logsOf(id).sort(newest)[0], m = milestoneOf(id), t = st.actTimer;
   openSheet('<h2><span aria-hidden="true">' + d.e + '</span> ' + esc(d.n) + '</h2>' +
-    (last ? '<p class="muted">Last time: ' + esc(prettyDate(last.date)) + (summary(last) ? ' · ' + esc(summary(last)) : '') + (last.hl ? '<br>“' + esc(last.hl) + '”' : '') + '</p>' : '') +
+    (last ? '<div class="lbl">Recent · tap one to change or remove it</div><div class="actrecent">' + logsOf(id).sort(newest).slice(0, 5).map(a => '<button type="button" class="mgrow" data-entry="' + a.id + '"><span>' + esc(prettyDate(a.date)) + '<small>' + esc(summary(a) || 'logged') + (a.hl ? ' · “' + esc(a.hl) + '”' : '') + '</small></span><b aria-hidden="true">›</b></button>').join('') + '</div>' : '') +
     '<div class="actbtns"><button type="button" class="btn" data-o="start"' + (t ? ' disabled' : '') + '>Start now</button><button type="button" class="btn alt" data-o="log">Log one I did</button></div>' +
     (t ? '<p class="muted" style="font-size:13px;margin:0">A timer is already running for ' + esc(actDef(t.type).n.toLowerCase()) + '.</p>' : '<p class="muted" style="font-size:13px;margin:0">Start now runs a timer, even if you close the app. Stop it when you\'re done.</p>') +
     '<button type="button" class="rowlink" data-o="mile" style="width:100%"><span>' + (m ? 'Milestone: ' + count(m) + ' of ' + m.target + ' ' + esc(unitOf(m)) : 'Set a milestone') + '</span><b>›</b></button>' +
     '<button type="button" class="btn ghost" data-close>Close</button>', ev => {
+    const en = ev.target.closest('[data-entry]'); if (en) { closeSheet(); entrySheet(en.dataset.entry, done); return; }
     const o = ev.target.closest('[data-o]'); if (!o || o.disabled) return;
     if (o.dataset.o === 'start') { st.actTimer = { type: id, start: Date.now(), date: logDate() }; save(); closeSheet(); toast('Timer on. Enjoy it.'); done(); return; }
     if (o.dataset.o === 'log') { closeSheet(); logSheet(id, null, done); return; }
@@ -119,14 +140,18 @@ function actSheet(id, done) {
   });
 }
 
-function latelySheet() {
+function latelySheet(done, openSession) {
   const st = get();
-  const items = (st.activities || []).map(a => ({ ts: a.ts, date: a.date, t: actDef(a.type).e + ' ' + actDef(a.type).n, s: summary(a), hl: a.hl })).concat(st.sessions.map(s => ({ ts: s.ts, date: s.date, t: '🏋️ ' + s.workoutName, s: s.noReps ? s.exercises.length + ' exercises' : s.exercises.reduce((n, x) => n + x.sets.length, 0) + ' sets' }))).sort(newest).slice(0, 30);
-  openSheet('<h2>Lately</h2><div class="latelylist">' + items.map(i => '<div class="entry"><span><small>' + esc(prettyDate(i.date)) + '</small><b>' + esc(i.t) + '</b>' + (i.s ? ' · ' + esc(i.s) : '') + (i.hl ? '<br><i>“' + esc(i.hl) + '”</i>' : '') + '</span></div>').join('') + '</div><button type="button" class="btn alt" data-close>Close</button>');
+  const items = (st.activities || []).map(a => ({ k: 'a:' + a.id, ts: a.ts, date: a.date, t: actDef(a.type).e + ' ' + actDef(a.type).n, s: summary(a), hl: a.hl })).concat(st.sessions.map(s => ({ k: 's:' + s.id, ts: s.ts, date: s.date, t: '🏋️ ' + s.workoutName, s: s.noReps ? s.exercises.length + ' exercises' : s.exercises.reduce((n, x) => n + x.sets.length, 0) + ' sets' }))).sort(newest).slice(0, 30);
+  openSheet('<h2>Lately</h2><p class="muted" style="margin:0">Tap one to see it, change it or remove it.</p><div class="latelylist">' + items.map(i => '<button type="button" class="entry" data-lt="' + i.k + '"><span><small>' + esc(prettyDate(i.date)) + '</small><b>' + esc(i.t) + '</b>' + (i.s ? ' · ' + esc(i.s) : '') + (i.hl ? '<br><i>“' + esc(i.hl) + '”</i>' : '') + '</span><b aria-hidden="true">›</b></button>').join('') + '</div><button type="button" class="btn alt" data-close>Close</button>', ev => {
+    const b = ev.target.closest('[data-lt]'); if (!b) return;
+    const [kind, id] = b.dataset.lt.split(':'); closeSheet();
+    if (kind === 'a') entrySheet(id, done); else if (openSession) openSession(id);
+  });
 }
 
 // ---------- clicks on the hub; returns true when it handled one ----------
-export function hubClick(e, root, rerender, openGym) {
+export function hubClick(e, root, rerender, openGym, openSession) {
   const t = e.target, st = get(); let b;
   if ((b = t.closest('[data-pick]'))) { const k = b.dataset.pick; pick.has(k) ? pick.delete(k) : pick.add(k); b.setAttribute('aria-pressed', String(pick.has(k))); return true; }
   if (t.closest('[data-ownact]')) { own = !own; redrawPicker(root); return true; }
@@ -152,7 +177,7 @@ export function hubClick(e, root, rerender, openGym) {
   }
   if (t.closest('[data-actsetup]')) {
     pick = new Set(picked()); own = false;
-    openSheet(pickerHtml(false), ev => { hubClick(ev, document.getElementById('sheet'), rerender, openGym); });
+    openSheet(pickerHtml(false), ev => { hubClick(ev, document.getElementById('sheet'), rerender, openGym, openSession); });
     return true;
   }
   if ((b = t.closest('[data-act]'))) { const id = b.dataset.act; if (id === 'gym') openGym(); else actSheet(id, rerender); return true; }
@@ -166,7 +191,7 @@ export function hubClick(e, root, rerender, openGym) {
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Sure? Tap again'; return true; }
     st.actTimer = null; save(); rerender(); return true;
   }
-  if (t.closest('[data-lately]')) { latelySheet(); return true; }
+  if (t.closest('[data-lately]')) { latelySheet(rerender, openSession); return true; }
   return false;
 }
 const customDraft = {};

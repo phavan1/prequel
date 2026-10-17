@@ -257,6 +257,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v50: change or remove any log right on Move (Phavan: having to go to Days was a gap); a professional README.
 - v49: Kickboxing and MMA on Move (effort fields: kind, rounds, round length, worked on); Lately shows the newest days first.
 - v48: Move for every kind of moving: hub with same-size tiles, per-sport fields, timer, milestones instead of road to 100.
 - v47: Week by week in the sleep diary (At a glance kept as it is).

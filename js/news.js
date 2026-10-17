@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 50, date: '2026-10-18', items: [
+    'You can now change or remove a log right on Move. Tap an activity to see its recent logs, or tap anything in "Lately", then Edit or Remove.',
+    'Gym sessions too: open one and tap "Fix this workout" or "Remove". No more trips to Days for it.'
+  ] },
   { v: 49, date: '2026-10-17', items: [
     'Kickboxing and MMA are on Move now. Kickboxing logs pads, bag work, sparring or class, rounds and round length. MMA logs striking, grappling, wrestling, sparring or class, and rounds.',
     '"Lately" on Move now shows your most recent days first.'

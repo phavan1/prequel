@@ -70,6 +70,18 @@ export function logActivity(type, date, data) {
   save(); return a;
 }
 
+// change a saved log (v50): its details are replaced, and its star's words follow
+export function updateActivity(id, data) {
+  const st = get(), a = (st.activities || []).find(x => x.id === id); if (!a) return;
+  ['mins', 'feel', 'hl', 'note', 'f'].forEach(k => { delete a[k]; }); Object.assign(a, data);
+  st.moments.forEach(m => { if (m.ref === id) m.text = actDef(a.type).n + (a.mins ? ' · ' + a.mins + ' min' : ''); });
+  save();
+}
+// remove a log or a gym session (v50), with its star
+export function removeEntry(list, id) {
+  const st = get(); st[list] = (st[list] || []).filter(x => x.id !== id); st.moments = st.moments.filter(m => m.ref !== id); save();
+}
+
 // a short line about one log, e.g. "45 min · Doubles · 6 games"
 export function summary(a) {
   const d = actDef(a.type), p = [];
