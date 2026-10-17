@@ -852,3 +852,55 @@ html[data-theme="dark"] .cal2.cy .d[aria-pressed="true"] { background: #C2577A; 
 .latelylist .entry { width: 100%; display: flex; gap: 10px; border: 0; border-top: 1px dashed var(--line); background: transparent; color: var(--ink); text-align: left; font: inherit; font-weight: 600; }
 .latelylist .entry > span { flex: 1; }
 .latelylist .entry > b { color: var(--ink-soft); align-self: center; }
+
+/* On repeat (v51): cassettes, the tape player, the shelf, song search */
+.ontape { display: flex; flex-direction: column; gap: 12px; }
+.tapethen { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--room); font-size: 14px; font-weight: 700; }
+.cassette { --w: 300px; position: relative; width: var(--w); max-width: 100%; aspect-ratio: 1.6; border-radius: calc(var(--w) * .06); background: var(--shell); box-shadow: inset 0 0 0 3px rgba(0,0,0,.18), 0 6px 14px rgba(35,38,47,.18); padding: calc(var(--w) * .05); display: flex; flex-direction: column; gap: calc(var(--w) * .035); }
+.cassette .clabel { flex: 1; display: flex; align-items: center; gap: calc(var(--w) * .035); background: #FFFDF6; border-radius: calc(var(--w) * .025); padding: calc(var(--w) * .03); min-height: 0; background-image: repeating-linear-gradient(0deg, transparent 0 calc(var(--w) * .07), rgba(31,85,208,.12) calc(var(--w) * .07) calc(var(--w) * .074)); }
+.cassette .clabel img { height: 100%; aspect-ratio: 1; border-radius: 4px; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.cassette .clabel div { min-width: 0; display: flex; flex-direction: column; }
+.cassette .clabel b { font-family: var(--font-hand); font-size: calc(var(--w) * .085); line-height: 1; color: #23262F; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cassette .clabel small { font-size: calc(var(--w) * .045); font-weight: 800; color: #6B6456; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cassette .cwin { height: 30%; margin: 0 14%; border-radius: 999px; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: space-between; padding: 0 6%; position: relative; }
+.cassette .ctape { position: absolute; left: 22%; right: 22%; top: 30%; bottom: 30%; background: #4A2E1E; border-radius: 3px; opacity: .85; }
+.cassette .reel { position: relative; z-index: 1; height: 72%; aspect-ratio: 1; border-radius: 50%; background: #FFFDF6; border: calc(var(--w) * .012) solid #3A2A20; background-image: conic-gradient(#3A2A20 0 8%, transparent 8% 33%, #3A2A20 33% 41%, transparent 41% 66%, #3A2A20 66% 74%, transparent 74%); }
+.cassette.playing .reel { animation: reelspin 1.6s linear infinite; }
+@keyframes reelspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cassette.playing .reel { animation: none; } }
+.cassette .cscrew { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,.3); bottom: 6px; }
+.cassette .cscrew.a { left: 8px; } .cassette .cscrew.b { right: 8px; }
+.cassette.small { --w: 150px; }
+.cassette.big { --w: 300px; }
+.cassette.blank { --shell: #D8CDB2; }
+.tapeplayer { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 24px; background: var(--paper); border: 1px solid var(--line); }
+.tapeplayer .deck { display: flex; justify-content: center; padding: 14px 0; border-radius: 18px; background: linear-gradient(#3A3F4D, #23262F); box-shadow: inset 0 2px 8px rgba(0,0,0,.4); }
+.tpinfo h2 { margin: 2px 0 0; font-family: var(--font-hand); font-size: 30px; line-height: 1.05; }
+.tpinfo p { margin: 2px 0 0; }
+.tpartist { font-weight: 800; color: var(--ink-soft); }
+.tpera { font-family: var(--font-hand); font-size: 20px; color: var(--blue); }
+.tpsince { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.tpline { font-size: 14px; font-style: italic; padding-left: 10px; border-left: 3px solid var(--sun, #F4C430); }
+.tpbtns, .tpbtns2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tpbtns .btn, .tpbtns2 .btn { margin: 0; }
+.tpnote { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-soft); min-height: 1em; }
+.tpnote .lnk { border: 0; background: none; color: var(--blue); font-weight: 800; padding: 0; }
+.mixtape { display: flex; flex-direction: column; gap: 6px; }
+.mixname { font-family: var(--font-hand); font-size: 22px; }
+.shelf { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; -webkit-overflow-scrolling: touch; }
+.shelftape { flex: none; display: flex; flex-direction: column; gap: 4px; border: 0; background: none; padding: 0; color: var(--ink); text-align: left; font: inherit; }
+.shelftape > span { font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
+.tapesheet { display: flex; justify-content: center; padding: 6px 0; }
+.songres { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+.songrow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px; border-radius: 14px; border: 1px solid var(--line); background: var(--room); color: var(--ink); text-align: left; font: inherit; }
+.songrow img, .songrow .nocover { width: 52px; height: 52px; border-radius: 8px; flex: none; object-fit: cover; }
+.songrow .nocover { display: grid; place-items: center; background: var(--line); font-style: normal; font-size: 22px; }
+.songrow > span:not(.pv) { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.songrow b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.songrow small { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.songrow .pv { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--paper); border: 1px solid var(--line); font-size: 14px; }
+.songrow .pv.on { background: var(--ink); color: #fff; }
+.songrow.chosen { background: var(--paper); }
+.songmsg { margin: 4px 2px; font-size: 14px; }
+.manualbtn { border: 0; background: none; color: var(--blue); font-weight: 800; padding: 6px 0; text-align: left; }
+.appchips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

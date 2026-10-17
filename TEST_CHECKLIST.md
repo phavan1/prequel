@@ -151,7 +151,10 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [iPhone] The weight words and ⋯ are easy to hit mid-set; the Days picker works with the iPhone wheel.
 
 ## 6. Calendar, jar and journal
-- [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins, Weather and Cycle tabs switch on from ＋.
+- [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins, Weather, Cycle and On repeat tabs switch on from ＋.
+- [ ] [Claude] **On repeat (v51):** `ontape.js` (Apple's search simulated): search, preview, put on, era and line, the player, Listen in full, change song, shelf, made cover and little tune, edit and remove a tape, offline message, year and month cards, backup checks.
+- [ ] [iPhone] **Most important:** on the live site, the song search finds real songs with covers, and ▶ plays a preview. If not, tell Claude what happens (it may need another way to reach the search).
+- [ ] [iPhone] Listen in full opens Spotify / Apple Music / YouTube properly from the home-screen app; the little tune plays with the phone's silent switch off.
 - [ ] [Claude] **Cycle (v46):** `cycle.js`: off by default; marking days, droplets, feelings, the estimate after two periods, day of cycle, a feelings-only day, the quiet row on other tabs, no stars, switching off keeps data, backup checks.
 - [ ] [iPhone] Cycle feels quick and private: marking a day is one tap, the rose and droplets read well in light and Cosy dark.
 - [ ] [Claude] The All tab has no summary line. Other tabs' summaries never say zero.

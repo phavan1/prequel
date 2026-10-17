@@ -5,6 +5,7 @@ import { AREAS, weatherByName } from './data.js';
 import { updateSky, starPos, mulberry32, hashStr } from './sky-model.js';
 import { patches, PAT, byMonth, drawQuiltMonth, monthName as ymName, QCOLS, fullLayout } from './screens/quilt.js';
 import { count, unitOf, ensureGoals } from './goals.js';
+import { tapes, byStart, coverOf, soundtrackOf } from './music.js';
 
 export const W = 1080, H = 1920;
 const HAND = '"Gaegu", cursive', BODY = '"Nunito", system-ui, sans-serif';
@@ -237,6 +238,15 @@ export function drawMonth(g, look, imgs) {
     });
     top += s + 90;
   }
+  // the soundtrack of the month (v51): the song on repeat longest
+  const snd = soundtrackOf(dateKey(now).slice(0, 7));
+  if (snd && top + 330 < H - 420) {
+    text(g, 'the soundtrack', 80, top + 30, '800 32px ' + BODY, look.soft);
+    drawTape(g, 80, top + 56, 420, snd, imgs.covers && imgs.covers[snd.id]);
+    text(g, snd.title, 540, top + 150, '700 56px ' + HAND, look.ink, 'left', W - 620);
+    if (snd.artist) text(g, snd.artist, 540, top + 205, '800 32px ' + BODY, look.soft, 'left', W - 620);
+    top += 330;
+  }
   if (!S.tiles.length && !S.wx.length) text(g, 'a quiet month, and that\'s okay', W / 2, 900, '700 64px ' + HAND, look.ink, 'center');
   drawFit(g, imgs[look.pose], look.pose === 'ccarve' ? 790 : 830, H - 175, 470, 470);
   text(g, 'still here,', 80, H - 380, '700 64px ' + HAND, look.ink);
@@ -279,4 +289,50 @@ export async function shareCanvas(cv, name) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name + '.png'; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   return 'saved';
+}
+
+// ---------- 5. my year in songs (v51): every era on repeat, as cassettes ----------
+export const SONG_LOOKS = [
+  { id: 'shoebox', name: 'Shoebox', bg: '#FAF3DC', ink: '#23262F', soft: '#5E584B', accent: '#1F55D0', dots: 'rgba(31,85,208,.05)' },
+  { id: 'night', name: 'Night drive', bg: '#1C1815', ink: '#F2E8DA', soft: '#BCAD9A', accent: '#F4C430', dots: 'rgba(255,255,255,.05)' },
+  { id: 'hoodie', name: 'Hoodie', bg: '#1F55D0', ink: '#FFFFFF', soft: '#DCE7FF', accent: '#F4C430', dots: 'rgba(255,255,255,.06)' }
+];
+const SHELLS = [['#23262F', '#F3EEDF'], ['#F3EEDF', '#23262F'], ['#1F55D0', '#FFFFFF'], ['#E2402F', '#FFFFFF'], ['#5DAE7E', '#FFFFFF'], ['#F4C430', '#23262F'], ['#B07CC6', '#FFFFFF']];
+export const songYears = () => [...new Set(tapes().map(t => t.start.slice(0, 4)))].sort().reverse();
+// the covers, as pictures the canvas can draw (made covers included)
+export function loadCovers() {
+  return Promise.all(tapes().map(t => new Promise(res => { const i = new Image(); i.onload = () => res([t.id, i]); i.onerror = () => res([t.id, null]); i.src = coverOf(t); }))).then(a => Object.fromEntries(a));
+}
+// one cassette on the card: shell, paper label with the cover and handwritten title, the window with its reels
+export function drawTape(g, x, y, w, t, img) {
+  const h = w / 1.6, [shell] = SHELLS[Math.floor(mulberry32(hashStr(t.id))() * SHELLS.length)], p = w * 0.05;
+  g.save(); g.shadowColor = 'rgba(0,0,0,.25)'; g.shadowBlur = w * 0.05; g.shadowOffsetY = w * 0.02;
+  g.fillStyle = shell; rr(g, x, y, w, h, w * 0.06); g.fill(); g.restore();
+  const lh = h * 0.5, lx = x + p, ly = y + p, lw = w - 2 * p;
+  g.fillStyle = '#FFFDF6'; rr(g, lx, ly, lw, lh, w * 0.025); g.fill();
+  const cs = lh - w * 0.06; if (img) { g.save(); rr(g, lx + w * 0.03, ly + w * 0.03, cs, cs, 6); g.clip(); g.drawImage(img, lx + w * 0.03, ly + w * 0.03, cs, cs); g.restore(); }
+  text(g, t.title, lx + cs + w * 0.06, ly + lh * 0.48, '700 ' + Math.round(w * 0.085) + 'px ' + HAND, '#23262F', 'left', lw - cs - w * 0.09);
+  if (t.artist) text(g, t.artist, lx + cs + w * 0.06, ly + lh * 0.8, '800 ' + Math.round(w * 0.045) + 'px ' + BODY, '#6B6456', 'left', lw - cs - w * 0.09);
+  const wy = ly + lh + w * 0.035, wh = h * 0.3, wx = x + w * 0.14, ww = w * 0.72;
+  g.fillStyle = 'rgba(0,0,0,.55)'; rr(g, wx, wy, ww, wh, wh / 2); g.fill();
+  g.fillStyle = 'rgba(74,46,30,.85)'; g.fillRect(wx + ww * 0.22, wy + wh * 0.3, ww * 0.56, wh * 0.4);
+  [wx + ww * 0.2, wx + ww * 0.8].forEach(cx => { const r = wh * 0.36; g.fillStyle = '#FFFDF6'; g.beginPath(); g.arc(cx, wy + wh / 2, r, 0, 7); g.fill(); g.strokeStyle = '#3A2A20'; g.lineWidth = r * 0.18; g.stroke(); for (let k = 0; k < 3; k++) { const a = k * 2.094; g.beginPath(); g.moveTo(cx, wy + wh / 2); g.lineTo(cx + Math.cos(a) * r * 0.8, wy + wh / 2 + Math.sin(a) * r * 0.8); g.stroke(); } });
+}
+export function drawSongs(g, look, imgs, year) {
+  const list = tapes().filter(t => t.start.slice(0, 4) === year).sort(byStart);
+  g.fillStyle = look.bg; g.fillRect(0, 0, W, H);
+  halftone(g, look.dots, 34, 4, 0, 0, W, H);
+  text(g, 'MY YEAR IN SONGS', 80, 170, '900 34px ' + BODY, look.soft);
+  text(g, year, 80, 310, '700 160px ' + HAND, look.ink);
+  text(g, list.length + (list.length === 1 ? ' era on repeat' : ' eras on repeat'), 80, 380, '800 40px ' + BODY, look.accent);
+  const cols = list.length <= 8 ? 2 : 3, show = list.slice(-(cols === 2 ? 8 : 15)), gap = 30, w = (W - 160 - gap * (cols - 1)) / cols, rowH = w / 1.6 + (cols === 2 ? 70 : 58);
+  const short = d => parseKey(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  show.forEach((t, i) => {
+    const x = 80 + (i % cols) * (w + gap), y = 450 + Math.floor(i / cols) * rowH;
+    drawTape(g, x, y, w, t, imgs.covers && imgs.covers[t.id]);
+    text(g, short(t.start) + (t.end && t.end !== t.start ? ' – ' + short(t.end) : t.end ? '' : ' – now') + (t.era ? ' · ' + t.era : ''), x + 4, y + w / 1.6 + (cols === 2 ? 44 : 36), '700 ' + (cols === 2 ? 34 : 28) + 'px ' + HAND, look.soft, 'left', w - 8);
+  });
+  if (list.length > show.length) text(g, '+ ' + (list.length - show.length) + ' more before these', 80, 450 + Math.ceil(show.length / cols) * rowH + 20, '800 32px ' + BODY, look.soft);
+  grain(g, 0.05, 51);
+  footer(g, look.soft, 'every song, a chapter');
 }

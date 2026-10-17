@@ -3,20 +3,22 @@
 import { get } from '../store.js';
 import { esc, nav, backLink, toast, IOS, saveToDevice, SAVED_NOTE } from '../ui.js';
 import { shareFile } from '../pdf.js';
-import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, drawQuiltCard, quiltMonths, milestones, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS, QUILT_LOOKS } from '../cards.js';
+import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, drawQuiltCard, quiltMonths, milestones, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS, QUILT_LOOKS, SONG_LOOKS, drawSongs, songYears, loadCovers } from '../cards.js';
 import { monthLabel } from './quilt.js';
 
 const KINDS = {
   sky: { name: 'My sky', looks: SKY_LOOKS },
   mile: { name: 'Milestone', looks: MILE_LOOKS },
   month: { name: 'My month', looks: MONTH_LOOKS },
-  quilt: { name: 'My quilt', looks: QUILT_LOOKS }
+  quilt: { name: 'My quilt', looks: QUILT_LOOKS },
+  songs: { name: 'My year in songs', looks: SONG_LOOKS }
 };
-let kind = null, lookIx = { sky: 0, mile: 0, month: 0, quilt: 0 }, mileId = null, qym = null;
+let kind = null, lookIx = { sky: 0, mile: 0, month: 0, quilt: 0, songs: 0 }, mileId = null, qym = null, songYear = null;
 
 export function mount(root, params = {}) {
-  const st = get(), miles = milestones(), qms = quiltMonths();
-  const avail = Object.keys(KINDS).filter(k => k === 'month' || (k === 'sky' ? st.moments.length > 0 : k === 'quilt' ? qms.length > 0 : miles.length > 0));
+  const st = get(), miles = milestones(), qms = quiltMonths(), sys = songYears();
+  const avail = Object.keys(KINDS).filter(k => k === 'month' || (k === 'sky' ? st.moments.length > 0 : k === 'quilt' ? qms.length > 0 : k === 'songs' ? sys.length > 0 : miles.length > 0));
+  if (!songYear || !sys.includes(songYear)) songYear = sys[0];
   if (params.t === 'quilt' && params.m && qms.includes(params.m)) qym = params.m;
   if (!qym || !qms.includes(qym)) qym = qms[0];
   if (params.t && avail.includes(params.t)) kind = params.t;
@@ -46,6 +48,7 @@ export function mount(root, params = {}) {
     if (kind === 'sky') drawSky(g, look, imgs);
     else if (kind === 'mile') drawMilestone(g, look, imgs, miles.find(m => m.id === mileId) || miles[0]);
     else if (kind === 'quilt') drawQuiltCard(g, look, imgs, qym);
+    else if (kind === 'songs') drawSongs(g, look, imgs, songYear);
     else drawMonth(g, look, imgs);
     // get the picture ready now, so the share sheet opens straight from the tap
     const my = ++stamp, name = 'prequel-' + KINDS[kind].name.toLowerCase().replace(/\s+/g, '-') + '.png'; file = null;
@@ -54,7 +57,8 @@ export function mount(root, params = {}) {
   const ui = () => {
     root.querySelectorAll('[data-kind]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.kind === kind)));
     const mp = root.querySelector('.milepick');
-    mp.hidden = kind !== 'mile' && kind !== 'quilt';
+    mp.hidden = kind !== 'mile' && kind !== 'quilt' && !(kind === 'songs' && sys.length > 1);
+    if (kind === 'songs') mp.innerHTML = '<div class="chips">' + sys.map(y => '<button type="button" class="chip small" data-sy="' + y + '" aria-pressed="' + (y === songYear) + '">' + y + '</button>').join('') + '</div>';
     if (kind === 'quilt') mp.innerHTML = '<div class="chips">' + qms.map(m => '<button type="button" class="chip small" data-qm="' + m + '" aria-pressed="' + (m === qym) + '">' + esc(monthLabel(m)) + '</button>').join('') + '</div>';
     if (kind === 'mile') mp.innerHTML = '<div class="chips">' + miles.map(m => '<button type="button" class="chip small" data-mile="' + m.id + '" aria-pressed="' + (m.id === mileId) + '">' + esc(m.title) + ' · ' + m.n + '</button>').join('') + '</div>';
     const looks = KINDS[kind].looks;
@@ -64,8 +68,8 @@ export function mount(root, params = {}) {
   const step = d => { const n = KINDS[kind].looks.length; lookIx[kind] = (lookIx[kind] + d + n) % n; ui(); };
 
   ui();
-  Promise.all([fontsReady(), loadArt(POSES)]).then(([, a]) => {
-    POSES.forEach((n, i) => { imgs[n] = a[i]; }); ready = true; draw();
+  Promise.all([fontsReady(), loadArt(POSES)]).then(async ([, a]) => {
+    POSES.forEach((n, i) => { imgs[n] = a[i]; }); imgs.covers = await loadCovers(); ready = true; draw();
   });
 
   root.addEventListener('click', async e => {
@@ -73,6 +77,7 @@ export function mount(root, params = {}) {
     if ((b = t.closest('[data-kind]'))) { kind = b.dataset.kind; ui(); return; }
     if ((b = t.closest('[data-mile]'))) { mileId = b.dataset.mile; ui(); return; }
     if ((b = t.closest('[data-qm]'))) { qym = b.dataset.qm; ui(); return; }
+    if ((b = t.closest('[data-sy]'))) { songYear = b.dataset.sy; ui(); return; }
     if ((b = t.closest('[data-look-i]'))) { lookIx[kind] = Number(b.dataset.lookI); ui(); return; }
     if ((b = t.closest('[data-step]'))) { step(Number(b.dataset.step)); return; }
     if (t.closest('[data-share]') || t.closest('[data-saveimg]')) {

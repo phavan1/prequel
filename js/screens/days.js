@@ -4,6 +4,8 @@ import { SPECIAL } from './move.js';
 import { esc, nav, prettyDate, timeOf, hm, openSheet, closeSheet } from '../ui.js';
 import { openLog, ensureGoals } from '../goals.js';
 import { totalOf, qtyLabel } from '../nutrition.js';
+import { musicPanel, musicClick } from './ontape.js';
+import { tapes, soundtrackOf } from '../music.js';
 import { FLOW, CYCLE_FEELS, cycleOn, cycleDay, setCycleDay, estimate, cycleDayNumber } from '../cycle.js';
 
 // Days: one calendar, filtered by a tab. Icons and words carry the meaning, never colour alone.
@@ -15,11 +17,12 @@ const ICON = {
   win: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
   weather: '<path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 11a3.5 3.5 0 0 0 1 7z"/>',
   goal: '<path d="M6 21V4M6 4l11 4-11 4"/>',
+  music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
   cycle: '<path d="M12 3.5c3.2 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 2.8-6.8 6-11z"/>',
   plus: '<path d="M12 5v14M5 12h14"/>'
 };
 const svg = (k, cls) => '<svg class="' + (cls || 'ic') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + '</svg>';
-const OPTIONAL = [['win', 'Tiny wins'], ['weather', 'Weather'], ['cycle', 'Cycle', 'a private period tracker, just for you']];
+const OPTIONAL = [['win', 'Tiny wins'], ['weather', 'Weather'], ['cycle', 'Cycle', 'a private period tracker, just for you'], ['music', 'On repeat', 'the song you can\'t stop playing, era by era']];
 let month = null, selected = null, tab = 'all', open = null;
 
 // what happened on a day, per category
@@ -31,7 +34,7 @@ function dayData(d) {
   const wins = st.moments.filter(m => m.date === d && m.area === 'win');
   const wx = st.weather.filter(w => w.date === d);
   const goals = {}; (st.goalLogs || []).filter(l => l.date === d).forEach(l => { (goals[l.goalId] = goals[l.goalId] || []).push(l); });
-  return { move, meals, oldFood, rests, restNotes, wins, wx, goals, cycle: cycleDay(d) };
+  return { d, move, meals, oldFood, rests, restNotes, wins, wx, goals, cycle: cycleDay(d) };
 }
 function has(D, k) {
   if (k === 'move') return D.move.length > 0;
@@ -39,6 +42,7 @@ function has(D, k) {
   if (k === 'rest') return D.rests.length + D.restNotes.length > 0;
   if (k === 'win') return D.wins.length > 0;
   if (k === 'weather') return D.wx.length > 0;
+  if (k === 'music') { const t = tapes().find(x => x.start <= D.d && (x.end || today()) >= D.d); return t ? (t.start === D.d ? 3 : 1) : 0; } // a song started, or was on repeat
   if (k === 'cycle') return D.cycle ? (D.cycle.period ? 3 : 1) : 0; // a period day, or just a note about how you felt
   if (k.startsWith('g:')) return !!D.goals[k.slice(2)];
   // all: how many kinds of things happened that day
@@ -53,6 +57,7 @@ export function mount(root, params) {
   render(root);
   root.addEventListener('click', e => {
     const t = e.target; let b;
+    if (tab === 'music' && musicClick(e, () => render(root))) return;
     if ((b = t.closest('[data-tab]'))) { tab = b.dataset.tab; render(root); return; }
     if (t.closest('[data-addtab]')) { tabSheet(root); return; }
     if ((b = t.closest('[data-day]'))) { selected = b.dataset.day; open = null; render(root); return; }
@@ -200,12 +205,12 @@ function render(root) {
   for (let i = 0; i < lead; i++) cells += '<span></span>';
   for (let d = 1; d <= nDays; d++) {
     const key = dateKey(new Date(y, mo, d)), D = dayData(key), v = has(D, tab);
-    const lvl = tab === 'all' ? Math.min(3, v) : tab === 'cycle' ? v : (v ? 3 : 0);
+    const lvl = tab === 'all' ? Math.min(3, v) : tab === 'cycle' || tab === 'music' ? v : (v ? 3 : 0);
     const est = tab === 'cycle' && E && key === E.next && key > t; // where the next one might start: a dashed ring, nothing more
     if (lvl) marked++;
     cells += '<button type="button" class="d lv' + lvl + (key === t ? ' today' : '') + (est ? ' est' : '') + '" data-day="' + key + '" aria-pressed="' + (key === selected) + '"' + (key > t ? ' disabled' : '') +
       ' aria-label="' + esc(prettyDate(key, { weekday: 'long', day: 'numeric', month: 'long' })) + (tab === 'cycle' && lvl === 3 ? ', period' : lvl ? ', logged' : '') + (est ? ', your next period might start around here' : '') + '"><span class="n">' + d + '</span>' +
-      (tab !== 'all' && (tab === 'cycle' ? lvl === 3 : lvl) ? svg(tabs.find(x => x[0] === tab)[2], 'badge') : '') + '</button>';
+      (tab !== 'all' && (tab === 'cycle' || tab === 'music' ? lvl === 3 : lvl) ? svg(tabs.find(x => x[0] === tab)[2], 'badge') : '') + '</button>';
   }
   const nextDisabled = new Date(y, mo + 1, 1) > new Date();
   const monthName = first.toLocaleDateString('en-AU', { month: 'long' });
@@ -233,6 +238,7 @@ function summary(tab, marked, monthName, y, mo) {
   }
   if (tab === 'rest') return marked ? 'Rest logged on ' + days(marked) + ' in ' + monthName + '.' : 'Rests you log will show up here.';
   if (tab === 'win') { const n = st.moments.filter(m => m.area === 'win' && inMonth(m.date)).length; return n ? n + (n === 1 ? ' tiny win' : ' tiny wins') + ' in ' + monthName + '.' : 'Tiny wins will show up here.'; }
+  if (tab === 'music') { const s = soundtrackOf(y + '-' + String(mo + 1).padStart(2, '0')); return s ? esc(monthName) + '\'s soundtrack: <b>' + esc(s.title) + '</b>' + (s.artist ? ' · ' + esc(s.artist) : '') : 'Put a song on repeat, and its era starts here.'; }
   if (tab === 'cycle') {
     const E = estimate();
     if (E && E.next >= today()) return 'Your next period might start around ' + esc(prettyDate(E.next, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Just an estimate, from your last few.';
@@ -283,6 +289,7 @@ function dayCard(d) {
     row('g:' + gid, 'goal', g ? esc(g.name) : 'A goal', L.length + (L.length === 1 ? ' time' : ' times'),
       L.map(l => '<div class="ditem"><span>' + (g ? esc(g.name) : 'Goal') + (l.amt && g ? ' · ' + l.amt + ' ' + esc(g.unit || '') : '') + '<small>' + timeOf(l.ts) + '</small></span>' + x('goalLogs:' + l.id, g ? g.name : 'this') + '</div>').join(''));
   });
+  if (tab === 'music') return musicPanel(d); // On repeat (v51): the tape player and shelf instead of the day card
   return '<div class="daycard"><div class="top"><h2>' + esc(prettyDate(d, { weekday: 'long', day: 'numeric', month: 'long' })) + '</h2></div>' +
     (tab === 'cycle' ? cyclePanel(d, D.cycle) : '') +
     (tab === 'cycle' ? '' : (rows.length ? rows.join('') : '<p class="empty" style="margin:0">Nothing here yet. Add anything you remember; late logs count the same.</p>') +

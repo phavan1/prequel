@@ -39,6 +39,11 @@ It has no streaks, no scores and no zeros. Everything stays on your phone.
 - A monthly quilt, with one patch per night. Its colour shows how long you slept, and its pattern shows how you felt.
 - A sleep diary PDF for your doctor: at a glance, week by week, hours each day, a sleep chart, every rest, and your own notes.
 
+**On repeat**
+- The song you can't stop playing, kept one era at a time as a cassette tape, with the era's name and the line that gets you.
+- Find songs with their covers, press play on the tape for a 30-second preview, or listen in full in your own music app.
+- A shelf of monthly mixtapes, a soundtrack for every month, and a "My year in songs" share card.
+
 **Mind, wins and more**
 - Notes that come back when you want them, lanterns you can let go (and call back), and letters to your future self.
 - A jar of paper stars for small wins, with a proper celebration when a jar fills.
@@ -50,8 +55,8 @@ It has no streaks, no scores and no zeros. Everything stays on your phone.
 ## Principles
 
 - **Kind by design.** No streaks, no grades, no "perfect days" and no zeros on screen. Counts only go up. A hard day is a *soft day*.
-- **Private.** No accounts, no servers, no analytics. Your data lives on your phone and leaves it only when you save a backup or share something yourself.
-- **Offline first.** Once opened, everything works without a connection, including food search, PDFs and share cards.
+- **Private.** No accounts, no servers, no analytics. Your data lives on your phone and leaves it only when you save a backup or share something yourself. The only outside service is Apple's public music search, which is used only when you look up a song, and receives only the words you typed.
+- **Offline first.** Once opened, everything works without a connection, including food search, PDFs and share cards. Only finding a new song and playing its preview need the internet.
 - **Accessible.** Colour is never the only signal, dates are written in words, and motion respects "reduce motion".
 
 ## Install

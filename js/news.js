@@ -4,6 +4,13 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 51, date: '2026-10-18', items: [
+    'New: On repeat. Keep the song you can\'t stop playing, one era at a time, as a little cassette tape. Turn it on in Days → ＋ → On repeat.',
+    'Search for your song and pick it with its cover, then press play on the tape for a 30-second preview, or "Listen in full" in your own music app.',
+    'Name the era, add the line that gets you, and when you change the song the old tape goes on your shelf, in monthly mixtapes.',
+    'Each month gets a soundtrack (the song you had on repeat longest), and there\'s a new "My year in songs" share card.',
+    'Songs Prequel can\'t find get a cover of their own, and a tiny tune of their own too. Tell Phavan what\'s missing.'
+  ] },
   { v: 50, date: '2026-10-18', items: [
     'You can now change or remove a log right on Move. Tap an activity to see its recent logs, or tap anything in "Lately", then Edit or Remove.',
     'Gym sessions too: open one and tap "Fix this workout" or "Remove". No more trips to Days for it.'

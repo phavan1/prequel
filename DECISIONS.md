@@ -122,6 +122,14 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 **Rest (v42)**
 - The night chips ("What did you do") are **gone**. In their place is one night-only **"Awake for a bit?" → "Back to sleep"** button that logs when and how long (the option Claude recommended, approved 15 Oct 2026).
 
+**On repeat (v51, agreed 18 Oct 2026)**
+- A friend's request: a place for the songs you're obsessed with, to see your music taste over time. Built as **eras, one song at a time** (it stays on until you change it), on an **optional Days tab** for now; it can move into a future **Play** space.
+- **Cassettes**, because the character is the goofy kid with a shoebox of mixtapes. A shelf of monthly mixtapes, era names, "the line that gets you", **soundtrack of the month**, and **My year in songs**.
+- **No Spotify connection** (accounts, data leaving the phone, strict developer limits, and it leaves out other apps).
+- **Apple's public song search** for picking songs with covers and **30-second previews inside Prequel**. It works for everyone, whatever app they use. **Listen in full** opens the person's own app (exact song on Apple Music, a search elsewhere). Embedding full songs (YouTube, Spotify, Apple players) was considered and rejected.
+- Songs that can't be found: **covers made by Prequel**, and a tape click, hiss and **a tiny tune of its own**, never a fake of the real song.
+- A new character picture (cassette and Walkman) is optional: Phavan will ask ChatGPT, using the prompt Claude wrote.
+
 **Move for every kind of moving (v48, agreed 17 Oct 2026)**
 - Keep the name **Move**. It opens on a hub; **every activity tile is the same size, Gym included**. Tapping Gym opens the existing gym page.
 - **Ask everyone once** what they do (multi-pick, plus their own). Phavan is fine with one extra tap to reach the gym.
@@ -257,6 +265,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v51: On repeat, songs as cassette eras, with search, previews, a shelf, soundtrack of the month and My year in songs.
 - v50: change or remove any log right on Move (Phavan: having to go to Days was a gap); a professional README.
 - v49: Kickboxing and MMA on Move (effort fields: kind, rounds, round length, worked on); Lately shows the newest days first.
 - v48: Move for every kind of moving: hub with same-size tiles, per-sport fields, timer, milestones instead of road to 100.
