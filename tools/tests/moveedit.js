@@ -16,7 +16,9 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const key = async k => { await p.locator('[data-k="' + k + '"]').dispatchEvent('pointerdown'); await p.waitForTimeout(40); };
   const type = async s => { for (const c of s) await key(c); };
   const sets = async () => (await p.locator('#sets .set:not(.slot)').allInnerTexts()).map(t => t.replace(/\s+/g, ' ').trim());
-  await p.goto(BASE + '#/move'); await p.waitForTimeout(2600); await p.mouse.click(5, 5); await p.waitForTimeout(500);
+  // v48: Move opens on the hub. Pick Gym once in the first-time picker, then open the Gym tile
+  const toGym = async (pg = p) => { if (await pg.locator('.picker [data-picksave]').count()) { if ((await pg.locator('[data-pick="gym"]').getAttribute('aria-pressed')) !== 'true') await pg.click('[data-pick="gym"]'); await pg.click('[data-picksave]'); await pg.waitForTimeout(300); } if (await pg.locator('[data-act="gym"]').count()) { await pg.click('[data-act="gym"]'); await pg.waitForTimeout(300); } };
+  await p.goto(BASE + '#/move'); await p.waitForTimeout(2600); await p.mouse.click(5, 5); await p.waitForTimeout(500); await toGym();
   await p.click('[data-start="fbA"]'); await p.waitForTimeout(400);
 
   // 1. Not noted (leg press) and Bar only (chest press)
@@ -77,7 +79,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('Days keeps "Not noted" sets', ex[0].sets[0].a === 'nn');
 
   // 7. a new exercise can be body weight × reps
-  await p.goto(BASE + '#/move'); await p.waitForTimeout(400); await p.click('[data-quick]'); await p.waitForTimeout(200); await p.click('[data-q="reps"]'); await p.waitForTimeout(300);
+  await p.goto(BASE + '#/move'); await p.waitForTimeout(400); await toGym(); await p.click('[data-quick]'); await p.waitForTimeout(200); await p.click('[data-q="reps"]'); await p.waitForTimeout(300);
   await p.click('[data-first="plank"]'); await p.waitForTimeout(300); await p.click('[data-addex]'); await p.waitForTimeout(300);
   ok('"Body weight × reps" is a choice for a new exercise', await p.locator('[data-type="bw"]').count() === 1);
   await p.click('#sheet [data-close]'); await p.click('[data-leave]'); await p.waitForTimeout(200); await p.click('[data-o="discard"]'); await p.waitForTimeout(300);

@@ -114,7 +114,7 @@ function confirmDelete(root, key) {
   openSheet('<h2>Remove this?</h2><p class="muted">' + esc(label) + '</p><button type="button" class="btn danger" data-yes>Remove it</button><button type="button" class="btn alt" data-close>Keep it</button>', ev => {
     if (!ev.target.closest('[data-yes]')) return;
     if (list === 'moments') {
-      if (item.ref) ['sessions', 'rests', 'foods', 'meals', 'weather', 'goalLogs', 'letters'].forEach(l => { if (st[l]) st[l] = st[l].filter(x => x.id !== item.ref); });
+      if (item.ref) ['sessions', 'activities', 'rests', 'foods', 'meals', 'weather', 'goalLogs', 'letters'].forEach(l => { if (st[l]) st[l] = st[l].filter(x => x.id !== item.ref); });
       st.moments = st.moments.filter(x => x.id !== id); save();
     } else removeById(list, id);
     closeSheet(); render(root);

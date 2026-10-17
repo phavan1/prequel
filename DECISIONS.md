@@ -122,6 +122,17 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 **Rest (v42)**
 - The night chips ("What did you do") are **gone**. In their place is one night-only **"Awake for a bit?" → "Back to sleep"** button that logs when and how long (the option Claude recommended, approved 15 Oct 2026).
 
+**Move for every kind of moving (v48, agreed 17 Oct 2026)**
+- Keep the name **Move**. It opens on a hub; **every activity tile is the same size, Gym included**. Tapping Gym opens the existing gym page.
+- **Ask everyone once** what they do (multi-pick, plus their own). Phavan is fine with one extra tap to reach the gym.
+- **How's the body?** moves up to the hub, so it covers every sport.
+- **No default "road to 100"**, not even for the gym: it was personal to Phavan. Milestones are optional, per activity, chosen by the user, counting times, total time, days, or the sport's own numbers. Existing gym-goers are asked once whether to keep theirs.
+- **Each sport logs its own things** (fields agreed as listed in HANDOVER), all optional, plus a **Highlight of the day**. **Effort, not results: no wins or losses.** No "who you played with" (no way to follow or tag people).
+- **Both** "Log one I did" and a **Start now** timer.
+- Gaming and other hobbies: a separate **Play** space later, not in Move. Home stays as it is. Me shows a count per activity. Move reports' scope: decide later.
+- What's new ends with **"Tell Phavan what's missing."** Phavan wants to be named as the creator.
+- Built straight away without a mock-up, at Phavan's request; adjust after trying it.
+
 **Cycle (v46, agreed 17 Oct 2026)**
 - A period tracker, asked for by a friend using the app. **Ship a first version and let users say what's missing**, rather than collecting wishes first (Phavan).
 - **Never ask gender.** It's an optional tab anyone can switch on from Days → ＋, announced once in What's new.
@@ -234,7 +245,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Protecting data if the phone breaks or is replaced: three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified) | Phavan's question, 14 Oct 2026 | **Shelved** until the next session |
 | A simpler "Hours each day" (one bar per day, hours on top, labelled typical line, no stripes or legend), because his doctor found it confusing | Claude, 17 Oct 2026 | **Waiting**: Phavan wants to keep it as it is for a while. The two-line version (B) was dropped as too hard to read. Week by week (D) was built in v47. |
-| Move as an "active" page: Gym as one option among badminton, walks and others (gaming questioned) | Friends' feedback, 17 Oct 2026 | **Shelved until Cycle is done**, then discuss |
+| A "Play" space for gaming, reading, music and other hobbies (kept out of Move) | Move discussion, 17 Oct 2026 | Later |
 | **Move PDF reports** (order and the session log are done, v42) | Phavan, 14–15 Oct 2026 | Agreed in principle; to design |
 | Backup B4: prefer the newer copy on load | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Still open.** (B1, B2, B3 and B5 were approved and built in v38, see section C.) Earlier note: On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
 
@@ -246,6 +257,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v48: Move for every kind of moving: hub with same-size tiles, per-sport fields, timer, milestones instead of road to 100.
 - v47: Week by week in the sleep diary (At a glance kept as it is).
 - v46: Cycle, an optional private period tracker on Days.
 - v45: gentler nights: awake card extras, what woke you, six feelings + own words, doctor notes in the diary, Move's Yellow hint.

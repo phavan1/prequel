@@ -4,6 +4,14 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 48, date: '2026-10-17', items: [
+    'Move is now for every kind of moving: walks, runs, badminton, football, swimming, yoga and more, plus anything of your own. The gym is one of them, just like before.',
+    'Each activity logs what matters for it, like games played, goals, laps or distance. All of it optional, plus a "highlight of the day".',
+    'Log one you did, or tap "Start now" and Prequel keeps time for you, even if you close the app.',
+    '"How\'s the body?" now sits at the top of Move, for whatever you do today.',
+    'No more set "road to 100". Give any activity a milestone of your own: sessions, hours, km, games, goals, whatever you like.',
+    'This is a first version. Tell Phavan what\'s missing.'
+  ] },
   { v: 47, date: '2026-10-17', items: [
     'The sleep diary has a new "Week by week" table: typical rest, typical night, nights you woke, and your shortest to longest day, for each week. Handy for seeing if things are changing.'
   ] },

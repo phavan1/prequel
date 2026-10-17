@@ -141,6 +141,10 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [Claude] Your sessions lists the latest (newest first); Copy puts the formatted text on the clipboard (swaps, plates, seconds and ticked sessions read right).
 - [ ] [iPhone] Copy, then paste into the other app: the text looks right there.
 
+## 5e. Move for every kind of moving (v48)
+- [ ] [Claude] `movehub.js`: the first-time picker (nothing preselected for a new person; Gym preselected and the road-to-100 question for a gym-goer); same-size tiles; your own activity; a sport's own fields and highlight; the timer survives leaving; Stop fills the minutes; milestones count up on the tile and Me; the gym page has no lights but shows the day's light; Days removal; backup checks.
+- [ ] [iPhone] The hub feels calm, not crowded; the tiles are easy to hit; the timer keeps going after closing the app; the gym is one tap further but still quick.
+
 ## 5d. Move: logging honestly (v43)
 - [ ] [Claude] `moveedit.js`: Not noted / Bar only log word weights; ⋯ removes an accidental exercise (today, and from the workout for next time); switching to body weight asks about old 0 kg sets and then shows only reps; Fix the order (arrows) renumbers the chips; Copy this workout on the done sheet; Move shows just Your last workout; Days fixes a past session (word ↔ number, reorder).
 - [ ] [iPhone] The weight words and ⋯ are easy to hit mid-set; the Days picker works with the iPhone wheel.

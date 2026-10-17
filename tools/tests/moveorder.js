@@ -14,7 +14,9 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const st = () => p.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
   const key = async k => { await p.locator('[data-k="' + k + '"]').dispatchEvent('pointerdown'); await p.waitForTimeout(40); };
   const logSet = async (w, r) => { for (const c of w) await key(c); await p.click('[data-next]'); for (const c of r) await key(c); await p.click('[data-next]'); await p.waitForTimeout(150); };
-  await p.goto(BASE + '#/move'); await p.waitForTimeout(2600); await p.mouse.click(5, 5); await p.waitForTimeout(500);
+  // v48: Move opens on the hub. Pick Gym once in the first-time picker, then open the Gym tile
+  const toGym = async (pg = p) => { if (await pg.locator('.picker [data-picksave]').count()) { if ((await pg.locator('[data-pick="gym"]').getAttribute('aria-pressed')) !== 'true') await pg.click('[data-pick="gym"]'); await pg.click('[data-picksave]'); await pg.waitForTimeout(300); } if (await pg.locator('[data-act="gym"]').count()) { await pg.click('[data-act="gym"]'); await pg.waitForTimeout(300); } };
+  await p.goto(BASE + '#/move'); await p.waitForTimeout(2600); await p.mouse.click(5, 5); await p.waitForTimeout(500); await toGym();
 
   // 1. Full Body A, done out of order: chest press (2nd in the plan), then shoulder press (4th), then leg press (1st)
   await p.click('[data-start="fbA"]'); await p.waitForTimeout(400);

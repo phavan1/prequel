@@ -4,6 +4,7 @@ import { esc, nav, him, prettyDate } from '../ui.js';
 import { ensureGoals, count, unitOf, checkFinished, openNewGoal, openEditGoal, openLog } from '../goals.js';
 import { hill, wireHills, ribbon, restClock, noticing } from '../charts.js';
 import { dateKey } from '../store.js';
+import { actDef, logsOf } from '../activities.js';
 
 let hillKey = 'all';
 
@@ -61,6 +62,8 @@ function render(root) {
     (resting.length ? '<div class="lbl">Resting for now</div><div class="trophies">' + resting.map(g => { const n = count(g); return '<button type="button" class="trophy resting" data-goal="' + g.id + '"><span class="star">☾</span><span>' + esc(g.name) + '<small>' + (n ? n + ' so far, kept safe' : 'kept safe for later') + ' · tap to pick it back up</small></span></button>'; }).join('') + '</div>' : '') +
     (finished.length ? '<div class="lbl">The finished shelf</div><div class="trophies">' + finished.map(g => '<button type="button" class="trophy" data-goal="' + g.id + '"><span class="star">★</span><span>' + esc(g.name) + '<small>' + g.target + ' ' + esc(unitOf(g)) + ' · ' + esc(prettyDate(dateKey(new Date(g.finished)))) + '</small></span></button>').join('') + '</div>' : '') +
     // only the counts that have something in them
+    // how you've moved (v48): one count per activity, only above zero
+    (() => { const ids = [...new Set((st.activities || []).map(a => a.type))]; const c = (st.sessions.length ? [[st.sessions.length, st.sessions.length === 1 ? 'gym session' : 'gym sessions']] : []).concat(ids.map(id => { const d = actDef(id), n = logsOf(id).length; return [n, d.unit === 'times' ? d.n.toLowerCase() + (n === 1 ? ' session' : ' sessions') : n === 1 ? d.unit.slice(0, -1) : d.unit]; })); return c.length ? '<div class="lbl">How you\'ve moved</div><div class="movecounts">' + c.map(x => '<div class="count"><b>' + x[0] + '</b><span>' + esc(x[1]) + '</span></div>').join('') + '</div>' : ''; })() +
     (() => { const c = [[wins, 'tiny wins'], [lanterns, 'lanterns let go'], [st.letters.length, st.letters.length === 1 ? 'letter' : 'letters']].filter(x => x[0] > 0); return c.length ? '<div class="grid' + (c.length === 1 ? '1' : c.length) + '">' + c.map(x => '<div class="count"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('') + '</div>' : ''; })() +
     '<div class="grid2"><a class="rowlink" href="#/sky?from=me"><span>Your sky</span><b>›</b></a><a class="rowlink" href="#/quilt?from=me"><span>Your quilt</span><b>›</b></a></div>' +
     '<a class="sharecta" href="#/share"><span><b>Share your story</b><small>Cards made from your sky, milestones and month</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></a>' +

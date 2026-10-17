@@ -2,6 +2,7 @@
 // They only count up. When one is reached it's celebrated and goes on the finished shelf. No next target appears.
 import { get, save, uid, addMoment, today, dateKey } from './store.js';
 import { esc, him, openSheet, closeSheet, toast, prettyDate } from './ui.js';
+import { actDef, measures, measureTotal } from './activities.js';
 
 const tsOfDay = rests => { const m = {}; rests.forEach(r => { if (!m[r.date] || r.end < m[r.date]) m[r.date] = r.end || r.start; }); return Object.values(m); };
 // a meal counts as home-cooked when the food it came from is marked home-cooked
@@ -19,6 +20,8 @@ export const SOURCES = {
 // any one of your tiny wins can be a goal too ("Stepped outside" 30 times)
 function source(key) {
   if (SOURCES[key]) return SOURCES[key];
+  // a Move milestone (v48): "act:<activity>:<what it counts>", e.g. act:badminton:games
+  if (key.startsWith('act:')) { const [, id, m] = key.split(':'), x = measures(id).find(z => z[0] === m) || [m, m, m]; return { label: actDef(id).n + ' · ' + x[1].toLowerCase(), unit: x[2], total: from => measureTotal(id, m, from) }; }
   if (key.startsWith('win:')) { const w = key.slice(4); return { label: w, unit: 'times', items: st => st.moments.filter(m => m.area === 'win' && m.text === w).map(m => m.ts) }; }
   return { label: '?', unit: '', items: () => [] };
 }
@@ -42,7 +45,9 @@ const r1 = v => Math.round(v * 10) / 10;
 export function count(g) {
   const st = get();
   if (g.kind === 'own') return r1(st.goalLogs.filter(l => l.goalId === g.id).reduce((n, l) => n + (l.amt || 1), 0));
-  return source(g.source).items(st).filter(ts => ts >= (g.from || 0)).length;
+  const src = source(g.source);
+  if (src.total) return src.total(g.from || 0);
+  return src.items(st).filter(ts => ts >= (g.from || 0)).length;
 }
 export const unitOf = g => g.kind === 'own' ? (g.unit || 'times') : source(g.source).unit;
 

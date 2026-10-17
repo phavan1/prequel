@@ -12,7 +12,9 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   await p.clock.install({ time: new Date('2026-10-14T18:00:00') });
   const st = () => p.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
-  await p.goto(BASE + '#/move'); await p.waitForTimeout(2600); await p.mouse.click(5, 5); await p.waitForTimeout(800);
+  // v48: Move opens on the hub. Pick Gym once in the first-time picker, then open the Gym tile
+  const toGym = async (pg = p) => { if (await pg.locator('.picker [data-picksave]').count()) { if ((await pg.locator('[data-pick="gym"]').getAttribute('aria-pressed')) !== 'true') await pg.click('[data-pick="gym"]'); await pg.click('[data-picksave]'); await pg.waitForTimeout(300); } if (await pg.locator('[data-act="gym"]').count()) { await pg.click('[data-act="gym"]'); await pg.waitForTimeout(300); } };
+  await p.goto(BASE + '#/move'); await p.waitForTimeout(2600); await p.mouse.click(5, 5); await p.waitForTimeout(800); await toGym();
   await p.screenshot({ path: OUT + '/q-move.png' });
   ok('Quick session button on Move', await p.locator('[data-quick]').count() === 1);
 
@@ -44,7 +46,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('taking one off keeps the other three', s.sessions[0].exercises.length === 3 && s.moments.some(m => m.text === 'Quick session · 3 exercises'));
 
   // 3. with sets and reps: pick the first exercise, log, add another as you go
-  await p.goto(BASE + '#/move'); await p.waitForTimeout(500);
+  await p.goto(BASE + '#/move'); await p.waitForTimeout(500); await toGym();
   await p.click('[data-quick]'); await p.waitForTimeout(300); await p.screenshot({ path: OUT + '/q-ask-again.png' });
   ok('last answer is highlighted', await p.locator('[data-q="tick"].cur').count() === 1);
   ok('"Same as last time" is offered', await p.locator('[data-q="same"]').count() === 1);

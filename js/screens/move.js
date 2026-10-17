@@ -2,6 +2,8 @@ import { get, save, uid, addMoment, addDays, today } from '../store.js';
 import { EXERCISES, WORKOUTS, REST_GUIDE, feelFamily, feelLabel } from '../data.js';
 import { esc, nav, backLink, dateChip, logDate, prettyDate, him, pop, openSheet, closeSheet, toast, pick, reduceMotion } from '../ui.js';
 import { dayDate } from '../pdf.js';
+import { hubHtml, hubClick, hubTick, milestoneOf, milestoneSheet } from './movehub.js';
+import { count as goalCount, unitOf as goalUnit } from '../goals.js';
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
 const TYPES = [['wr', 'Weight × reps'], ['bw', 'Body weight × reps'], ['hold', 'Seconds'], ['mins', 'Minutes']];
@@ -30,12 +32,12 @@ function newExercise(name, t) {
 }
 
 // ---------- live state (the workout in progress is saved, so closing the app never loses it) ----------
-let hintGone = false, view = 'start', light = 'green', field = 'a', fresh = true, A = '', B = '', edit = -1, say = '', justLogged = false, timer = null, root = null;
+let hintGone = false, view = 'hub', light = 'green', field = 'a', fresh = true, A = '', B = '', edit = -1, say = '', justLogged = false, timer = null, root = null;
 const act = () => get().active;
 
 export function mount(r, params) {
   root = r;
-  if (act()) view = 'wk'; else view = 'start';
+  if (act()) view = 'wk'; else view = 'hub'; // v48: Move opens on the hub; Gym is one tile
   if (view === 'wk') prefill();
   render();
   root.addEventListener('click', onClick);
@@ -47,7 +49,7 @@ export function unmount() { clearInterval(timer); }
 
 function render() {
   root.classList.toggle('in-workout', view === 'wk');
-  if (view === 'start') renderStart(); else renderWk();
+  if (view === 'hub') renderHub(); else if (view === 'start') renderStart(); else renderWk();
 }
 
 // ---------- start: how's the body + what's next ----------
@@ -59,7 +61,7 @@ function suggestion() {
   const nextFB = lastFB && lastFB.workoutId === 'fbA' ? 'B' : 'A';
   if (light === 'red') return { k: 'RED DAY', h: 'Not a lifting day', p: 'Rest is the plan today, and that is a good plan. If you want to move, an easy walk counts.', red: 'If it is chest pain, dizziness, feeling faint or a fever, please get it checked.', btns: [['rec', 'Recovery / Light']] };
   let s;
-  if (!last) s = { k: 'A GOOD PLACE TO START', h: 'Full Body A', p: 'Your main general session. Two sets is plenty. Every session counts toward your 100.', btns: [['fbA', 'Start Full Body A']] };
+  if (!last) s = { k: 'A GOOD PLACE TO START', h: 'Full Body A', p: 'Your main general session. Two sets is plenty. Every session counts.', btns: [['fbA', 'Start Full Body A']] };
   else if (last.date === addDays(d, -1) || last.date === d) s = { k: 'WHAT\'S NEXT', h: 'Lower A, or Pull', p: 'You trained ' + (last.date === d ? 'already today' : 'yesterday') + ' (' + esc(last.workoutName) + '), so let\'s use different muscles. Full Body ' + nextFB + ' waits until after a rest day.', btns: [['lA', 'Lower A'], ['pull', 'Pull']] };
   else s = { k: 'WHAT\'S NEXT', h: 'Full Body ' + nextFB, p: 'There\'s been a rest day since ' + esc(last.workoutName) + ' (' + esc(prettyDate(last.date)).toLowerCase() + '), so Full Body ' + nextFB + ' is next' + (lastFB ? ' in your sequence' : '') + '. Nothing resets because it\'s a new week.', btns: [['fb' + nextFB, 'Start Full Body ' + nextFB]] };
   if (light === 'yellow') { s.k = 'YELLOW DAY'; s.note = 'Keep it to 2 sets and skip the optional extras. Or do the 20-Minute Minimum.'; s.btns.push(['min20', '20-Minute Minimum']); }
@@ -77,14 +79,19 @@ function restHint() {
   const why = last.feel && feelFamily(last.feel) === 'groggy' ? 'You woke up ' + feelLabel(last.feel).toLowerCase() + '.' : hours < 5 ? 'Not much rest in the last day.' : '';
   return why ? '<button type="button" class="resthint" data-light="yellow"><span aria-hidden="true">🌙</span><span>' + why + ' Yellow might be kinder today. Lighter still counts.</span></button>' : '';
 }
+// "How's the body?" lives on the hub (v48), so it covers every activity
+const L = [['green', 'Green', 'awake, normal', '#2E8B57'], ['yellow', 'Yellow', 'tired, a bit sore', '#E3B000'], ['red', 'Red', 'unwell, faint, pain', '#C2412D']];
+const lightsHtml = () => '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' + restHint() +
+  (light === 'red' ? '<div class="note-r">Rest is the plan today, and that is a good plan. If it is chest pain, dizziness, feeling faint or a fever, please get it checked.</div>' : light === 'yellow' ? '<div class="note-y">Go gently today. A lighter version of anything still counts.</div>' : '');
+function renderHub() { root.innerHTML = hubHtml(lightsHtml()) + nav('move'); }
 function renderStart() {
-  const st = get(), s = suggestion();
-  const L = [['green', 'Green', 'awake, normal', '#2E8B57'], ['yellow', 'Yellow', 'tired, a bit sore', '#E3B000'], ['red', 'Red', 'unwell, faint, pain', '#C2412D']];
+  const st = get(), s = suggestion(), ms = milestoneOf('gym');
+  const lt = L.find(l => l[0] === light);
   root.innerHTML =
-    '<div class="top"><div class="lbl">Session ' + (st.sessions.length + 1) + ' · road to 100</div>' + dateChip() + '</div>' +
+    '<div class="top"><button type="button" class="back" data-hub style="border:0;background:transparent;color:var(--blue);padding:0">‹ Move</button>' + dateChip() + '</div>' +
+    '<div class="gymhead"><span class="lbl">Session ' + (st.sessions.length + 1) + '</span><button type="button" class="lnk" data-gymmile>' + (ms ? goalCount(ms) + ' of ' + ms.target + ' ' + esc(goalUnit(ms)) + ' ›' : 'Set a milestone ›') + '</button></div>' +
+    '<p class="todaylight"><i style="background:' + lt[3] + '"></i>' + lt[1] + ' day <button type="button" class="lnk" data-hub>change</button></p>' +
     '<button type="button" class="quickgo" data-quick="1"><b>Quick session</b><span>No plan needed. Just go.</span><i aria-hidden="true">›</i></button>' +
-    '<h1>How\'s the body?</h1>' +
-    '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' + restHint() +
     '<div class="card sug"><div class="k">' + s.k + '</div><h2>' + s.h + '</h2><p>' + s.p + '</p>' +
       (s.note ? '<div class="note-y">' + s.note + '</div>' : '') + (s.red ? '<div class="note-r">' + s.red + '</div>' : '') +
       '<div class="chips">' + s.btns.map((b, i) => '<button type="button" class="btn' + (i ? ' alt' : '') + '" data-start="' + b[0] + '">' + b[1] + '</button>').join('') + '</div></div>' +
@@ -178,6 +185,7 @@ function renderWk() {
   tick();
 }
 function tick() {
+  if (view === 'hub' && root) hubTick(root);
   const a = act(), el = root && root.querySelector('#since'); if (!el || !a || !a.lastAt) return;
   const sec = Math.floor((Date.now() - a.lastAt) / 1000);
   el.textContent = 'Since last set ' + Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
@@ -247,7 +255,10 @@ function onKey(e) {
 function onClick(e) {
   const t = e.target, a = act();
   let b;
-  if ((b = t.closest('[data-light]'))) { light = b.dataset.light; hintGone = true; renderStart(); return; }
+  if ((b = t.closest('[data-light]'))) { light = b.dataset.light; hintGone = true; render(); return; }
+  if (view === 'hub' && hubClick(e, root, render, () => { view = 'start'; render(); window.scrollTo(0, 0); })) return;
+  if (t.closest('[data-hub]')) { view = 'hub'; render(); window.scrollTo(0, 0); return; }
+  if (t.closest('[data-gymmile]')) { milestoneSheet('gym', render); return; }
   if ((b = t.closest('[data-start]'))) { startWorkout(b.dataset.start); return; }
   if (t.closest('[data-newwk]')) { openNewWk(); return; }
   if (t.closest('[data-quick]')) { openQuick(); return; }

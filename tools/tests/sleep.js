@@ -102,6 +102,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   // 11. Move: a soft Yellow hint after a restless night, gone once you pick
   await at('2026-10-16T07:00:00');
   await p.evaluate(async () => { const S = await import('./js/store.js'); const st = S.get(); st.rests = st.rests.filter(r => !r.words); S.save(); }); // just the restless night
+  await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().moveSetup = { picked: ['gym', 'walk'], custom: {} }; S.save(); }); // v48: the hint lives on the Move hub
   await p.goto(BASE + '#/move'); await p.waitForTimeout(400);
   await p.screenshot({ path: OUT + '/sl-movehint.png' });
   ok('Move gently suggests Yellow after waking restless', /You woke up restless\. Yellow might be kinder today/.test(await p.locator('.resthint').innerText().catch(() => '')));
@@ -112,7 +113,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const p2 = await ctx.newPage(); p2.on('pageerror', e => errs.push(e.message));
   await p2.clock.install({ time: new Date('2026-10-16T18:00:00') });
   await p2.goto(BASE + '#/move'); await p2.waitForTimeout(400);
-  await p2.evaluate(async () => { const S = await import('./js/store.js'); const st = S.get(); const d = t => new Date(t).getTime();
+  await p2.evaluate(async () => { const S = await import('./js/store.js'); const st = S.get(); st.moveSetup = { picked: ['gym'], custom: {} }; const d = t => new Date(t).getTime();
     st.rests = [{ id: 'a', date: '2026-10-16', start: d('2026-10-16T01:00:00'), end: d('2026-10-16T04:00:00'), feel: 'okay' }, { id: 'b', date: '2026-10-16', start: d('2026-10-16T13:00:00'), end: d('2026-10-16T16:00:00'), feel: 'okay' }]; S.save(); });
   await p2.goto(BASE + '#/home'); await p2.goto(BASE + '#/move'); await p2.waitForTimeout(400);
   ok('no hint after 3 h + 3 h that felt okay', await p2.locator('.resthint').count() === 0);
