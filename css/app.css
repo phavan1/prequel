@@ -781,3 +781,29 @@ html[data-theme="dark"] .jarsvg ellipse { fill: rgba(0,0,0,.35); }
 .resthint { display: flex; align-items: center; gap: 10px; width: 100%; margin: 10px 0 2px; padding: 10px 14px; border-radius: 16px; border: 1px dashed #E3B000; background: #FFF8DD; color: #4A3E10; text-align: left; font-size: 13.5px; font-weight: 700; line-height: 1.35; }
 .resthint > span:first-child { font-size: 18px; }
 html[data-theme="dark"] .resthint { background: #3A3320; color: #F3EEDF; }
+
+/* Cycle (v46): an optional, private period tracker on Days. Rose with a droplet, so colour is never the only sign */
+.cal2.cy .d.lv1 { border: 2px dashed color-mix(in srgb, #C2577A 55%, transparent); }
+.cal2.cy .d.lv3 { border: 3.5px solid #C2577A; }
+.cal2.cy .badge { color: #C2577A; }
+.cal2.cy .d[aria-pressed="true"] { background: #C2577A; border-color: #C2577A; }
+.cal2.cy .d.est { border: 2px dashed #C2577A; opacity: .7; }
+.cyclecard { display: flex; flex-direction: column; gap: 8px; }
+.pon { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; border-radius: 16px; border: 1.5px dashed #E3B9C6; background: #FFF4F6; color: var(--ink); text-align: left; font: inherit; }
+.pon .ic { width: 26px; height: 26px; flex: none; color: #C2577A; }
+.pon span { flex: 1; display: flex; flex-direction: column; }
+.pon b { font-size: 15px; font-weight: 800; }
+.pon small { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+.pon i { font-style: normal; font-size: 18px; font-weight: 900; color: #fff; }
+.pon[aria-pressed="true"] { background: #C2577A; border: 1.5px solid #C2577A; color: #fff; }
+.pon[aria-pressed="true"] .ic, .pon[aria-pressed="true"] small { color: #fff; }
+.flowrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.flowrow button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 64px; padding: 8px 4px; border-radius: 14px; border: 1px solid var(--line); background: var(--room); color: var(--ink); font-size: 13px; font-weight: 800; }
+.flowrow button[aria-pressed="true"] { border: 2px solid #C2577A; background: #FFF4F6; }
+.drops { display: flex; gap: 1px; }
+.drops svg { width: 15px; height: 15px; fill: #C2577A; }
+.cyfeels .chip { min-height: 40px; padding: 0 14px; font-size: 13px; }
+html[data-theme="dark"] .pon { background: #3A2830; border-color: #6B4352; }
+html[data-theme="dark"] .pon[aria-pressed="true"] { background: #C2577A; }
+html[data-theme="dark"] .flowrow button[aria-pressed="true"] { background: #3A2830; }
+html[data-theme="dark"] .cal2.cy .d[aria-pressed="true"] { background: #C2577A; border-color: #C2577A; color: #fff; }

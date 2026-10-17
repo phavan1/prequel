@@ -4,6 +4,12 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 46, date: '2026-10-17', items: [
+    'New, and only if you want it: a private period tracker. Turn it on in Days → ＋ → Cycle.',
+    'Tap a day to mark it as a period day. How much and how you felt are there if you want them.',
+    'After a couple of periods, Prequel gently estimates when the next one might start. It\'s just an estimate.',
+    'It stays on your phone. No stars in the sky, nothing on share cards. This is a first version, and what you think will shape the next one.'
+  ] },
   { v: 45, date: '2026-10-17', items: [
     'Awake in the night? The Awake card now has "Breathe with me", a slow in-and-out to follow for as long as you like.',
     '"Put it down for the morning": write down what\'s on your mind, and it waits on Mind until morning, so your head doesn\'t have to hold it.',

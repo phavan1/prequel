@@ -122,6 +122,11 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 **Rest (v42)**
 - The night chips ("What did you do") are **gone**. In their place is one night-only **"Awake for a bit?" → "Back to sleep"** button that logs when and how long (the option Claude recommended, approved 15 Oct 2026).
 
+**Cycle (v46, agreed 17 Oct 2026)**
+- A period tracker, asked for by a friend using the app. **Ship a first version and let users say what's missing**, rather than collecting wishes first (Phavan).
+- **Never ask gender.** It's an optional tab anyone can switch on from Days → ＋, announced once in What's new.
+- Private: on the phone only, no sky stars, never on share cards. Flow shown as droplets, never "heavy". The estimate is always called an estimate; no fertility or contraception predictions.
+
 **Sleep, gently (v45, agreed 17 Oct 2026)**
 - **Minimal and warm, never overwhelming.** A helping hand, not pressure (Phavan; friends using the app said the same). One main button, quiet extras, nothing extra on screen unless you open it.
 - **Nothing is detected or guessed.** Breathe with me and Put it down for the morning are simply offered while you're awake.
@@ -228,6 +233,8 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Protecting data if the phone breaks or is replaced: three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified) | Phavan's question, 14 Oct 2026 | **Shelved** until the next session |
+| A clearer chart instead of the sleep diary's "Hours each day" (his doctor found it confusing). Four mock-ups: A total bars with numbers, B two named lines (night / night + day), C side-by-side bars, D a weekly summary table with ranges | Phavan, 17 Oct 2026 | **Discussing** |
+| Move as an "active" page: Gym as one option among badminton, walks and others (gaming questioned) | Friends' feedback, 17 Oct 2026 | **Shelved until Cycle is done**, then discuss |
 | **Move PDF reports** (order and the session log are done, v42) | Phavan, 14–15 Oct 2026 | Agreed in principle; to design |
 | Backup B4: prefer the newer copy on load | Backup audit, 12 Oct 2026 (HANDOVER 5b) | **Still open.** (B1, B2, B3 and B5 were approved and built in v38, see section C.) Earlier note: On 14 Oct 2026 Phavan made **B1 the next recommended technical fix**. His preferred direction: stricter validation, a clear explanation of what restoring will replace, and a chance to save current data before importing, while keeping older legitimate backups restorable and adding no new risks. The actual solution must be proposed and discussed in its own task before anything is built. B2–B5 stay open. |
 
@@ -239,6 +246,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v46: Cycle, an optional private period tracker on Days.
 - v45: gentler nights: awake card extras, what woke you, six feelings + own words, doctor notes in the diary, Move's Yellow hint.
 - v44: What's new shows only the latest update, plus "See all updates".
 - v43: Not noted / Bar only / Body weight, body weight × reps, ⋯ sheet (measure, fix order with arrows, remove), Copy on the done sheet, Your last workout, fixing past workouts in Days.

@@ -144,7 +144,9 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] [iPhone] The weight words and ⋯ are easy to hit mid-set; the Days picker works with the iPhone wheel.
 
 ## 6. Calendar, jar and journal
-- [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins and Weather tabs switch on from ＋.
+- [ ] [Claude] Days tabs: All, Move, Food, Rest, plus each own goal. Optional Tiny wins, Weather and Cycle tabs switch on from ＋.
+- [ ] [Claude] **Cycle (v46):** `cycle.js`: off by default; marking days, droplets, feelings, the estimate after two periods, day of cycle, a feelings-only day, the quiet row on other tabs, no stars, switching off keeps data, backup checks.
+- [ ] [iPhone] Cycle feels quick and private: marking a day is one tap, the rose and droplets read well in light and Cosy dark.
 - [ ] [Claude] The All tab has no summary line. Other tabs' summaries never say zero.
 - [ ] [Claude] Day card: rows collapse; × deletes; "Add to this day" logs to that date.
 - [ ] [Claude] **The jar:** a chip adds one star once per day ("Already in the jar today" after). Written wins have no limit. Removal works only from "In the jar today". Shaking gives a slip with a sensible stat.
