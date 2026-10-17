@@ -17,6 +17,8 @@ export const CATALOG = [
   { id: 'football', n: 'Football', e: '⚽', unit: 'times', f: [{ k: 'kind', l: 'What kind', seg: ['Match', 'Training', 'Kickabout'] }, { k: 'goals', l: 'Goals', u: 'goals', num: 1 }, { k: 'assists', l: 'Assists', u: 'assists', num: 1 }] },
   { id: 'cricket', n: 'Cricket', e: '🏏', unit: 'times', f: [{ k: 'kind', l: 'What kind', seg: ['Match', 'Nets'] }, { k: 'runs', l: 'Runs scored', u: 'runs', num: 1 }, { k: 'wickets', l: 'Wickets taken', u: 'wickets', num: 1 }] },
   { id: 'tennis', n: 'Tennis', e: '🎾', unit: 'times', f: [{ k: 'kind', l: 'Played', seg: ['Singles', 'Doubles'] }, { k: 'sets', l: 'Sets played', u: 'sets', num: 1 }] },
+  { id: 'kickboxing', n: 'Kickboxing', e: '🥊', unit: 'times', f: [{ k: 'kind', l: 'What kind', seg: ['Pads', 'Bag work', 'Sparring', 'Class'] }, { k: 'rounds', l: 'Rounds', u: 'rounds', num: 1 }, { k: 'roundlen', l: 'Round length', seg: ['1 min', '2 min', '3 min'] }, { k: 'focus', l: 'Worked on', text: 'combos, kicks, footwork…' }] },
+  { id: 'mma', n: 'MMA', e: '🥋', unit: 'times', f: [{ k: 'kind', l: 'What kind', seg: ['Striking', 'Grappling', 'Wrestling', 'Sparring', 'Class'] }, { k: 'rounds', l: 'Rounds', u: 'rounds', num: 1 }, { k: 'focus', l: 'Worked on', text: 'takedowns, guard, combos…' }] },
   { id: 'yoga', n: 'Yoga or stretching', e: '🧘', unit: 'times', f: [{ k: 'style', l: 'Style', seg: ['Gentle', 'Flow', 'Strong'] }, { k: 'focus', l: 'Focused on', text: 'back, hips, whole body…' }] },
   { id: 'dance', n: 'Dance', e: '💃', unit: 'times', f: [{ k: 'style', l: 'Style', text: 'in your own words' }] },
   { id: 'hike', n: 'Hiking', e: '🥾', unit: 'hikes', f: [km, { k: 'climb', l: 'Climbed', u: 'm', num: 1 }, { k: 'trail', l: 'Trail', text: 'its name' }] },

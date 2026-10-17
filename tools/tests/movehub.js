@@ -91,6 +91,21 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const s2 = await p2.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
   ok('changing the number keeps the same milestone', s2.goals.length === 1 && s2.goals[0].target === 50 && /1 of 50 sessions/.test(await p2.locator('[data-act="gym"]').innerText()));
 
+  // 7b. v49: Lately shows the most recent first, even when older sessions keep their time as text; kickboxing and MMA
+  const lately = await p2.evaluate(async () => { const S = await import('./js/store.js'), st = S.get();
+    st.sessions = ['2026-09-29', '2026-09-30', '2026-10-03', '2026-10-14', '2026-10-13'].map((d, i) => ({ id: 's' + i, date: d, ts: i === 3 ? 5 : 'x' + i, workoutId: 'fbA', workoutName: 'Full Body A', light: 'green', exercises: [] })); S.save(); });
+  await p2.goto(BASE + '#/home'); await p2.goto(BASE + '#/move'); await p2.waitForTimeout(400);
+  const lt = await p2.locator('.lately').innerText();
+  ok('Lately starts with the newest days', /Gym Wed, 14 Oct · Gym Tue, 13 Oct · Gym Sat, 3 Oct/.test(lt), lt);
+  await p2.click('[data-actsetup]'); await p2.waitForTimeout(200);
+  ok('kickboxing and MMA can be picked', await p2.locator('#sheet [data-pick="kickboxing"]').count() === 1 && await p2.locator('#sheet [data-pick="mma"]').count() === 1);
+  await p2.click('#sheet [data-pick="kickboxing"]'); await p2.click('#sheet [data-pick="mma"]'); await p2.click('#sheet [data-picksave]'); await p2.waitForTimeout(300);
+  await p2.click('[data-act="kickboxing"]'); await p2.click('#sheet [data-o="log"]'); await p2.waitForTimeout(200);
+  await p2.screenshot({ path: OUT + '/mh-kickboxing.png' });
+  await p2.click('[data-seg="kind"][data-v="Pads"]'); await p2.fill('[data-fld="rounds"]', '8'); await p2.click('[data-seg="roundlen"][data-v="3 min"]'); await p2.fill('[data-fld="focus"]', 'teeps'); await p2.click('[data-alsave]'); await p2.waitForTimeout(300);
+  const kb = await p2.evaluate(async () => (await import('./js/store.js')).get().activities.find(a => a.type === 'kickboxing'));
+  ok('kickboxing saves pads, rounds, round length and focus', kb && kb.f.kind === 'Pads' && kb.f.rounds === 8 && kb.f.roundlen === '3 min' && kb.f.focus === 'teeps', JSON.stringify(kb));
+
   // 8. backups carry activities and check them
   const chk = await p.evaluate(async () => { const S = await import('./js/store.js'); return [!!S.checkBackup(JSON.stringify({ v: 1, moments: [], activities: [{ id: 'x', date: '2026-10-01', ts: 1, type: 'walk', f: {} }] })).data, S.checkBackup(JSON.stringify({ v: 1, moments: [], activities: [{ id: 'x', date: 'later' }] })).problem]; });
   ok('backups: activities are checked like everything else', chk[0] === true && chk[1] === 'damaged', JSON.stringify(chk));

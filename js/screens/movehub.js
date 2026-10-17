@@ -17,6 +17,8 @@ const tileSub = id => {
   const n = logsOf(id).length, d = actDef(id);
   return n ? n + ' ' + (d.unit === 'times' ? (n === 1 ? 'time' : 'times') : n === 1 ? d.unit.slice(0, -1) : d.unit) + ' so far' : 'Tap to log';
 };
+// newest day first, then the latest time on that day (some older sessions keep their time as text)
+const newest = (a, b) => (b.date || '').localeCompare(a.date || '') || (Number(b.ts) || 0) - (Number(a.ts) || 0);
 const order = () => { const p = picked(); return CATALOG.map(a => a.id).filter(id => p.includes(id)).concat(p.filter(id => !CATALOG.some(a => a.id === id))); };
 
 // ---------- the hub ----------
@@ -24,14 +26,14 @@ export function hubHtml(lightsHtml) {
   const st = get();
   if (!st.moveSetup) return '<div class="top"><div class="lbl">Move</div>' + dateChip() + '</div>' + pickerHtml(true);
   const t = st.actTimer, td = t && actDef(t.type);
-  const recent = (st.activities || []).map(a => [a.ts, a.date, actDef(a.type).n]).concat(st.sessions.map(s => [s.ts, s.date, 'Gym'])).sort((a, b) => b[0] - a[0]).slice(0, 3);
+  const recent = (st.activities || []).map(a => ({ ts: a.ts, date: a.date, n: actDef(a.type).n })).concat(st.sessions.map(s => ({ ts: s.ts, date: s.date, n: 'Gym' }))).sort(newest).slice(0, 3);
   return '<div class="top"><div class="lbl">Move</div>' + dateChip() + '</div>' +
     (t ? '<div class="card acttimer"><span class="emo" aria-hidden="true">' + td.e + '</span><div><b>' + esc(td.n) + '</b><small id="acttime">' + timerText() + '</small></div><button type="button" class="btn" data-actstop>Stop</button><button type="button" class="awakex" data-actcancel>Cancel</button></div>' : '') +
     '<h1>How\'s the body?</h1>' + lightsHtml +
     '<div class="lbl">What did you get up to?</div>' +
     '<div class="acttiles">' + order().map(id => { const d = actDef(id); return '<button type="button" class="acttile" data-act="' + esc(id) + '"><span class="emo" aria-hidden="true">' + d.e + '</span><b>' + esc(d.n) + '</b><small>' + esc(tileSub(id)) + '</small></button>'; }).join('') + '</div>' +
     '<button type="button" class="rowlink" data-actsetup style="width:100%"><span>Your activities</span><b>›</b></button>' +
-    (recent.length ? '<button type="button" class="lately" data-lately><b>Lately</b> ' + recent.map(r => esc(r[2]) + ' ' + esc(prettyDate(r[1]).toLowerCase())).join(' · ') + ' ›</button>' : '');
+    (recent.length ? '<button type="button" class="lately" data-lately><b>Lately</b> ' + recent.map(r => { const w = prettyDate(r.date); return esc(r.n) + ' ' + esc(/^(Today|Yesterday)$/.test(w) ? w.toLowerCase() : w); }).join(' · ') + ' ›</button>' : '');
 }
 const timerText = () => { const t = get().actTimer; if (!t) return ''; const m = Math.floor((Date.now() - t.start) / 60000); return m < 1 ? 'Just started' : (m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min' : m + ' min') + ' so far'; };
 export function hubTick(root) { const el = root.querySelector('#acttime'); if (el) el.textContent = timerText(); }
@@ -103,7 +105,7 @@ export function milestoneSheet(id, done) {
 
 // one activity's little menu: start a timer, log one, its milestone, and the last time
 function actSheet(id, done) {
-  const st = get(), d = actDef(id), last = logsOf(id).sort((a, b) => b.ts - a.ts)[0], m = milestoneOf(id), t = st.actTimer;
+  const st = get(), d = actDef(id), last = logsOf(id).sort(newest)[0], m = milestoneOf(id), t = st.actTimer;
   openSheet('<h2><span aria-hidden="true">' + d.e + '</span> ' + esc(d.n) + '</h2>' +
     (last ? '<p class="muted">Last time: ' + esc(prettyDate(last.date)) + (summary(last) ? ' · ' + esc(summary(last)) : '') + (last.hl ? '<br>“' + esc(last.hl) + '”' : '') + '</p>' : '') +
     '<div class="actbtns"><button type="button" class="btn" data-o="start"' + (t ? ' disabled' : '') + '>Start now</button><button type="button" class="btn alt" data-o="log">Log one I did</button></div>' +
@@ -119,7 +121,7 @@ function actSheet(id, done) {
 
 function latelySheet() {
   const st = get();
-  const items = (st.activities || []).map(a => ({ ts: a.ts, date: a.date, t: actDef(a.type).e + ' ' + actDef(a.type).n, s: summary(a), hl: a.hl })).concat(st.sessions.map(s => ({ ts: s.ts, date: s.date, t: '🏋️ ' + s.workoutName, s: s.noReps ? s.exercises.length + ' exercises' : s.exercises.reduce((n, x) => n + x.sets.length, 0) + ' sets' }))).sort((a, b) => b.ts - a.ts).slice(0, 30);
+  const items = (st.activities || []).map(a => ({ ts: a.ts, date: a.date, t: actDef(a.type).e + ' ' + actDef(a.type).n, s: summary(a), hl: a.hl })).concat(st.sessions.map(s => ({ ts: s.ts, date: s.date, t: '🏋️ ' + s.workoutName, s: s.noReps ? s.exercises.length + ' exercises' : s.exercises.reduce((n, x) => n + x.sets.length, 0) + ' sets' }))).sort(newest).slice(0, 30);
   openSheet('<h2>Lately</h2><div class="latelylist">' + items.map(i => '<div class="entry"><span><small>' + esc(prettyDate(i.date)) + '</small><b>' + esc(i.t) + '</b>' + (i.s ? ' · ' + esc(i.s) : '') + (i.hl ? '<br><i>“' + esc(i.hl) + '”</i>' : '') + '</span></div>').join('') + '</div><button type="button" class="btn alt" data-close>Close</button>');
 }
 
