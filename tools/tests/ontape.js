@@ -17,8 +17,12 @@ const SONGS = { resultCount: 2, results: [
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }); const errs = [];
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
-  let online = true, searched = 0;
-  await ctx.route('https://itunes.apple.com/**', r => { searched++; if (!online) return r.abort(); const u = new URL(r.request().url()), cb = u.searchParams.get('callback'); return cb ? r.fulfill({ contentType: 'text/javascript', body: cb + '(' + JSON.stringify(SONGS) + ')' }) : r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(SONGS) }); });
+  let online = true, searched = 0, appleDown = false, deezerHits = 0;
+  const DZ = { data: [{ id: 777, title: 'Night Swim', artist: { name: 'Pretend Pals' }, album: { title: 'Pool Lights', cover_small: 'https://cdn-images.dzcdn.net/s.png', cover_big: 'https://cdn-images.dzcdn.net/b.png' }, preview: 'https://cdnt-preview.dzcdn.net/old.wav' }] };
+  await ctx.route('https://api.deezer.com/**', r => { deezerHits++; if (!online) return r.abort(); const u = new URL(r.request().url()), cb = u.searchParams.get('callback'); const body = /\/track\//.test(u.pathname) ? { id: 777, preview: 'https://cdnt-preview.dzcdn.net/fresh.wav' } : DZ; return r.fulfill({ contentType: 'text/javascript', body: cb + '(' + JSON.stringify(body) + ')' }); });
+  await ctx.route('https://cdn-images.dzcdn.net/**', r => r.fulfill({ contentType: 'image/png', headers: { 'access-control-allow-origin': '*' }, body: PNG }));
+  await ctx.route('https://cdnt-preview.dzcdn.net/**', r => r.fulfill({ contentType: 'audio/wav', headers: { 'access-control-allow-origin': '*' }, body: WAV }));
+  await ctx.route('https://itunes.apple.com/**', r => { searched++; if (!online || appleDown) return r.abort(); const u = new URL(r.request().url()), cb = u.searchParams.get('callback'); return cb ? r.fulfill({ contentType: 'text/javascript', body: cb + '(' + JSON.stringify(SONGS) + ')' }) : r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(SONGS) }); });
   await ctx.route('https://is1-ssl.mzstatic.com/**', r => r.fulfill({ contentType: 'image/png', headers: { 'access-control-allow-origin': '*' }, body: PNG }));
   await ctx.route('https://audio-ssl.itunes.apple.com/**', r => r.fulfill({ contentType: 'audio/wav', headers: { 'access-control-allow-origin': '*' }, body: WAV }));
   const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message));
@@ -90,9 +94,19 @@ const SONGS = { resultCount: 2, results: [
   await p.click('.shelftape'); await p.waitForTimeout(200); await p.click('[data-erm]'); await p.click('[data-erm]'); await p.waitForTimeout(200);
   s = await st(); ok('a tape can be removed (asks twice)', s.tapes.length === 1 && s.tapes[0].title === 'Kitchen Radio');
 
+  // 6b. v52: when Apple doesn't answer (as on iPhones), Deezer does; its preview is fetched fresh at play time
+  appleDown = true; await p.click('[data-tchange]'); await p.fill('#songQ', 'night swim'); await p.waitForTimeout(1500);
+  ok('with Apple unreachable, the Deezer backup finds the song with its cover', /Night Swim\s*Pretend Pals · Pool Lights/.test(await p.locator('#songRes').innerText()) && await p.locator('#songRes img').count() === 1);
+  await p.click('[data-pick="0"]'); await p.click('[data-mput]'); await p.waitForTimeout(800);
+  s = await st(); const dz = s.tapes.find(t => t.title === 'Night Swim');
+  ok('a Deezer song keeps its id and cover, not its expiring preview link', dz && dz.did === 777 && !dz.preview && /^data:image\/jpeg/.test(dz.cover || ''));
+  const before = deezerHits; await p.click('.tapeplayer [data-tplay]'); await p.waitForTimeout(800);
+  ok('pressing play fetches a fresh preview and plays it', deezerHits > before && /30-second preview/.test(await p.locator('#tpnote').innerText()));
+  await p.click('.tapeplayer [data-tplay]'); appleDown = false;
+
   // 7. offline: the search says so kindly, and typing it yourself still works
   online = false; await p.click('[data-tchange]'); await p.fill('#songQ', 'anything'); await p.waitForTimeout(1500);
-  ok('offline search explains itself and offers typing', /can't be reached right now/.test(await p.locator('#songRes').innerText()));
+  ok('offline search explains itself, with a small detail line for Phavan', /can't be reached right now/.test(await p.locator('#songRes').innerText()) && /Apple: .*Deezer: .*Apple again: /.test(await p.locator('.songwhy').innerText()));
   await p.click('#sheet [data-close]'); online = true;
 
   // 8. the year-in-songs card draws, and the month card too
@@ -102,7 +116,13 @@ const SONGS = { resultCount: 2, results: [
   const card = await p.evaluate(() => document.getElementById('card').toDataURL('image/png'));
   require('fs').writeFileSync(OUT + '/ot-yearcard-full.png', Buffer.from(card.split(',')[1], 'base64'));
   ok('My year in songs is offered and drawn', await p.locator('[data-kind="songs"]').count() === 1 && card.length > 50000);
-  await p.click('[data-kind="month"]'); await p.waitForTimeout(800);
+  // a busy month: the soundtrack still makes it onto My month (v52)
+  await p.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(), T = (d, h) => new Date(d + 'T00:00:00').getTime() + h * 3600000;
+    for (let i = 1; i <= 12; i++) { const d = '2026-10-' + String(i).padStart(2, '0'); st.rests.push({ id: 'r' + i, date: d, start: T(d, 1), end: T(d, 7), feel: 'okay' }); st.weather.push({ id: 'w' + i, date: d, ts: T(d, 9), types: ['Sunny'], strength: 'a little' }); st.moments.push({ id: 'm' + i, date: d, ts: T(d, 10), area: 'win', text: 'Drank water', bright: 0 }); st.sessions.push({ id: 's' + i, date: d, ts: T(d, 17), workoutId: 'fbA', workoutName: 'Full Body A', light: 'green', exercises: [] }); }
+    st.meals = [{ id: 'f1', date: '2026-10-02', ts: T('2026-10-02', 12), name: 'Toast', n: null, qty: 1 }]; S.save(); });
+  const said = await p.evaluate(async () => { const out = [], orig = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...r) { out.push(String(t)); return orig.call(this, t, ...r); }; const C = await import('./js/cards.js'); const c = document.createElement('canvas'); c.width = C.W; c.height = C.H; C.drawMonth(c.getContext('2d'), C.MONTH_LOOKS[0], {}); CanvasRenderingContext2D.prototype.fillText = orig; return out.join(' | '); });
+  ok('a full month card still shows its soundtrack', /the soundtrack \| (Kitchen Radio|Night Swim)/.test(said), said.slice(0, 200));
+  await p.goto(BASE + '#/home'); await p.goto(BASE + '#/share?t=month'); await p.waitForTimeout(2000);
   const mcard = await p.evaluate(() => document.getElementById('card').toDataURL('image/png'));
   require('fs').writeFileSync(OUT + '/ot-monthcard-full.png', Buffer.from(mcard.split(',')[1], 'base64'));
 

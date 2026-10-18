@@ -55,7 +55,7 @@ It has no streaks, no scores and no zeros. Everything stays on your phone.
 ## Principles
 
 - **Kind by design.** No streaks, no grades, no "perfect days" and no zeros on screen. Counts only go up. A hard day is a *soft day*.
-- **Private.** No accounts, no servers, no analytics. Your data lives on your phone and leaves it only when you save a backup or share something yourself. The only outside service is Apple's public music search, which is used only when you look up a song, and receives only the words you typed.
+- **Private.** No accounts, no servers, no analytics. Your data lives on your phone and leaves it only when you save a backup or share something yourself. The only outside services are public music searches (Apple's, with Deezer's as a backup), used only when you look up or play a song, and they receive only the words you typed.
 - **Offline first.** Once opened, everything works without a connection, including food search, PDFs and share cards. Only finding a new song and playing its preview need the internet.
 - **Accessible.** Colour is never the only signal, dates are written in words, and motion respects "reduce motion".
 

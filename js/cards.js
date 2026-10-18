@@ -217,16 +217,19 @@ export function drawMonth(g, look, imgs) {
     top += 250;
   }
   // number tiles (only ones with something in them)
-  const tw = (W - 160 - 24) / 2, th = 230;
+  // the soundtrack of the month (v51) always gets a place (v52): the tiles get a little shorter to make room
+  const snd = soundtrackOf(dateKey(now).slice(0, 7)), SND = 200;
+  const tw = (W - 160 - 24) / 2, th = snd ? 190 : 230;
   S.tiles.forEach((t, i) => {
     const x = 80 + (i % 2) * (tw + 24), yy = top + Math.floor(i / 2) * (th + 24);
     g.fillStyle = look.card; rr(g, x, yy, tw, th, 34); g.fill(); g.strokeStyle = look.line; g.lineWidth = 3; g.stroke();
-    text(g, String(t[0]), x + 40, yy + 130, '900 110px ' + BODY, look.accent);
-    text(g, t[1], x + 40, yy + 190, '700 44px ' + HAND, look.ink, 'left', tw - 70);
+    text(g, String(t[0]), x + 40, yy + (snd ? 108 : 130), '900 ' + (snd ? 96 : 110) + 'px ' + BODY, look.accent);
+    text(g, t[1], x + 40, yy + (snd ? 160 : 190), '700 44px ' + HAND, look.ink, 'left', tw - 70);
   });
   top += Math.ceil(S.tiles.length / 2) * (th + 24) + 20;
   // quilt patches from this month
-  if (S.qp.length) {
+  // if the soundtrack still wouldn't fit, it takes the quilt patches' place (the quilt has its own card)
+  if (S.qp.length && !(snd && top + 220 + SND > H - 400)) {
     text(g, 'new quilt patches', 80, top + 30, '800 32px ' + BODY, look.soft);
     const s = Math.min(150, (W - 160 - 10 * (S.qp.length - 1)) / S.qp.length);
     S.qp.forEach((p, i) => {
@@ -236,16 +239,14 @@ export function drawMonth(g, look, imgs) {
       if (look.id === 'journal') { g.strokeStyle = look.line; g.lineWidth = 3; rr(g, x, yy, s, s, 16); g.stroke(); }
       g.setLineDash([8, 8]); g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 3; rr(g, x + 8, yy + 8, s - 16, s - 16, 10); g.stroke(); g.setLineDash([]);
     });
-    top += s + 90;
+    top += s + (snd ? 70 : 90);
   }
-  // the soundtrack of the month (v51): the song on repeat longest
-  const snd = soundtrackOf(dateKey(now).slice(0, 7));
-  if (snd && top + 330 < H - 420) {
+  if (snd) {
     text(g, 'the soundtrack', 80, top + 30, '800 32px ' + BODY, look.soft);
-    drawTape(g, 80, top + 56, 420, snd, imgs.covers && imgs.covers[snd.id]);
-    text(g, snd.title, 540, top + 150, '700 56px ' + HAND, look.ink, 'left', W - 620);
-    if (snd.artist) text(g, snd.artist, 540, top + 205, '800 32px ' + BODY, look.soft, 'left', W - 620);
-    top += 330;
+    drawTape(g, 80, top + 48, 230, snd, imgs.covers && imgs.covers[snd.id]);
+    text(g, snd.title, 340, top + 112, '700 54px ' + HAND, look.ink, 'left', W - 420);
+    if (snd.artist) text(g, snd.artist, 340, top + 158, '800 30px ' + BODY, look.soft, 'left', W - 420);
+    top += SND;
   }
   if (!S.tiles.length && !S.wx.length) text(g, 'a quiet month, and that\'s okay', W / 2, 900, '700 64px ' + HAND, look.ink, 'center');
   drawFit(g, imgs[look.pose], look.pose === 'ccarve' ? 790 : 830, H - 175, 470, 470);

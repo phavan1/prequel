@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 52, date: '2026-10-18', items: [
+    'Song search on On repeat now works on iPhones: if Apple\'s search doesn\'t answer, Prequel asks Deezer\'s instead. Same covers, same 30-second previews.',
+    'Previews start properly on iPhones when you press play.',
+    'My month now always shows its soundtrack, even in a busy month.'
+  ] },
   { v: 51, date: '2026-10-18', items: [
     'New: On repeat. Keep the song you can\'t stop playing, one era at a time, as a little cassette tape. Turn it on in Days → ＋ → On repeat.',
     'Search for your song and pick it with its cover, then press play on the tape for a 30-second preview, or "Listen in full" in your own music app.',

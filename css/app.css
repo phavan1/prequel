@@ -904,3 +904,4 @@ html[data-theme="dark"] .cal2.cy .d[aria-pressed="true"] { background: #C2577A; 
 .songmsg { margin: 4px 2px; font-size: 14px; }
 .manualbtn { border: 0; background: none; color: var(--blue); font-weight: 800; padding: 6px 0; text-align: left; }
 .appchips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.songwhy { margin: 0 2px; font-size: 11px; color: var(--ink-soft); opacity: .7; word-break: break-word; }

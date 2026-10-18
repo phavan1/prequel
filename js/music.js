@@ -12,25 +12,35 @@ const days = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 86400000) + 1;
 
 // ---------- finding a song ----------
 const API = 'https://itunes.apple.com/search?media=music&entity=song&limit=6&term=';
-function jsonp(url) {
+function jsonp(url, wait = 6000) {
   return new Promise((res, rej) => {
     const cb = 'pqsong' + Date.now(), s = document.createElement('script');
     const done = () => { clearTimeout(t); delete window[cb]; s.remove(); };
-    const t = setTimeout(() => { done(); rej(new Error('timeout')); }, 8000);
+    const t = setTimeout(() => { done(); rej(new Error('timeout')); }, wait);
     window[cb] = d => { done(); res(d); }; s.onerror = () => { done(); rej(new Error('offline')); };
     s.src = url + '&callback=' + cb; document.head.appendChild(s);
   });
 }
-// tries a normal request first, then the older "callback" way; throws when neither works (offline)
+// Apple first; then Deezer as a backup (v52: Apple's search didn't answer on iPhones); then Apple's older "callback" way.
+// Throws when none of them answer (offline). Deezer songs keep their id, because Deezer's preview links expire.
+const fromApple = d => (d.results || []).filter(r => r.trackName).map(r => ({
+  title: r.trackName, artist: r.artistName || '', album: r.collectionName || '',
+  thumb: r.artworkUrl60 || r.artworkUrl100 || '', coverUrl: (r.artworkUrl100 || '').replace(/100x100bb/, '400x400bb'),
+  preview: r.previewUrl || '', link: r.trackViewUrl || ''
+}));
+const fromDeezer = d => (d.data || []).filter(r => r.title).map(r => ({
+  title: r.title, artist: (r.artist || {}).name || '', album: (r.album || {}).title || '',
+  thumb: (r.album || {}).cover_small || '', coverUrl: (r.album || {}).cover_big || (r.album || {}).cover_medium || '',
+  preview: r.preview || '', did: r.id
+}));
+export let lastSearchTrouble = '';
 export async function searchSongs(q) {
-  const url = API + encodeURIComponent(q);
-  let data;
-  try { const r = await fetch(url); if (!r.ok) throw new Error(r.status); data = await r.json(); } catch (e) { data = await jsonp(url); }
-  return (data.results || []).filter(r => r.trackName).map(r => ({
-    title: r.trackName, artist: r.artistName || '', album: r.collectionName || '',
-    thumb: r.artworkUrl60 || r.artworkUrl100 || '', coverUrl: (r.artworkUrl100 || '').replace(/100x100bb/, '400x400bb'),
-    preview: r.previewUrl || '', link: r.trackViewUrl || ''
-  }));
+  const t = encodeURIComponent(q), why = [];
+  try { const r = await fetch(API + t); if (!r.ok) throw new Error('status ' + r.status); return fromApple(await r.json()); } catch (e) { why.push('Apple: ' + (e.message || e)); }
+  try { return fromDeezer(await jsonp('https://api.deezer.com/search?limit=6&output=jsonp&q=' + t)); } catch (e) { why.push('Deezer: ' + (e.message || e)); }
+  try { return fromApple(await jsonp(API + t, 5000)); } catch (e) { why.push('Apple again: ' + (e.message || e)); }
+  lastSearchTrouble = why.join(' · ');
+  throw new Error(lastSearchTrouble);
 }
 // keep a small copy of the cover on the phone, so tapes look right offline (null if the picture can't be copied)
 export function saveCover(url) {
@@ -82,7 +92,7 @@ export function putOnRepeat(song, start, extra) {
   const st = get(); st.tapes = st.tapes || [];
   const prev = current();
   if (prev) prev.end = start > prev.start ? addDays(start, -1) : prev.start;
-  const t = Object.assign({ id: uid(), date: start, start, end: null, title: song.title, artist: song.artist || '', album: song.album || '', coverUrl: song.coverUrl || '', preview: song.preview || '', link: song.link || '', cover: song.cover || null }, extra || {});
+  const t = Object.assign({ id: uid(), date: start, start, end: null, title: song.title, artist: song.artist || '', album: song.album || '', coverUrl: song.coverUrl || '', preview: song.did ? '' : song.preview || '', link: song.link || '', cover: song.cover || null }, song.did ? { did: song.did } : {}, extra || {}); // Deezer previews expire, so only its id is kept
   st.tapes.push(t); save(); return t;
 }
 export function removeTape(id) { const st = get(); st.tapes = tapes().filter(t => t.id !== id); save(); }
@@ -113,13 +123,20 @@ export function stopPlay() {
   if (ctx) { try { ctx.close(); } catch (e) { /* already closed */ } ctx = null; }
   clearTimeout(stopTimer); const f = onEnd; onEnd = null; if (f) f();
 }
+// iPhones only allow sound that starts from the tap itself, so the player starts (silently) right away,
+// then the real preview is loaded into it (Deezer songs need a fresh link first)
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 export function play(t, ended) {
   stopPlay(); onEnd = ended;
-  if (t.preview) {
-    audio = new Audio(t.preview); audio.addEventListener('ended', stopPlay);
-    return audio.play().then(() => 'preview').catch(() => { audio = null; return tune(t); });
-  }
-  return Promise.resolve(tune(t));
+  if (!t.preview && !t.did) return Promise.resolve(tune(t));
+  const a = audio = new Audio(SILENT); a.play().catch(() => {});
+  const src = t.did ? jsonp('https://api.deezer.com/track/' + t.did + '?output=jsonp', 5000).then(d => d.preview || '').catch(() => '') : Promise.resolve(t.preview);
+  return src.then(url => {
+    if (audio !== a) return 'stopped';
+    if (!url) { audio = null; return tune(t); }
+    a.src = url; a.addEventListener('ended', stopPlay);
+    return a.play().then(() => 'preview').catch(() => { if (audio === a) audio = null; return tune(t); });
+  });
 }
 function tune(t) {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { stopPlay(); return 'none'; }

@@ -79,7 +79,7 @@ function changeSheet(done) {
         const r = await searchSongs(q); if (my !== seq) return; found = r;
         box.innerHTML = r.length ? r.map((s, i) => '<button type="button" class="songrow" data-pick="' + i + '">' + (s.thumb ? '<img src="' + esc(s.thumb) + '" alt="">' : '<i class="nocover">♪</i>') + '<span><b>' + esc(s.title) + '</b><small>' + esc(s.artist) + (s.album ? ' · ' + esc(s.album) : '') + '</small></span>' + (s.preview ? '<span class="pv" data-pv="' + i + '" role="button" aria-label="Hear 30 seconds of ' + esc(s.title) + '">▶</span>' : '') + '</button>').join('')
           : '<p class="muted songmsg">Nothing found for that. Try fewer words, or type it yourself.</p>';
-      } catch (e2) { if (my === seq) box.innerHTML = '<p class="muted songmsg">The song search can\'t be reached right now (are you offline?). You can type it yourself instead.</p>'; }
+      } catch (e2) { if (my === seq) box.innerHTML = '<p class="muted songmsg">The song search can\'t be reached right now (are you offline?). You can type it yourself instead.</p><p class="songwhy">' + esc(String(e2.message || e2)) + '</p>'; }
     }, 400);
   });
   setTimeout(() => { const q = sheet.querySelector('#songQ'); if (q) q.focus(); }, 50);
