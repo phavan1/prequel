@@ -50,7 +50,7 @@ function drawFit(g, img, cx, bottom, maxW, maxH) {
   if (!img) return; const k = Math.min(maxW / img.width, maxH / img.height), w = img.width * k, h = img.height * k;
   g.drawImage(img, cx - w / 2, bottom - h, w, h);
 }
-export const POSES = ['cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve', 'sewing'];
+export const POSES = ['cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve', 'sewing', 'onrepeat'];
 function footer(g, colour, sub) {
   text(g, 'prequel', W / 2, H - 120, '900 44px ' + BODY, colour, 'center');
   text(g, sub || 'the behind-the-scenes of everything I\'m becoming', W / 2, H - 70, '700 30px ' + HAND, colour, 'center');
@@ -218,7 +218,7 @@ export function drawMonth(g, look, imgs) {
   }
   // number tiles (only ones with something in them)
   // the soundtrack of the month (v51) always gets a place (v52): the tiles get a little shorter to make room
-  const snd = soundtrackOf(dateKey(now).slice(0, 7)), SND = 200;
+  const snd = soundtrackOf(dateKey(now).slice(0, 7)), SND = 170;
   const tw = (W - 160 - 24) / 2, th = snd ? 190 : 230;
   S.tiles.forEach((t, i) => {
     const x = 80 + (i % 2) * (tw + 24), yy = top + Math.floor(i / 2) * (th + 24);
@@ -229,7 +229,7 @@ export function drawMonth(g, look, imgs) {
   top += Math.ceil(S.tiles.length / 2) * (th + 24) + 20;
   // quilt patches from this month
   // if the soundtrack still wouldn't fit, it takes the quilt patches' place (the quilt has its own card)
-  if (S.qp.length && !(snd && top + 220 + SND > H - 400)) {
+  if (S.qp.length && !(snd && top + 220 + SND > H - 410)) {
     text(g, 'new quilt patches', 80, top + 30, '800 32px ' + BODY, look.soft);
     const s = Math.min(150, (W - 160 - 10 * (S.qp.length - 1)) / S.qp.length);
     S.qp.forEach((p, i) => {
@@ -243,9 +243,9 @@ export function drawMonth(g, look, imgs) {
   }
   if (snd) {
     text(g, 'the soundtrack', 80, top + 30, '800 32px ' + BODY, look.soft);
-    drawTape(g, 80, top + 48, 230, snd, imgs.covers && imgs.covers[snd.id]);
-    text(g, snd.title, 340, top + 112, '700 54px ' + HAND, look.ink, 'left', W - 420);
-    if (snd.artist) text(g, snd.artist, 340, top + 158, '800 30px ' + BODY, look.soft, 'left', W - 420);
+    drawTape(g, 80, top + 50, 170, snd, imgs.covers && imgs.covers[snd.id]);
+    text(g, snd.title, 280, top + 100, '700 50px ' + HAND, look.ink, 'left', W - 360);
+    if (snd.artist) text(g, snd.artist, 280, top + 144, '800 30px ' + BODY, look.soft, 'left', W - 360);
     top += SND;
   }
   if (!S.tiles.length && !S.wx.length) text(g, 'a quiet month, and that\'s okay', W / 2, 900, '700 64px ' + HAND, look.ink, 'center');
@@ -323,6 +323,7 @@ export function drawSongs(g, look, imgs, year) {
   const list = tapes().filter(t => t.start.slice(0, 4) === year).sort(byStart);
   g.fillStyle = look.bg; g.fillRect(0, 0, W, H);
   halftone(g, look.dots, 34, 4, 0, 0, W, H);
+  drawFit(g, imgs.onrepeat, W - 250, 440, 300, 400); // him, lost in a song (v53)
   text(g, 'MY YEAR IN SONGS', 80, 170, '900 34px ' + BODY, look.soft);
   text(g, year, 80, 310, '700 160px ' + HAND, look.ink);
   text(g, list.length + (list.length === 1 ? ' era on repeat' : ' eras on repeat'), 80, 380, '800 40px ' + BODY, look.accent);

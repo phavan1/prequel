@@ -265,6 +265,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The ongoing docs workflow and the focused conversation-change handover (`START_HERE.md` 8b and 8c).
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
+- v53: a start-up safety net instead of a blank page (never opens with empty data; Fix and reopen clears app files, never data); the search box stays in view; the On repeat picture; a smaller soundtrack on My month.
 - v52: song search falls back to Deezer (Apple's didn't answer on iPhones); iPhone-safe previews; the soundtrack always on My month.
 - v51: On repeat, songs as cassette eras, with search, previews, a shelf, soundtrack of the month and My year in songs.
 - v50: change or remove any log right on Move (Phavan: having to go to Days was a gap); a professional README.

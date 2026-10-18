@@ -1,7 +1,7 @@
 // On repeat (v51), on its own Days tab: the tape player with the song you can't stop playing, and a shelf of
 // past eras as cassettes, one mixtape per month. Change the song, edit or remove a tape, play a preview.
 import { get, save, today, parseKey } from '../store.js';
-import { esc, prettyDate, logDate, openSheet, closeSheet, toast } from '../ui.js';
+import { esc, prettyDate, logDate, openSheet, closeSheet, toast, him } from '../ui.js';
 import { tapes, current, byStart, searchSongs, saveCover, coverOf, putOnRepeat, removeTape, tapeDays, onDay, APPS, fullUrl, play, stopPlay } from '../music.js';
 import { mulberry32, hashStr } from '../sky-model.js';
 
@@ -24,6 +24,8 @@ export function musicPanel(sel) {
   const months = {}; past.forEach(t => { const m = t.start.slice(0, 7); (months[m] = months[m] || []).push(t); });
   const mname = m => parseKey(m + '-01').toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
   return '<div class="ontape">' +
+    // him, lost in a song (v53)
+    '<div class="tapehero">' + him('onrepeat', 'breathe', 'Your character with headphones on, lost in a song') + '<p class="say">' + (c ? 'Still on repeat? Same.' : 'What can\'t you stop playing?') + '</p></div>' +
     (then && then !== c ? '<p class="tapethen">On ' + esc(long(sel)) + ', <b>' + esc(then.title) + '</b> was on repeat.</p>' : '') +
     (c
       ? '<div class="tapeplayer"><div class="deck">' + cassette(c, 'big') + '</div>' +
@@ -50,7 +52,7 @@ function changeSheet(done) {
     '<label class="field-label" for="mLine">THE LINE THAT GETS YOU · IF YOU LIKE</label><input id="mLine" type="text" maxlength="100" placeholder="in your own words" autocomplete="off">' +
     '<label class="field-label" for="mStart">ON REPEAT SINCE</label><input id="mStart" type="date" max="' + today() + '" value="' + logDate() + '">' +
     '<div class="err" id="mErr"></div><button type="button" class="btn" data-mput>Put it on</button><button type="button" class="btn alt" data-close>Cancel</button>';
-  const search = () => '<h2>What\'s on repeat?</h2><input id="songQ" type="search" placeholder="Search for a song or artist" autocomplete="off" aria-label="Search for a song">' +
+  const search = () => '<div class="songhead"><h2>What\'s on repeat?</h2><input id="songQ" type="search" placeholder="Search for a song or artist" autocomplete="off" aria-label="Search for a song"></div>' +
     '<div id="songRes" class="songres"></div><button type="button" class="lnk manualbtn" data-manual>Not here? Type it yourself</button><button type="button" class="btn alt" data-close>Cancel</button>';
   const sheet = openSheet(search(), async ev => {
     const t = ev.target; let b;
@@ -82,6 +84,13 @@ function changeSheet(done) {
       } catch (e2) { if (my === seq) box.innerHTML = '<p class="muted songmsg">The song search can\'t be reached right now (are you offline?). You can type it yourself instead.</p><p class="songwhy">' + esc(String(e2.message || e2)) + '</p>'; }
     }, 400);
   });
+  // (v53) while searching, the sheet sits at the top of what's visible above the keyboard, with the search box pinned
+  // and only the results scrolling, so typing never pushes the box off the top of the screen
+  sheet.classList.add('topsheet');
+  const vv = window.visualViewport, fit = () => { const sh = sheet.querySelector('.sheet'); if (!sh || !sheet.isConnected) return; const h = vv ? vv.height : window.innerHeight; sheet.style.paddingTop = (vv ? vv.offsetTop : 0) + 'px'; sh.style.maxHeight = Math.max(240, h - 12) + 'px'; };
+  fit(); if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+  const gone = new MutationObserver(() => { if (!sheet.isConnected) { if (vv) { vv.removeEventListener('resize', fit); vv.removeEventListener('scroll', fit); } gone.disconnect(); } });
+  gone.observe(document.body, { childList: true });
   setTimeout(() => { const q = sheet.querySelector('#songQ'); if (q) q.focus(); }, 50);
 }
 

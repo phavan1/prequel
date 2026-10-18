@@ -100,10 +100,11 @@ load().then(() => {
   window.addEventListener('hashchange', route);
   applyTheme();
   route();
+  if (window.prequelStarted) window.prequelStarted(); // tells the start-up safety net in index.html all is well (v53)
   hello();
   setTimeout(whatsNew, 300);
   document.documentElement.classList.add('ready');
-});
+}).catch(e => { if (window.prequelFailed) window.prequelFailed(e); });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   // when a new version finishes installing, reload once so it shows straight away

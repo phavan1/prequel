@@ -64,6 +64,10 @@ function fresh() {
   };
 }
 
+// v53: never wait forever. Chrome on Android can occasionally get stuck opening a site's storage; then the app
+// showed a blank page that looked like the launch screen. A stuck open now stops start-up with a recovery screen
+// (index.html), instead of opening with empty data that could be saved over the real data.
+const within = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error(msg), { stuck: true })), ms))]);
 function openDB() {
   return new Promise((resolve, reject) => {
     if (!('indexedDB' in window)) { reject(new Error('no indexedDB')); return; }
@@ -88,13 +92,13 @@ function idbPut(value, key = KEY) {
 
 export async function load() {
   let saved = null;
-  try { db = await openDB(); saved = await idbGet(); } catch (e) { db = null; }
+  try { db = await within(openDB(), 8000, 'storage did not open'); saved = await within(idbGet(), 8000, 'storage did not answer'); } catch (e) { if (e.stuck) throw e; db = null; }
   if (!saved) { try { const raw = localStorage.getItem('prequel-state'); if (raw) saved = JSON.parse(raw); } catch (e) { /* private mode */ } }
   state = Object.assign(fresh(), saved || {});
   state.settings = Object.assign(fresh().settings, state.settings || {});
-  await loadUndo();
+  await within(loadUndo(), 4000, 'undo copy').catch(() => {});
   // ask the browser to keep this data even when the phone is low on space
-  try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* not supported */ }
+  try { if (navigator.storage && navigator.storage.persist) await within(navigator.storage.persist(), 2000, 'persist'); } catch (e) { /* not supported, or slow: carry on */ }
   return state;
 }
 

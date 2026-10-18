@@ -36,6 +36,10 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. R
 - [ ] [Claude] The Me gear opens Settings, and its back goes to Me.
 - [ ] [iPhone] Swiping back with the iPhone gesture behaves sensibly.
 
+## 1d. Start-up safety net (v53)
+- [ ] [Claude] `startup.js`: normal start shows no recovery screen; stuck storage and a missing file show it with the reason; nothing saved while stuck; Fix and reopen reloads fresh.
+- [ ] [Android] The friend's phone opens Prequel (or shows the recovery screen, never a frozen launch screen).
+
 ## 1c. What's new (v40)
 - [ ] [Claude] `news.js`: a new user never sees it; after an update it shows once, after the hello; only the latest update shows, with "You also missed N" and **See all updates** (same window); closing it is the end; Settings → What's new lists them all.
 - [ ] [Claude] Every release has a `NEWS` entry whose number matches `VERSION` in `sw.js`.

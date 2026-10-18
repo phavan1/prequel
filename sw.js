@@ -1,5 +1,5 @@
 // Offline support: the app opens even with no signal. Change VERSION when you publish an update.
-const VERSION = 'prequel-v52';
+const VERSION = 'prequel-v53';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/store.js', 'js/data.js', 'js/ui.js', 'js/sky-model.js', 'js/goals.js', 'js/charts.js', 'js/nutrition.js', 'data/foods.json',
@@ -7,7 +7,7 @@ const SHELL = [
   'js/screens/wins.js', 'js/screens/mind.js', 'js/screens/letters.js', 'js/screens/days.js', 'js/screens/me.js', 'js/screens/sky.js', 'js/screens/quilt.js', 'js/screens/skate.js', 'js/screens/settings.js', 'js/screens/share.js', 'js/cards.js', 'js/pdf.js', 'js/reports.js', 'js/news.js', 'js/cycle.js', 'js/activities.js', 'js/screens/movehub.js', 'js/music.js', 'js/screens/ontape.js',
   ...['nunito-latin-500', 'nunito-latin-700', 'nunito-latin-800', 'nunito-latin-900', 'gaegu-latin-700'].map(n => 'fonts/' + n + '-normal.woff2'),
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
-  ...['standing', 'waving', 'lying', 'asleep', 'eating', 'cooking', 'umbrella', 'sunny', 'nightwatch', 'letter', 'cheer', 'stickynote', 'skate', 'legday', 'sitting', 'skatego', 'afternoon', 'cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve', 'sewing'].map(n => 'art/' + n + '.webp')
+  ...['standing', 'waving', 'lying', 'asleep', 'eating', 'cooking', 'umbrella', 'sunny', 'nightwatch', 'letter', 'cheer', 'stickynote', 'skate', 'legday', 'sitting', 'skatego', 'afternoon', 'cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve', 'sewing', 'onrepeat'].map(n => 'art/' + n + '.webp')
 ];
 
 self.addEventListener('install', e => {
@@ -23,7 +23,9 @@ self.addEventListener('fetch', e => {
   if (new URL(e.request.url).origin !== self.location.origin) return;
   // opening the app: try the network first so updates arrive, fall back to the cache when offline
   if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request, { cache: 'no-store' }).then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put('index.html', copy)); return res; }).catch(() => caches.match('index.html')));
+    // (v53) asked for by address, which every version of Chrome accepts, and never answered with nothing
+    e.respondWith(fetch(e.request.url, { cache: 'no-store', credentials: 'same-origin' }).then(res => { if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put('index.html', copy)); } return res; })
+      .catch(() => caches.match('index.html', { ignoreSearch: true }).then(hit => hit || caches.match('./', { ignoreSearch: true })).then(hit => hit || fetch(e.request))));
     return;
   }
   // everything else: serve from the cache straight away, refresh it quietly in the background

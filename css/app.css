@@ -905,3 +905,23 @@ html[data-theme="dark"] .cal2.cy .d[aria-pressed="true"] { background: #C2577A; 
 .manualbtn { border: 0; background: none; color: var(--blue); font-weight: 800; padding: 6px 0; text-align: left; }
 .appchips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .songwhy { margin: 0 2px; font-size: 11px; color: var(--ink-soft); opacity: .7; word-break: break-word; }
+
+/* start-up safety net (v53): shown only if the app can't open */
+#rescue { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 24px; background: #FAF3DC; color: #23262F; font-family: system-ui, sans-serif; }
+#rescue[hidden] { display: none; }
+.rescuebox { max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.rescuebox img { border-radius: 18px; }
+.rescuebox h1 { margin: 0; font-size: 22px; }
+.rescuebox p { margin: 0; font-size: 15px; }
+.rescuebox button { width: 100%; min-height: 50px; border-radius: 16px; border: 1px solid #E8DDC2; background: #FFFDF6; font: 700 16px system-ui, sans-serif; color: #23262F; }
+.rescuebox #rescueTry { background: #1F55D0; color: #fff; border-color: #1F55D0; }
+.rescuenote { font-size: 12.5px !important; color: #6B6456; }
+#rescueWhy { font-size: 11px !important; color: #9A927F; word-break: break-word; }
+/* song search (v53): the sheet sits at the top of the visible area, the search box stays pinned */
+#sheet.topsheet { align-items: flex-start; }
+#sheet.topsheet .sheet { border-radius: 0 0 24px 24px; padding-top: 0; }
+.songhead { position: sticky; top: 0; z-index: 2; background: var(--paper); padding: 16px 0 8px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 8px 10px -10px rgba(35,38,47,.25); }
+.songhead h2 { margin: 0; }
+.tapehero { display: flex; align-items: center; gap: 12px; }
+.tapehero .him { height: 150px; width: auto; flex: none; }
+.tapehero .say { margin: 0; }

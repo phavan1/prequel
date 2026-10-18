@@ -33,6 +33,7 @@ Each script opens the app in a phone-sized Chromium window, loads fictional data
 | `jars.js` | (v41) Jars of 20–40, shapes, the celebration (incl. belated), lantern recall, dark sticky notes. Prints PASS/FAIL lines. |
 | `moveorder.js` | (v42) Real exercise order, "Last time", Your sessions + Copy, Rest's Awake for a bit. Prints PASS/FAIL lines and the copied text. |
 | `moveedit.js` | (v43) Not noted / Bar only / Body weight, body weight × reps, the ⋯ sheet, fixing the order, Copy on the done sheet, fixing past sessions in Days. Prints PASS/FAIL lines and the copied text. |
+| `startup.js` | (v53) The start-up safety net: stuck storage, a file that fails to load, Fix and reopen. Prints PASS/FAIL lines. |
 | `ontape.js` | (v51) On repeat: song search (simulated), preview, eras and the shelf, made covers and tunes, Listen in full, cards, backup checks. Prints PASS/FAIL lines. |
 | `movehub.js` | (v48) Move hub: picker, tiles, sport fields, timer, milestones, Me counts, gym page, Days, backup checks. Prints PASS/FAIL lines. |
 | `cycle.js` | (v46) Cycle: the optional period tracker on Days, estimate, privacy (no stars), backup checks. Prints PASS/FAIL lines. |
@@ -55,4 +56,4 @@ node tools/tests/backup.js              # in another
 - The scripts click specific buttons (`[data-…]` attributes). If a screen changes, its script may need updating. That's expected.
 - In Claude's cloud workspace, Playwright may already be installed globally: run with `NODE_PATH=$(npm root -g) node tools/tests/<script>.js`.
 
-**Last run (17 Oct 2026, v48, Claude's workspace):** all eighteen scripts ran with no page errors; `movehub.js` 35/35 (v50), `ontape.js` 27/27 (v52) (the Move scripts now pick Gym in the picker and open its tile first); `cycle.js` 14/14; `backup.js` 40/40, `usuals.js` 16/16, `quick.js` 17/17, `saving.js` 12/12, `news.js` 12/12, `jars.js` 15/15, `moveorder.js` 12/12 (updated for the Goodnight step), `moveedit.js` 15/15, `sleep.js` 24/24 (v47: Week by week) passed. (`jar.js` now closes the belated celebration first.)
+**Last run (17 Oct 2026, v48, Claude's workspace):** all nineteen scripts ran with no page errors; `movehub.js` 35/35 (v50), `ontape.js` 27/27 (v52), `startup.js` 6/6 (v53) (the Move scripts now pick Gym in the picker and open its tile first); `cycle.js` 14/14; `backup.js` 40/40, `usuals.js` 16/16, `quick.js` 17/17, `saving.js` 12/12, `news.js` 12/12, `jars.js` 15/15, `moveorder.js` 12/12 (updated for the Goodnight step), `moveedit.js` 15/15, `sleep.js` 24/24 (v47: Week by week) passed. (`jar.js` now closes the belated celebration first.)

@@ -4,6 +4,12 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 53, date: '2026-10-18', items: [
+    'If Prequel ever has trouble opening, it now says so and offers "Try again" or "Fix and reopen", instead of getting stuck on the start screen. Your data stays safe either way.',
+    'Searching for a song keeps the search box in view while results appear.',
+    'A new picture of him, lost in a song, on On repeat and the My year in songs card.',
+    'The soundtrack on My month is a little smaller and calmer.'
+  ] },
   { v: 52, date: '2026-10-18', items: [
     'Song search on On repeat now works on iPhones: if Apple\'s search doesn\'t answer, Prequel asks Deezer\'s instead. Same covers, same 30-second previews.',
     'Previews start properly on iPhones when you press play.',
