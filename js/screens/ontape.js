@@ -1,7 +1,7 @@
 // On repeat (v51), on its own Days tab: the tape player with the song you can't stop playing, and a shelf of
 // past eras as cassettes, one mixtape per month. Change the song, edit or remove a tape, play a preview.
 import { get, save, today, parseKey } from '../store.js';
-import { esc, prettyDate, logDate, openSheet, closeSheet, toast, him } from '../ui.js';
+import { esc, prettyDate, logDate, openSheet, closeSheet, toast } from '../ui.js';
 import { tapes, current, byStart, searchSongs, saveCover, coverOf, putOnRepeat, removeTape, tapeDays, onDay, APPS, fullUrl, play, stopPlay } from '../music.js';
 import { mulberry32, hashStr } from '../sky-model.js';
 
@@ -24,8 +24,6 @@ export function musicPanel(sel) {
   const months = {}; past.forEach(t => { const m = t.start.slice(0, 7); (months[m] = months[m] || []).push(t); });
   const mname = m => parseKey(m + '-01').toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
   return '<div class="ontape">' +
-    // him, lost in a song (v53)
-    '<div class="tapehero">' + him('onrepeat', 'breathe', 'Your character with headphones on, lost in a song') + '<p class="say">' + (c ? 'Still on repeat? Same.' : 'What can\'t you stop playing?') + '</p></div>' +
     (then && then !== c ? '<p class="tapethen">On ' + esc(long(sel)) + ', <b>' + esc(then.title) + '</b> was on repeat.</p>' : '') +
     (c
       ? '<div class="tapeplayer"><div class="deck">' + cassette(c, 'big') + '</div>' +

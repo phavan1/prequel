@@ -37,6 +37,7 @@ const SONGS = { resultCount: 2, results: [
   await p.click('[data-opt="music"]'); await p.waitForTimeout(200); await p.click('#sheet [data-close]'); await p.waitForTimeout(200);
   await p.click('[data-tab="music"]'); await p.waitForTimeout(300);
   await p.screenshot({ path: OUT + '/ot-empty.png' });
+  ok('the On repeat tab shows the cassette, without the character (v54)', await p.locator('.ontape .him').count() === 0 && await p.locator('.ontape .cassette').count() === 1);
   ok('an empty tape player invites you in', /Nothing on repeat yet/.test(await p.locator('main').innerText()) && await p.locator('[data-tchange]').count() === 1);
 
   // 2. find a song, hear it, pick it

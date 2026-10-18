@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 54, date: '2026-10-19', items: [
+    'On repeat in Days now shows just your cassette, without the picture above it. He\'s still on the My year in songs card.'
+  ] },
   { v: 53, date: '2026-10-18', items: [
     'If Prequel ever has trouble opening, it now says so and offers "Try again" or "Fix and reopen", instead of getting stuck on the start screen. Your data stays safe either way.',
     'Searching for a song keeps the search box in view while results appear.',
