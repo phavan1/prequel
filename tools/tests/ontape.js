@@ -117,6 +117,9 @@ const SONGS = { resultCount: 2, results: [
   const card = await p.evaluate(() => document.getElementById('card').toDataURL('image/png'));
   require('fs').writeFileSync(OUT + '/ot-yearcard-full.png', Buffer.from(card.split(',')[1], 'base64'));
   ok('My year in songs is offered and drawn', await p.locator('[data-kind="songs"]').count() === 1 && card.length > 50000);
+  for (const n of [2, 3]) { await p.click('.sharenav.next'); await p.waitForTimeout(500); const c = await p.evaluate(() => document.getElementById('card').toDataURL('image/png')); require('fs').writeFileSync(OUT + '/ot-yearcard-look' + n + '.png', Buffer.from(c.split(',')[1], 'base64')); }
+  const art = await p.evaluate(() => new Promise(r => { const i = new Image(); i.onload = () => r(i.width / i.height); i.onerror = () => r(0); i.src = 'art/onrepeat.webp'; }));
+  ok('the year card picture is the wide lying-down one (v55)', art > 1.8, String(art));
   // a busy month: the soundtrack still makes it onto My month (v52)
   await p.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(), T = (d, h) => new Date(d + 'T00:00:00').getTime() + h * 3600000;
     for (let i = 1; i <= 12; i++) { const d = '2026-10-' + String(i).padStart(2, '0'); st.rests.push({ id: 'r' + i, date: d, start: T(d, 1), end: T(d, 7), feel: 'okay' }); st.weather.push({ id: 'w' + i, date: d, ts: T(d, 9), types: ['Sunny'], strength: 'a little' }); st.moments.push({ id: 'm' + i, date: d, ts: T(d, 10), area: 'win', text: 'Drank water', bright: 0 }); st.sessions.push({ id: 's' + i, date: d, ts: T(d, 17), workoutId: 'fbA', workoutName: 'Full Body A', light: 'green', exercises: [] }); }

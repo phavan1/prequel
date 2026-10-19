@@ -323,7 +323,7 @@ export function drawSongs(g, look, imgs, year) {
   const list = tapes().filter(t => t.start.slice(0, 4) === year).sort(byStart);
   g.fillStyle = look.bg; g.fillRect(0, 0, W, H);
   halftone(g, look.dots, 34, 4, 0, 0, W, H);
-  drawFit(g, imgs.onrepeat, W - 250, 440, 300, 400); // him, lost in a song (v53)
+  drawFit(g, imgs.onrepeat, W - 330, 436, 540, 300); // him, lying back lost in a song (v55: wide picture beside the year)
   text(g, 'MY YEAR IN SONGS', 80, 170, '900 34px ' + BODY, look.soft);
   text(g, year, 80, 310, '700 160px ' + HAND, look.ink);
   text(g, list.length + (list.length === 1 ? ' era on repeat' : ' eras on repeat'), 80, 380, '800 40px ' + BODY, look.accent);
