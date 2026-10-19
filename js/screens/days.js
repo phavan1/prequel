@@ -102,7 +102,7 @@ function tabSheet(root) {
 }
 
 function addSheet(root) {
-  const go = g => { closeSheet(); location.hash = '#/' + g + (selected === today() ? '' : (g.includes('?') ? '&' : '?') + 'd=' + selected); };
+  const go = g => { closeSheet(); const q = (g === 'move' ? [] : ['from=days']).concat(selected === today() ? [] : ['d=' + selected]); location.hash = '#/' + g + (q.length ? '?' + q.join('&') : ''); }; // from=days: the tab bar and back button lead back to Days (v56)
   openSheet('<h2>Add to ' + esc(prettyDate(selected, { weekday: 'long', day: 'numeric', month: 'long' })) + '</h2>' +
     '<div class="addgrid">' + [['move', 'Move', 'move'], ['food', 'Food', 'food'], ['rest', 'Rest', 'rest'], ['wins', 'Tiny win', 'win'], ['weather', 'Weather', 'weather'], ['goals', 'Your goals', 'goal']].map(o => '<button type="button" data-g="' + o[0] + '">' + svg(o[2]) + '<span>' + o[1] + '</span></button>').join('') + '</div>' +
     '<button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
@@ -271,7 +271,7 @@ function dayCard(d) {
     row('food', 'food', n + (n === 1 ? ' thing eaten' : ' things eaten'), known ? '~' + Math.round(kc).toLocaleString() + ' cal · ' + Math.round(pr) + ' g protein' : 'no numbers yet',
       D.meals.map(m => { const v = totalOf(m); return '<div class="ditem"><span>' + esc(m.name) + '<small>' + (m.sure ? '' : '~') + esc(qtyLabel(m)) + (v ? ' · ' + Math.round(v[0]) + ' cal' : '') + '</small></span>' + x('meals:' + m.id, m.name) + '</div>'; }).join('') +
       D.oldFood.map(f => '<div class="ditem"><span>' + esc(f.note || f.tags.join(', ')) + '<small>from before numbers</small></span>' + x('foods:' + f.id, f.note || 'this') + '</div>').join('') +
-      '<a class="lnk" href="#/food' + (d === today() ? '' : '?d=' + d) + '">Open food for this day ›</a>');
+      '<a class="lnk" href="#/food?from=days' + (d === today() ? '' : '&d=' + d) + '">Open food for this day ›</a>');
   }
   if (D.rests.length || D.restNotes.length) {
     const mins = D.rests.reduce((a, r) => a + (r.end - r.start) / 60000, 0);

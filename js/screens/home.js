@@ -74,7 +74,7 @@ function render() {
       '<div class="stage wide"><button type="button" id="tap" aria-label="Say hi">' + him(pose, 'wide breathe', 'Your character') + '</button></div>' +
     '</div>' +
     (soft
-      ? '<a class="game" href="#/skate"><span><b>Skate home</b><small>' + ((st.games && st.games.skate && st.games.skate.best) ? 'Your best: ' + st.games.skate.best + ' m' : 'Jump the bumps, grab the stars') + '</small></span><b class="go">Play ›</b></a>' +
+      ? gamesShelf(st) +
         (() => { const m = fromJar(true); return m ? '<a class="fromjar" href="#/wins"><small>From your jar · ' + esc(new Date(m.ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })) + '</small>' + esc(m.text) + '<em>You did this. You can again.</em></a>' : ''; })() +
         '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'A letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
         '<button type="button" class="btn ghost wide" data-unheavy>Back to a regular day</button>'
@@ -154,4 +154,22 @@ function drawMini(cv, st) {
     g.fillStyle = c; g.globalAlpha = 0.35; g.beginPath(); g.arc(x, y, r * 2.4, 0, 7); g.fill();
     g.globalAlpha = 1; g.fillStyle = '#FFF8E1'; g.beginPath(); g.arc(x, y, r * 0.8, 0, 7); g.fill();
   });
+}
+
+// the soft day's little games shelf (v56): Skate home, Stack the stars, Keep it up, each with your own best
+const starPts = (cx, cy, r) => Array.from({ length: 10 }, (_, k) => { const rr = k % 2 ? r * 0.52 : r, a = k * Math.PI / 5 - Math.PI / 2; return (cx + Math.cos(a) * rr).toFixed(1) + ',' + (cy + Math.sin(a) * rr).toFixed(1); }).join(' ');
+const pstar = (cx, cy, r, c) => '<polygon points="' + starPts(cx, cy, r) + '" fill="' + c + '" stroke="#23262F" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>';
+const GAME_ART = {
+  skate: '<path d="M8 30h38a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6z" fill="#1F55D0"/><circle cx="17" cy="40" r="4" fill="#23262F"/><circle cx="37" cy="40" r="4" fill="#23262F"/><path d="M4 22h10M2 16h8M8 10h8" stroke="#5E584B" stroke-width="2.4" stroke-linecap="round"/>' + pstar(42, 13, 7, '#F4C430'),
+  stack: pstar(27, 37, 9, '#9FC1F0') + pstar(29, 24, 9, '#F7A6B8') + pstar(26, 11, 9, '#F4C430'),
+  keepup: pstar(27, 12, 10, '#F4C430') + '<path d="M9 34q18-6 36 0q3 3 0 6q-18 5-36 0q-3-3 0-6z" fill="#BFD8FF" stroke="#3D66C9" stroke-width="2"/><path d="M14 22v-3M40 22v-3M27 27v-2" stroke="#5E584B" stroke-width="2" stroke-linecap="round"/>'
+};
+function gamesShelf(st) {
+  const gm = st.games || {}, best = k => gm[k] && gm[k].best;
+  const card = (k, href, name, line) => '<a href="' + href + '"><svg viewBox="0 0 54 46" aria-hidden="true">' + GAME_ART[k] + '</svg><b>' + name + '</b><small>' + line + '</small></a>';
+  return '<div class="lbl">Play something</div><div class="games">' +
+    card('skate', '#/skate', 'Skate home', best('skate') ? 'Best ' + best('skate') + ' m' : 'Jump the bumps') +
+    card('stack', '#/stack', 'Stack the stars', best('stack') ? 'Best ' + best('stack') + ' high' : 'Up to the moon') +
+    card('keepup', '#/keepup', 'Keep it up', best('keepup') ? 'Best ' + best('keepup') + (best('keepup') === 1 ? ' bounce' : ' bounces') : 'Don\'t let it drop') +
+    '</div>';
 }

@@ -431,10 +431,29 @@ button.goal { text-align: left; font: inherit; color: inherit; }
 .game span { display: flex; flex-direction: column; gap: 2px; }
 .game span b { font-size: 19px; font-weight: 900; }
 .game small { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+/* v56: the soft day's little games shelf */
+.games { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.games a { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px 12px; border-radius: 20px; color: var(--ink); background: linear-gradient(160deg, #BFD8FF, #FFF1D6); border: 1px solid var(--line); text-align: center; min-height: 128px; }
+.games a:active { transform: scale(.97); }
+.games svg { width: 54px; height: 46px; }
+.games b { font-size: 14px; font-weight: 900; line-height: 1.15; }
+.games small { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); line-height: 1.2; }
+html[data-theme="dark"] .games a { background: linear-gradient(160deg, #23304F, #3A2E22); }
+.screen-keepup, .screen-stack { touch-action: none; }
+.sk-hud .gbest { font-size: 13px; opacity: .7; margin-left: auto; }
+.sk-hud .gnow + .gbest { margin-left: 0; }
+.sk-hud .gnow { margin-left: auto; }
+.sk-hud .gsound { min-width: 44px; justify-content: center; border: 0; font-size: 17px; }
+.emopick { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.emopick button { width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--line); background: #FFFDF6; font-size: 22px; display: grid; place-items: center; padding: 0; }
+.emopick button[aria-pressed="true"] { border: 2px solid var(--blue); background: var(--blue-soft); }
+.emopick .pstar { width: 24px; height: 24px; background: #F4C430; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.emoown { min-height: 42px; border-radius: 14px; border: 1px solid var(--line); padding: 0 12px; font: inherit; font-size: 15px; text-align: center; background: #FFFDF6; color: #23262F; }
+html[data-theme="dark"] .emopick button, html[data-theme="dark"] .emoown { background: #2F2822; color: var(--ink); }
 .game .go { padding: 10px 16px; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 900; font-size: 14px; }
-.screen-skate { padding: 0; max-width: none; position: relative; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-body:has(.screen-skate) { overflow: hidden; overscroll-behavior: none; }
-.screen-skate canvas { position: fixed; inset: 0; display: block; }
+.screen-skate, .screen-keepup, .screen-stack { padding: 0; max-width: none; position: relative; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+body:has(.screen-skate), body:has(.screen-keepup), body:has(.screen-stack) { overflow: hidden; overscroll-behavior: none; }
+.screen-skate canvas, .screen-keepup canvas, .screen-stack canvas { position: fixed; inset: 0; display: block; }
 .sk-hud { position: fixed; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 0; display: flex; align-items: center; gap: 14px; font-weight: 900; font-size: 18px; color: #23262F; z-index: 2; }
 .sk-hud #skScore { margin-left: auto; }
 .sk-hud #skBest { font-size: 13px; opacity: .7; }
@@ -445,7 +464,7 @@ body:has(.screen-skate) { overflow: hidden; overscroll-behavior: none; }
 .sk-over p { margin: 0; color: #5E584B; font-weight: 700; line-height: 1.4; }
 .sk-over .big { font-size: 40px; font-weight: 900; color: #23262F; }
 .room .stage { pointer-events: none; } .room .stage button { pointer-events: auto; }
-.screen-skate.night .sk-hud { color: #F3EEDF; }
+.screen-skate.night .sk-hud, .screen-stack.night .sk-hud { color: #F3EEDF; }
 
 /* ---------- food ---------- */
 .foodhead { display: flex; align-items: center; gap: 14px; padding: 10px 16px 10px 6px; border-radius: 24px; background: var(--room-2); border: 1px solid var(--line); text-align: left; font: inherit; color: var(--ink); min-height: 112px; overflow: hidden; }

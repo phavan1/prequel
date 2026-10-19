@@ -6,7 +6,7 @@ const { chromium } = require('playwright'); const fs = require('fs'); const path
 const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';
 const SAMPLE = path.join(__dirname, 'sample-backup.json');
 const OUT = process.env.SHOTS || path.join(__dirname, 'shots'); fs.mkdirSync(OUT, { recursive: true });
-const ROUTES = ['home', 'weather', 'move', 'food', 'rest', 'wins', 'mind', 'letters', 'days', 'me', 'sky', 'quilt', 'skate', 'settings', 'share'];
+const ROUTES = ['home', 'weather', 'move', 'food', 'rest', 'wins', 'mind', 'letters', 'days', 'me', 'sky', 'quilt', 'skate', 'keepup', 'stack', 'settings', 'share'];
 const results = []; const ok = (name, pass, note = '') => { results.push([pass ? 'PASS' : 'FAIL', name, note]); };
 const strip = s => { const c = JSON.parse(JSON.stringify(s)); delete c.exported; return c; };
 function diff(a, b, p = '', out = []) {

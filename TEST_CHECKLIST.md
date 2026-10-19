@@ -32,7 +32,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. R
   - Quilt from Rest → Rest; Quilt from Me → Me; Quilt from Home → Home
   - Sky from Me → Me; Sky from Home → Home
   - Share from a Quilt → back to that month's quilt
-- [ ] [Claude] The bottom tab bar's five tabs go to the right pages. (Known, not yet fixed: Food, Rest, Weather, the Jar and Quilt always highlight Home, so Quilt opened from Me or Rest still lights up Home. See HANDOVER section 8, issue 2.)
+- [ ] [Claude] The bottom tab bar's five tabs go to the right pages. (v56: a page opened from another tab keeps that tab lit: Quilt from Me lights Me; Food from Days lights Days and Back goes to Days.)
 - [ ] [Claude] The Me gear opens Settings, and its back goes to Me.
 - [ ] [iPhone] Swiping back with the iPhone gesture behaves sensibly.
 
@@ -189,6 +189,8 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v56) Keep it up: sliding the pillow follows your finger without the page scrolling or bouncing; it feels fast but fair; your own emoji from the emoji keyboard works.
+- [ ] (v56) Stack the stars: a tap drops the star straight away; the climb past the clouds and up to the moon looks right; the sound switch makes little blips (and the silent switch on the side of the iPhone mutes them).
 - [ ] "Match my phone" follows the iPhone's dark mode.
 - [ ] Coming back after 4+ hours (or the first open after 5am) shows the welcome screen.
 

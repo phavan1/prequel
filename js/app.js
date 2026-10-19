@@ -13,11 +13,13 @@ import * as me from './screens/me.js';
 import * as sky from './screens/sky.js';
 import * as quilt from './screens/quilt.js';
 import * as skate from './screens/skate.js';
+import * as keepup from './screens/keepup.js';
+import * as stack from './screens/stack.js';
 import * as settings from './screens/settings.js';
 import * as share from './screens/share.js';
 import { closeSheet, setLogDate, esc, reduceMotion } from './ui.js';
 
-const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, settings, share };
+const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, keepup, stack, settings, share };
 let root = document.getElementById('app');
 let current = null;
 

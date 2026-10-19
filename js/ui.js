@@ -114,8 +114,14 @@ const NAV = [
   ['mind', 'Mind', '<path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4"/>'],
   ['me', 'Me', '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>']
 ];
+// where this page was opened from (?from=), so the tab bar and back button follow you (v56)
+function hashPage() { const [path, q] = location.hash.replace(/^#\/?/, '').split('?'); return { page: path.split('/')[0] || 'home', from: new URLSearchParams(q || '').get('from') }; }
 export function nav(active) {
+  const { page, from } = hashPage();
+  if (!NAV.some(n => n[0] === page) && NAV.some(n => n[0] === from)) active = from; // a page under a tab lights the tab you came from
   return '<nav class="tabbar" aria-label="Main">' + NAV.map(n => '<a href="#/' + n[0] + '"' + (n[0] === active ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + n[2] + '</svg>' + n[1] + '</a>').join('') + '</nav>';
 }
 export const FROM = { me: ['#/me', 'Me'], home: ['#/home', 'Home'], rest: ['#/rest', 'Rest'], share: ['#/share', 'Share'], days: ['#/days', 'Days'] };
-export function backLink(href = '#/home', label = 'Home') { return '<a class="back" href="' + href + '">‹ ' + esc(label) + '</a>'; }
+export function backLink(href, label) {
+  if (!href) { const f = FROM[hashPage().from]; [href, label] = f || ['#/home', 'Home']; }
+  return '<a class="back" href="' + href + '">‹ ' + esc(label) + '</a>'; }

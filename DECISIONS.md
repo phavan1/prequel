@@ -247,7 +247,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | A whole-app soft-day look | Earlier | Offered, no answer |
 | A one-time "You've already filled N jars!" moment | Jar work | Offered |
 | Light motion lines on dark share cards | v23 | Offered |
-| Fix the bottom tab bar so it highlights the section you came from (mainly Quilt, opened from Me and Rest; see HANDOVER section 8, issue 2) | Found during this handover; described more accurately 14 Oct 2026 | Not discussed yet |
+| Fix the bottom tab bar so it highlights the section you came from (mainly Quilt, opened from Me and Rest; see HANDOVER section 8, issue 2) | Found during this handover; described more accurately 14 Oct 2026 | **Done in v56** (option A: follow where you came from) |
 | A pin on usuals, so a favourite always stays in the top five | v37 discussion | Offered; not answered, so not built |
 | Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
@@ -266,6 +266,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
+- v56: two more soft-day games (a friend suggested Instagram's emoji game): **Keep it up** at real game speed (Phavan: "it's a game"), and **Stack the stars** (chosen over Star toss, Echo tape, Paper plane and Pour the tea), which speeds up slowly then settles. Both keep only your own best, never show a zero, sound off by default. Playing against friends (a "Beat my score" card) left for later. The tab bar follows `?from=` (option A, not "light nothing").
 - v55: the year card's picture is him lying back on the floor with his Walkman (Phavan disliked the walking one); it sits beside the year rather than top right.
 - v53: a start-up safety net instead of a blank page (never opens with empty data; Fix and reopen clears app files, never data); the search box stays in view; the On repeat picture; a smaller soundtrack on My month.
 - v52: song search falls back to Deezer (Apple's didn't answer on iPhones); iPhone-safe previews; the soundtrack always on My month.

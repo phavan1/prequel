@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 56, date: '2026-10-19', items: [
+    'Two new games on a soft day, next to Skate home. Stack the stars: tap to drop each star and build a tower up past the clouds to the moon. Keep it up: slide the pillow to keep your emoji in the air (pick any emoji), and it gets faster with every bounce.',
+    'The bottom bar now remembers where you came from. Open your quilt from Me, and Me stays lit. Open food from Days, and Back takes you to Days.'
+  ] },
   { v: 55, date: '2026-10-19', items: [
     'A new picture on the My year in songs card: he\'s lying back on the floor with his Walkman, lost in a song.'
   ] },
