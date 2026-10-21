@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 57, date: '2026-10-21', items: [
+    'In the gym, "Last time" now comes from the workouts you actually saved, with every set, like "10kg × 12, 10kg × 10". Fix an old workout in Days and it updates here too.',
+    'The first set of each exercise starts empty, with last time showing faintly as a hint. Tap Same again to use it, or type what you lifted. Nothing gets saved that you didn\'t choose.',
+    'Your body weight can be logged from Move now as well as Food. It\'s the same log.'
+  ] },
   { v: 56, date: '2026-10-19', items: [
     'Two new games on a soft day, next to Skate home. Stack the stars: tap to drop each star and build a tower up past the clouds to the moon. Keep it up: slide the pillow to keep your emoji in the air (pick any emoji), and it gets faster with every bounce.',
     'The bottom bar now remembers where you came from. Open your quilt from Me, and Me stays lit. Open food from Days, and Back takes you to Days.'

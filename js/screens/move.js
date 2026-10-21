@@ -112,10 +112,30 @@ const top = range => { const m = /(\d+)-(\d+)/.exec(range); return m ? Number(m[
 const baseSets = it => Number(String(it[1]).split('-')[0]);
 const maxSets = it => Number(String(it[1]).split('-').pop());
 const unitOf = k => get().units[k] || (k === 'legpress' ? 'plate' : 'kg');
+// "Last time" for one exercise (v57): read from your saved workouts, so fixing an old workout in Days fixes it here too.
+// The newest session on or before this workout's day that has it (a swap matches by what you swapped to).
+function lastTime(i) {
+  const a = act(), k = a.items[i][0], sw = a.swap[i] || null;
+  const list = get().sessions.filter(s => s.date <= a.date && Array.isArray(s.exercises))
+    .sort((x, y) => x.date.localeCompare(y.date) || (Number(x.ts) || 0) - (Number(y.ts) || 0));
+  for (let n = list.length - 1; n >= 0; n--) {
+    const x = list[n].exercises.find(y => (sw ? y.swap === sw : y.key === k && !y.swap) && (y.sets || []).length);
+    if (x) return { date: list[n].date, sets: x.sets };
+  }
+  return null;
+}
+function lastWords(i) {
+  const L = lastTime(i), k = act().items[i][0], e = EX()[k] || {};
+  if (!L) return '';
+  const sets = L.sets.map(x => fmtSet(x, e, k));
+  return sets.join(', ') + ' (' + prettyDate(L.date, { weekday: 'short', day: 'numeric', month: 'short' }) + ')';
+}
+const hello = i => { const w = lastWords(i); return w ? 'Last time: ' + w + '. Same again?' : 'First time with this one. Go easy.'; };
+// a set starts from the set you just did; the first set of an exercise starts empty (v57), with last time as a hint
 function prefill() {
   const a = act(); if (!a) return;
   const k = item()[0], L = a.log[a.i] || [];
-  const src = L.length ? L[L.length - 1] : (get().lifts[k] || { a: '', b: '' });
+  const src = L.length ? L[L.length - 1] : { a: '', b: '' };
   A = src.a || ''; B = src.b || ''; field = 'a'; fresh = true; edit = -1;
   if ((EX()[k] || {}).t === 'bw') { A = 'bw'; field = 'b'; }
 }
@@ -123,7 +143,7 @@ function startWorkout(id) {
   const base = byId(id); if (!base) return;
   get().active = { id: base.id, n: base.n, items: base.items.map(x => x.slice()), i: 0, log: {}, swap: {}, hinted: {}, light, date: logDate(), started: Date.now(), lastAt: 0 };
   save(); view = 'wk'; prefill();
-  say = id === 'min20' ? 'Three exercises. Then we decide together.' : id === 'rec' ? 'Gentle today. Nothing to prove.' : 'Let\'s go. ' + nameOf(0) + ' first.';
+  say = id === 'min20' ? 'Three exercises. Then we decide together.' : id === 'rec' ? 'Gentle today. Nothing to prove.' : 'Let\'s go. ' + nameOf(0) + ' first.' + (lastWords(0) ? ' Last time: ' + lastWords(0) + '.' : '');
   render(); window.scrollTo(0, 0);
 }
 const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
@@ -153,16 +173,19 @@ function renderWk() {
   const setsLabel = String(it[1]) === '1' ? '' : (baseSets(it) === maxSets(it) ? baseSets(it) + ' sets' : '2 sets + opt. 3rd');
   const restTxt = e.rest ? 'rest ' + REST_GUIDE[e.rest] : '';
   const one = e.t !== 'wr';
+  // an empty box on the first set shows last time's first set, faintly; nothing is saved until you type it or tap Same again (v57)
+  const lt = !(a.log[a.i] || []).length && edit < 0 ? lastTime(a.i) : null, g0 = lt && lt.sets[0];
+  const ghost = (v, f) => v !== '' || !g0 || g0[f] === '' || g0[f] == null ? '' : '<span class="v ghost">last ' + esc(f === 'a' ? (SPECIAL[g0.a] ? SPECIAL[g0.a].toLowerCase() : g0.a) : g0.b) + '</span>';
   let fields;
   if (e.t === 'bw') {
-    fields = '<div class="fields one"><button type="button" class="field" data-f="b" aria-pressed="true"><span class="l">REPS · BODY WEIGHT' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(B) + '</span></button></div>';
+    fields = '<div class="fields one"><button type="button" class="field" data-f="b" aria-pressed="true"><span class="l">REPS · BODY WEIGHT' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(B) + '</span>' + ghost(B, 'b') + '</button></div>';
   } else if (one) {
     fields = '<div class="fields one"><button type="button" class="field" data-f="a" aria-pressed="true"><span class="l">' + (e.t === 'hold' ? 'SECONDS' : 'MINUTES') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(A) + '</span></button></div>';
   } else {
     const u = unitOf(k);
     fields = '<div class="fields">' +
-      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : 'WEIGHT · KG') + (e.m ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">kg</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + (SPECIAL[A] ? ' word' : '') + '">' + esc(SPECIAL[A] || A) + '</span>' + (SPECIAL[A] ? '' : u === 'kg' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
-      '<button type="button" class="field" data-f="b" aria-pressed="' + (field === 'b') + '"><span class="l">REPS' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh && field === 'b' ? ' fresh' : '') + '">' + esc(B) + '</span></button></div>' +
+      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : 'WEIGHT · KG') + (e.m ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">kg</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + (SPECIAL[A] ? ' word' : '') + '">' + esc(SPECIAL[A] || A) + '</span>' + ghost(A, 'a') + (SPECIAL[A] ? '' : u === 'kg' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
+      '<button type="button" class="field" data-f="b" aria-pressed="' + (field === 'b') + '"><span class="l">REPS' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh && field === 'b' ? ' fresh' : '') + '">' + esc(B) + '</span>' + ghost(B, 'b') + '</button></div>' +
       // when the weight isn't a number
       '<div class="wsp">' + Object.keys(SPECIAL).map(v => '<button type="button" data-wsp="' + v + '" aria-pressed="' + (A === v) + '">' + SPECIAL[v] + '</button>').join('') + '</div>';
   }
@@ -279,13 +302,13 @@ function onClick(e) {
     return;
   }
   if (t.closest('[data-finish]')) { finish(); return; }
-  if ((b = t.closest('[data-ex]'))) { a.i = Number(b.dataset.ex); save(); prefill(); const k = item()[0], last = get().lifts[k]; say = (a.log[a.i] || []).length ? 'Back to ' + nameOf(a.i).toLowerCase() + '.' : last ? 'Last time: ' + fmtSet(last, EX()[k], k) + '. Same again?' : 'First time with this one. Go easy.'; renderWk(); return; }
+  if ((b = t.closest('[data-ex]'))) { a.i = Number(b.dataset.ex); save(); prefill(); say = (a.log[a.i] || []).length ? 'Back to ' + nameOf(a.i).toLowerCase() + '.' : hello(a.i); renderWk(); return; }
   if (t.closest('[data-addex]')) { openAddEx(); return; }
   if (t.closest('[data-busy]')) { openBusy(); return; }
   if (t.closest('[data-exmenu]')) { openExMenu(); return; }
   if ((b = t.closest('[data-wsp]'))) { A = b.dataset.wsp; field = 'b'; fresh = true; renderWk(); return; }
   if (t.closest('[data-unit]')) { const k = item()[0]; get().units[k] = unitOf(k) === 'kg' ? 'plate' : 'kg'; save(); A = ''; fresh = true; field = 'a'; renderWk(); return; }
-  if ((b = t.closest('[data-n]'))) { const v = Math.max(0, (parseFloat(A) || 0) + Number(b.dataset.n)); A = String(Math.round(v * 100) / 100); fresh = false; field = 'a'; renderWk(); return; }
+  if ((b = t.closest('[data-n]'))) { const g = A === '' && !(a.log[a.i] || []).length ? ((lastTime(a.i) || { sets: [] }).sets[0] || {}) : {}; const v = Math.max(0, (parseFloat(A) || parseFloat(g.a) || 0) + Number(b.dataset.n)); A = String(Math.round(v * 100) / 100); fresh = false; field = 'a'; renderWk(); return; }
   if ((b = t.closest('[data-f]'))) { field = b.dataset.f; fresh = true; renderWk(); return; }
   if (t.closest('[data-rm]')) { a.log[a.i].splice(edit, 1); say = 'Gone. No harm done.'; save(); prefill(); renderWk(); return; }
   if ((b = t.closest('[data-set]'))) {
@@ -296,9 +319,9 @@ function onClick(e) {
   if (t.closest('[data-next]')) { const one = EX()[item()[0]].t !== 'wr'; if (!one && field === 'a') { field = 'b'; fresh = true; renderWk(); } else commit(); return; }
   if (t.closest('[data-same]')) {
     if (edit >= 0) { prefill(); say = 'Left it as it was.'; renderWk(); return; }
-    const L = a.log[a.i] || [], k = item()[0];
-    const src = L.length ? L[L.length - 1] : get().lifts[k];
-    if (!src) { toast('Log your first set, then this repeats it'); return; }
+    const L = a.log[a.i] || [], last = lastTime(a.i);
+    const src = L.length ? L[L.length - 1] : last && last.sets[0]; // first set: the first set from last time
+    if (!src) { toast('Type your first set, then this repeats it'); return; }
     A = src.a; B = src.b; commit(); return;
   }
 }

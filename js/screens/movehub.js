@@ -4,6 +4,8 @@ import { get, save, uid } from '../store.js';
 import { esc, him, prettyDate, dateChip, logDate, openSheet, closeSheet, toast } from '../ui.js';
 import { CATALOG, FEELS_MOVE, MINS, actDef, picked, logsOf, measures, logActivity, updateActivity, removeEntry, summary } from '../activities.js';
 import { count, unitOf, checkFinished, openEditGoal, ensureGoals } from '../goals.js';
+import { weights } from '../nutrition.js';
+import { weightSheet } from '../weight.js';
 
 // the milestone an activity has right now (gym's old "road to 100" is a sessions goal, so it counts too)
 export function milestoneOf(id) {
@@ -32,7 +34,7 @@ export function hubHtml(lightsHtml) {
     '<h1>How\'s the body?</h1>' + lightsHtml +
     '<div class="lbl">What did you get up to?</div>' +
     '<div class="acttiles">' + order().map(id => { const d = actDef(id); return '<button type="button" class="acttile" data-act="' + esc(id) + '"><span class="emo" aria-hidden="true">' + d.e + '</span><b>' + esc(d.n) + '</b><small>' + esc(tileSub(id)) + '</small></button>'; }).join('') + '</div>' +
-    '<button type="button" class="rowlink" data-actsetup style="width:100%"><span>Your activities</span><b>›</b></button>' +
+    (() => { const w = weights().slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts)[0]; return '<div class="grid2"><button type="button" class="rowlink" data-actsetup><span>Your activities</span><b>›</b></button><button type="button" class="rowlink" data-weight><span>Weight</span><b>' + (w ? w.kg + ' kg ›' : '+') + '</b></button></div>'; })() + // body weight, same log as Food (v57)
     (recent.length ? '<button type="button" class="lately" data-lately><b>Lately</b> ' + recent.map(r => { const w = prettyDate(r.date); return esc(r.n) + ' ' + esc(/^(Today|Yesterday)$/.test(w) ? w.toLowerCase() : w); }).join(' · ') + ' ›</button>' : '');
 }
 const timerText = () => { const t = get().actTimer; if (!t) return ''; const m = Math.floor((Date.now() - t.start) / 60000); return m < 1 ? 'Just started' : (m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min' : m + ' min') + ' so far'; };
@@ -192,6 +194,7 @@ export function hubClick(e, root, rerender, openGym, openSession) {
     st.actTimer = null; save(); rerender(); return true;
   }
   if (t.closest('[data-lately]')) { latelySheet(rerender, openSession); return true; }
+  if (t.closest('[data-weight]')) { weightSheet(rerender); return true; }
   return false;
 }
 const customDraft = {};
