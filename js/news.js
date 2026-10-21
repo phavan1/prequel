@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 58, date: '2026-10-21', items: [
+    'Your weight is one a day for each place (Gym, Hospital, Other). Saving again on the same day changes that day\'s number instead of adding another.',
+    'A little more breathing room above "Last time" in the gym.'
+  ] },
   { v: 57, date: '2026-10-21', items: [
     'In the gym, "Last time" now comes from the workouts you actually saved, with every set, like "10kg × 12, 10kg × 10". Fix an old workout in Days and it updates here too.',
     'The first set of each exercise starts empty, with last time showing faintly as a hint. Tap Same again to use it, or type what you lifted. Nothing gets saved that you didn\'t choose.',

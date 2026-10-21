@@ -178,7 +178,7 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .exs .ord.done { background: var(--green); color: #FFFFFF; }
 .exs button[aria-pressed="true"] .ord { border-color: #9FE0B8; color: #9FE0B8; }
 .exs button[aria-pressed="true"] .ord.done { background: #9FE0B8; color: #23262F; }
-.lastorder { margin: -2px 0 0; padding: 0 16px; font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); }
+.lastorder { margin: 10px 0 2px; padding: 0 16px; font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); }
 .lastorder b { color: var(--ink); font-weight: 800; }
 /* your sessions (v42) */
 .sesslist { display: flex; flex-direction: column; gap: 8px; }

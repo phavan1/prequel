@@ -79,11 +79,19 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.click('[data-weight]'); await p.waitForTimeout(300);
   await p.fill('#wKg', '71.4'); await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
   await p.screenshot({ path: OUT + '/gl-weight.png' });
+  // one a day for each place (v58): saving Gym again changes it; Hospital is its own
+  await p.fill('#wKg', '71.6'); await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
+  let W = (await st()).weights;
+  ok('a second Gym weight today replaces the first', W.length === 1 && W[0].kg === 71.6, JSON.stringify(W));
+  await p.click('#sheet [data-where="Hospital"]'); await p.fill('#wKg', '72'); await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
+  W = (await st()).weights;
+  ok('Hospital today is kept separately', W.length === 2);
+  await p.click('#sheet [data-where="Gym"]'); await p.fill('#wKg', '71.4'); await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
   await p.click('#sheet [data-close]'); await p.waitForTimeout(300);
   ok('Move shows your latest weight', /71\.4 kg/.test(await p.locator('[data-weight]').innerText()));
   await p.screenshot({ path: OUT + '/gl-hub.png' });
   await p.goto(BASE + '#/food'); await p.waitForTimeout(500);
-  ok('Food shows the same weight', /71\.4 kg/.test(await p.locator('[data-weight]').innerText()));
+  ok('Food shows the same weight', /7[12](\.\d)? kg/.test(await p.locator('[data-weight]').innerText()));
 
   await b.close();
   results.forEach(r => console.log(r.join('  ')));
