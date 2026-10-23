@@ -12,6 +12,9 @@ const TYPES = [['wr', 'Weight × reps'], ['bw', 'Body weight × reps'], ['hold',
 const defRange = t => t === 'hold' ? '20-60s' : t === 'mins' ? '10 min' : '8-12';
 // a weight that isn't a number (v43): you didn't note it, it was just the bar, or your own body weight
 export const SPECIAL = { nn: 'Not noted', bar: 'Bar only', bw: 'Body weight' };
+// v59: "Bar +": a bar you don't know the weight of, plus the kg you loaded on EACH side. Saved as "b+2.5".
+export const isBP = a => String(a == null ? '' : a).startsWith('b+');
+export const bpKg = a => isBP(a) ? String(a).slice(2) : '';
 
 // ---------- library: playbook + your own additions ----------
 function EX() {
@@ -137,6 +140,7 @@ function prefill() {
   const k = item()[0], L = a.log[a.i] || [];
   const src = L.length ? L[L.length - 1] : { a: '', b: '' };
   A = src.a || ''; B = src.b || ''; field = 'a'; fresh = true; edit = -1;
+  if (!L.length) { const g = (lastTime(a.i) || { sets: [] }).sets[0]; if (g && isBP(g.a)) A = 'b+'; } // last time was Bar +: open in Bar +, still empty
   if ((EX()[k] || {}).t === 'bw') { A = 'bw'; field = 'b'; }
 }
 function startWorkout(id) {
@@ -157,6 +161,7 @@ function fmtSet(x, e, k) {
   if (e.t === 'hold') return x.a + ' s';
   if (e.t === 'mins') return x.a + ' min';
   if (SPECIAL[x.a]) return SPECIAL[x.a] + ' × ' + x.b + (e.each ? ' each' : '');
+  if (isBP(x.a)) return 'bar + ' + bpKg(x.a) + 'kg each side × ' + x.b;
   return (unitOf(k) === 'plate' ? 'P' + x.a : x.a + 'kg') + ' × ' + x.b + (e.each ? ' each' : '');
 }
 function setsHtml() {
@@ -175,7 +180,7 @@ function renderWk() {
   const one = e.t !== 'wr';
   // an empty box on the first set shows last time's first set, faintly; nothing is saved until you type it or tap Same again (v57)
   const lt = !(a.log[a.i] || []).length && edit < 0 ? lastTime(a.i) : null, g0 = lt && lt.sets[0];
-  const ghost = (v, f) => v !== '' || !g0 || g0[f] === '' || g0[f] == null ? '' : '<span class="v ghost">last ' + esc(f === 'a' ? (SPECIAL[g0.a] ? SPECIAL[g0.a].toLowerCase() : g0.a) : g0.b) + '</span>';
+  const ghost = (v, f) => (v !== '' && !(f === 'a' && v === 'b+')) || !g0 || g0[f] === '' || g0[f] == null ? '' : '<span class="v ghost">last ' + esc(f === 'a' ? (SPECIAL[g0.a] ? SPECIAL[g0.a].toLowerCase() : isBP(g0.a) ? (v === 'b+' ? bpKg(g0.a) : 'bar+' + bpKg(g0.a)) : g0.a) : g0.b) + '</span>';
   let fields;
   if (e.t === 'bw') {
     fields = '<div class="fields one"><button type="button" class="field" data-f="b" aria-pressed="true"><span class="l">REPS · BODY WEIGHT' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(B) + '</span>' + ghost(B, 'b') + '</button></div>';
@@ -184,10 +189,11 @@ function renderWk() {
   } else {
     const u = unitOf(k);
     fields = '<div class="fields">' +
-      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : 'WEIGHT · KG') + (e.m ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">kg</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + (SPECIAL[A] ? ' word' : '') + '">' + esc(SPECIAL[A] || A) + '</span>' + ghost(A, 'a') + (SPECIAL[A] ? '' : u === 'kg' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
+      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : isBP(A) ? 'BAR + · KG EACH SIDE' : 'WEIGHT · KG') + (e.m ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">kg</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + (SPECIAL[A] ? ' word' : '') + '">' + (isBP(A) ? esc(bpKg(A)) : esc(SPECIAL[A] || A)) + '</span>' + ghost(A, 'a') + (SPECIAL[A] ? '' : isBP(A) ? '<span class="nudge"><span data-n="-1.25">−1.25</span><span data-n="1.25">+1.25</span></span>' : u === 'kg' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
       '<button type="button" class="field" data-f="b" aria-pressed="' + (field === 'b') + '"><span class="l">REPS' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh && field === 'b' ? ' fresh' : '') + '">' + esc(B) + '</span>' + ghost(B, 'b') + '</button></div>' +
       // when the weight isn't a number
-      '<div class="wsp">' + Object.keys(SPECIAL).map(v => '<button type="button" data-wsp="' + v + '" aria-pressed="' + (A === v) + '">' + SPECIAL[v] + '</button>').join('') + '</div>';
+      '<div class="wsp">' + Object.keys(SPECIAL).map(v => '<button type="button" data-wsp="' + v + '" aria-pressed="' + (A === v) + '">' + SPECIAL[v] + '</button>').join('') +
+        (u === 'kg' && (!e.m || a.swap[a.i]) ? '<button type="button" data-bp="1" aria-pressed="' + isBP(A) + '">Bar +</button>' : '') + '</div>'; // Bar + is for bars: never on a machine (unless you swapped it for something else)
   }
   const nextLabel = (!one && field === 'a') ? 'Next →' : (edit >= 0 ? 'Save set ' + (edit + 1) + ' ✓' : 'Log ✓');
   const banner = a.id === 'min20' ? '<div class="banner min">If you feel better after these three, continue. If not, leave. The session still counts.</div>' : (a.light === 'yellow' ? '<div class="banner yellow">Yellow day · 2 sets is plenty, optional extras skipped.</div>' : '');
@@ -216,7 +222,13 @@ function tick() {
   el.textContent = 'Since last set ' + Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
 }
 function press(kk) {
-  const e = EX()[item()[0]], f = field; let v = fresh || (f === 'a' && SPECIAL[A]) ? '' : (f === 'a' ? A : B);
+  const e = EX()[item()[0]], f = field;
+  if (f === 'a' && isBP(A)) { // the kg on each side of the bar
+    let v = bpKg(A);
+    if (kk === 'del') v = v.slice(0, -1); else if (kk === '.') { if (!v.includes('.')) v = (v || '0') + '.'; } else if (v.length < 4) v = v === '0' ? kk : v + kk;
+    A = 'b+' + v; fresh = false; renderWk(); return;
+  }
+  let v = fresh || (f === 'a' && SPECIAL[A]) ? '' : (f === 'a' ? A : B);
   if (kk === 'del') v = (fresh ? (f === 'a' ? A : B) : v).slice(0, -1);
   else if (kk === '.') { if (f === 'a' && e.t === 'wr' && unitOf(item()[0]) === 'kg' && !v.includes('.')) v = (v || '0') + '.'; else return; }
   else if (v.length < (f === 'a' ? 5 : 3)) v = v === '0' ? kk : v + kk;
@@ -227,6 +239,7 @@ function commit() {
   const a = act(), it = item(), e = EX()[it[0]];
   if (e.t === 'bw') A = 'bw';
   const reps = e.t === 'wr' || e.t === 'bw';
+  if (A === 'b+') { field = 'a'; renderWk(); toast('Type the kg on each side of the bar'); return; }
   if (!A || (reps && !B)) { toast(e.t === 'wr' ? 'Type the weight and reps first' : e.t === 'bw' ? 'Type the reps first' : 'Type a number first'); return; }
   const set = { a: A, b: reps ? B : '' };
   const L = (a.log[a.i] = a.log[a.i] || []);
@@ -307,7 +320,9 @@ function onClick(e) {
   if (t.closest('[data-busy]')) { openBusy(); return; }
   if (t.closest('[data-exmenu]')) { openExMenu(); return; }
   if ((b = t.closest('[data-wsp]'))) { A = b.dataset.wsp; field = 'b'; fresh = true; renderWk(); return; }
+  if (t.closest('[data-bp]')) { A = isBP(A) ? '' : 'b+'; field = 'a'; fresh = false; renderWk(); return; }
   if (t.closest('[data-unit]')) { const k = item()[0]; get().units[k] = unitOf(k) === 'kg' ? 'plate' : 'kg'; save(); A = ''; fresh = true; field = 'a'; renderWk(); return; }
+  if ((b = t.closest('[data-n]')) && isBP(A)) { const v = Math.max(0, (parseFloat(bpKg(A)) || 0) + Number(b.dataset.n)); A = 'b+' + Math.round(v * 100) / 100; fresh = false; field = 'a'; renderWk(); return; }
   if ((b = t.closest('[data-n]'))) { const g = A === '' && !(a.log[a.i] || []).length ? ((lastTime(a.i) || { sets: [] }).sets[0] || {}) : {}; const v = Math.max(0, (parseFloat(A) || parseFloat(g.a) || 0) + Number(b.dataset.n)); A = String(Math.round(v * 100) / 100); fresh = false; field = 'a'; renderWk(); return; }
   if ((b = t.closest('[data-f]'))) { field = b.dataset.f; fresh = true; renderWk(); return; }
   if (t.closest('[data-rm]')) { a.log[a.i].splice(edit, 1); say = 'Gone. No harm done.'; save(); prefill(); renderWk(); return; }
@@ -316,7 +331,12 @@ function onClick(e) {
     if (edit === j) prefill(); else { const x = a.log[a.i][j]; edit = j; A = x.a; B = x.b; field = 'a'; fresh = true; say = 'Fixing set ' + (j + 1) + '. Type the right numbers.'; }
     renderWk(); return;
   }
-  if (t.closest('[data-next]')) { const one = EX()[item()[0]].t !== 'wr'; if (!one && field === 'a') { field = 'b'; fresh = true; renderWk(); } else commit(); return; }
+  if (t.closest('[data-next]')) {
+    // the first set's faint "last …" hint: Next or Log on an empty box takes it, as if you'd typed it (v59, Phavan)
+    const ex = EX()[item()[0]], g0 = !(a.log[a.i] || []).length && edit < 0 ? ((lastTime(a.i) || { sets: [] }).sets[0] || null) : null;
+    if (g0) { if (field === 'a' && (A === '' || (A === 'b+' && isBP(g0.a))) && ex.t !== 'bw' && g0.a !== '' && g0.a != null) A = String(g0.a); if ((field === 'b' || ex.t === 'bw') && B === '' && ex.t !== 'hold' && ex.t !== 'mins' && g0.b !== '' && g0.b != null) B = String(g0.b); }
+    const one = ex.t !== 'wr'; if (!one && field === 'a') { field = 'b'; fresh = true; renderWk(); } else commit(); return;
+  }
   if (t.closest('[data-same]')) {
     if (edit >= 0) { prefill(); say = 'Left it as it was.'; renderWk(); return; }
     const L = a.log[a.i] || [], last = lastTime(a.i);
@@ -522,6 +542,7 @@ function setWords(x, e, k) {
   if (t === 'mins') return x.a + ' min';
   if (x.a === 'nn') return 'weight not noted × ' + x.b + (e && e.each ? ' each side' : '');
   if (x.a === 'bar') return 'bar only × ' + x.b + (e && e.each ? ' each side' : '');
+  if (isBP(x.a)) return 'bar + ' + bpKg(x.a) + ' kg each side × ' + x.b;
   if (x.a === 'bw' || (e && e.t === 'bw')) return 'body weight × ' + x.b + (e && e.each ? ' each side' : '');
   const w = unitOf(k) === 'plate' ? 'plate ' + x.a : (Number(x.a) ? x.a + ' kg' : 'body weight');
   return w + ' × ' + x.b + (e && e.each ? ' each side' : '');

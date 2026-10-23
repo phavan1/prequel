@@ -214,7 +214,7 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .field .v { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.1; min-height: 33px; }
 .field .v.fresh { color: #9A927F; }
 .field .v:empty:has(+ .ghost) { display: none; }
-.field .v.ghost { font-size: 22px; line-height: 33px; font-weight: 800; color: #B9B19E; font-style: italic; } /* last time, as a hint (v57) */
+.field .v.ghost { font-family: var(--font-hand); font-size: 27px; line-height: 33px; font-weight: 700; color: #ADA38C; letter-spacing: .01em; } /* last time, as a hint, in the app's handwriting (v59) */
 html[data-theme="dark"] .field .v.ghost { color: #7A6E60; }
 .field[aria-pressed="true"] .v::after { content: ""; display: inline-block; width: 2px; height: 24px; background: var(--blue); margin-left: 2px; vertical-align: -3px; animation: blink 1s steps(1) infinite; }
 .field[aria-pressed="true"] .v.ghost::after { content: none; }

@@ -41,20 +41,31 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.locator('[data-n="2.5"]').click(); await p.waitForTimeout(100);
   ok('+2.5 on the empty box starts from last time (12.5)', /12\.5/.test(await p.locator('.field[data-f="a"]').innerText()));
   await p.locator('[data-n="-2.5"]').click(); await key('del'); await key('del'); await key('del'); await key('del'); await p.waitForTimeout(100);
-  // tapping through without typing saves nothing
-  await p.click('[data-next]'); await p.click('[data-next]'); await p.waitForTimeout(200);
+  // Next then Log on the empty first set takes the faint "last" numbers (v59)
+  await p.click('[data-next]'); await p.waitForTimeout(100);
+  await p.screenshot({ path: OUT + '/gl-reps-hint.png' });
+  await p.click('[data-next]'); await p.waitForTimeout(200);
   let s = await st();
-  ok('Next, Next without typing saves no set', !(s.active.log[5] || []).length);
-  // Same again on the first set uses last time's first set
-  await p.click('[data-same]'); await p.waitForTimeout(200);
-  s = await st();
-  ok('Same again on set 1 = last time\'s set 1 (10 kg × 12)', JSON.stringify(s.active.log[5]) === JSON.stringify([{ a: '10', b: '12' }]), JSON.stringify(s.active.log[5]));
+  ok('Next, Log on the empty first set logs last time\'s set 1 (10 kg × 12)', JSON.stringify(s.active.log[5]) === JSON.stringify([{ a: '10', b: '12' }]), JSON.stringify(s.active.log[5]));
   const box2 = await p.locator('.field[data-f="a"]').innerText();
   ok('set 2 starts from the set you just did', /10/.test(box2) && !/last/.test(box2), box2.replace(/\n/g, ' '));
   // typing still works normally
   await key('1'); await key('0'); await p.click('[data-next]'); await key('9'); await p.click('[data-next]'); await p.waitForTimeout(200);
   s = await st();
   ok('typing a set works as before', s.active.log[5].length === 2 && s.active.log[5][1].a === '10' && s.active.log[5][1].b === '9');
+  // Bar +: a bar you don't know the weight of, plus kg on each side
+  ok('a machine (triceps pushdown) has no Bar +', await (async () => { await p.click('[data-ex="6"]'); await p.waitForTimeout(150); return await p.locator('[data-bp]').count() === 0; })());
+  await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().active.items.push(['lateral', '2', '12-15']); S.save(); });
+  await p.click('[data-ex="5"]'); await p.waitForTimeout(100); await p.click('[data-ex="7"]'); await p.waitForTimeout(200);
+  await p.click('[data-bp]'); await p.waitForTimeout(100);
+  ok('Bar + changes the box to "added · kg each side"', /BAR \+ · KG EACH SIDE/.test(await p.locator('.field[data-f="a"]').innerText()));
+  await key('2'); await key('.'); await key('5'); await p.locator('[data-n="1.25"]').click(); await p.locator('[data-n="-1.25"]').click();
+  await p.screenshot({ path: OUT + '/gl-barplus.png' });
+  await p.click('[data-next]'); await key('1'); await key('0'); await p.click('[data-next]'); await p.waitForTimeout(200);
+  s = await st();
+  ok('it saves as bar + 2.5 each side', JSON.stringify(s.active.log[7]) === JSON.stringify([{ a: 'b+2.5', b: '10' }]), JSON.stringify(s.active.log[7]));
+  ok('the set reads "bar + 2.5kg each side × 10"', /bar \+ 2\.5kg each side × 10/.test(await p.locator('#sets').innerText()));
+  await p.click('[data-ex="0"]'); await p.waitForTimeout(150);
   await p.screenshot({ path: OUT + '/gl-second.png' });
 
   // fixing an old workout fixes "Last time" (as Days → Fix this workout does)
@@ -72,8 +83,23 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.click('[data-ex="5"]'); await p.waitForTimeout(200);
   say = await p.locator('.say').innerText();
   ok('next time, it\'s the latest workout', /Last time: 10kg × 12, 10kg × 9 \(Today\)/.test(say), say);
+  await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().active.items.push(['lateral', '2', '12-15']); S.save(); });
+  await p.click('[data-ex="5"]'); await p.waitForTimeout(100); await p.click('[data-ex="7"]'); await p.waitForTimeout(150);
+  ok('Bar + shows in Last time and the hint', /bar \+ 2\.5kg each side × 10/.test(await p.locator('.say').innerText()) && /BAR \+ · KG EACH SIDE/.test(await p.locator('.field[data-f="a"]').innerText()) && /last 2\.5/.test(await p.locator('.field[data-f="a"]').innerText()));
+  await p.screenshot({ path: OUT + '/gl-barplus-next.png' });
+  await p.click('[data-next]'); await p.click('[data-next]'); await p.waitForTimeout(200);
+  ok('Next, Log there logs bar + 2.5 each side × 10 again', JSON.stringify((await st()).active.log[7]) === JSON.stringify([{ a: 'b+2.5', b: '10' }]));
+  await p.screenshot({ path: OUT + '/gl-barplus-next.png' });
   await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().active = null; S.save(); });
 
+  // fixing a workout in Days keeps Bar + (and shows it as "Bar + kg each side")
+  const sid = (await st()).sessions.slice(-1)[0].id;
+  await p.goto(BASE + '#/days'); await p.waitForTimeout(300);
+  await p.evaluate(async id => { const D = await import('./js/screens/days.js'); D.editSession(document.querySelector('main'), id, () => {}); }, sid); await p.waitForTimeout(300);
+  ok('Days shows Bar + with 2.5 each side', await p.locator('#sheet select option[value="b+"]:checked').count() === 1 && await p.locator('#sheet input[value="2.5"]').count() >= 1);
+  await p.screenshot({ path: OUT + '/gl-days-barplus.png' });
+  await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
+  ok('saving in Days keeps bar + 2.5', JSON.stringify((await st()).sessions.slice(-1)[0]).includes('"b+2.5"'));
   // the Weight button: the same log as Food
   await p.goto(BASE + '#/home'); await p.goto(BASE + '#/move'); await p.waitForTimeout(300);
   await p.click('[data-weight]'); await p.waitForTimeout(300);
