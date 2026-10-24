@@ -26,6 +26,7 @@ It has no streaks, no scores and no zeros. Everything stays on your phone.
 - Log one afterwards, or start a timer that keeps running even when the app is closed.
 - A full gym logger: playbook workouts, a quick session, real exercise order, "Last time" with every set from your last session, weights that can be "Not noted" or "Body weight", and sessions you can copy into any app.
 - Milestones you choose for yourself (sessions, hours, km, goals…), instead of fixed targets.
+- A Move report PDF for you, a doctor or a coach: days moved, gym exercises (first, latest and best), other activities and body weight.
 - "How's the body?" (Green, Yellow or Red) shapes the suggestions, and gently suggests Yellow after a rough night.
 
 **Food**

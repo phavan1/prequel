@@ -2,7 +2,8 @@
 import { get, today, addDays, parseKey, dateKey } from './store.js';
 import { esc, openSheet, closeSheet, toast, him, IOS, canShareFile, saveToDevice, SAVED_NOTE } from './ui.js';
 import { loadArt, fontsReady } from './cards.js';
-import { feelLabel } from './data.js';
+import { feelLabel, EXERCISES } from './data.js';
+import { actDef, summary } from './activities.js';
 import { NUTRIENTS, totalOf, sumDay, qtyLabel, myFoods } from './nutrition.js';
 import { Doc, PW, PH, M, INK, SOFT, LINE, CARD, BLUE, SUN, HAND, BODY, txt, rr, wrap, longDate, dayDate, shortDay, range, clock, dur, shareFile } from './pdf.js';
 
@@ -316,6 +317,141 @@ export async function foodReport(from, to, label) {
   return doc.finish('Food report ' + longDate(from) + ' to ' + longDate(to) + '.pdf', 'Food · ' + range(from, to));
 }
 
+// ---------- Move report (v61): for me, and clear enough for a doctor or a coach ----------
+// Plain words and tables, a calendar that reads without colour, and the gym as first / latest / best per exercise.
+// Highlights and notes stay private (left out on purpose).
+const MOVE_BODY = { green: 'Green (awake, normal)', yellow: 'Yellow (tired, a bit sore)', red: 'Red (unwell, faint, pain)' };
+function setText(z, k, st) {
+  const e = EXERCISES[k] || (st.customExercises || {})[k] || {}, t = e.t || (z.b === '' || z.b == null ? 'hold' : 'wr');
+  const reps = z.b !== '' && z.b != null ? ' × ' + z.b : '';
+  if (t === 'hold') return z.a + ' sec';
+  if (t === 'mins') return z.a + ' min';
+  const a = String(z.a);
+  if (a === 'nn') return 'weight not noted' + reps;
+  if (a === 'bar') return 'bar only' + reps;
+  if (a === 'bw' || t === 'bw') return 'body weight' + reps;
+  if (a.startsWith('b+')) return 'bar + ' + a.slice(2) + ' kg each side' + reps;
+  const unit = (st.units || {})[k] || (k === 'legpress' ? 'plate' : 'kg');
+  return (unit === 'plate' ? 'plate ' + a : a + ' kg') + reps;
+}
+// how heavy a set is, to find the top set: kg (or the kg on each side), then reps
+const setWeight = z => { const a = String(z.a); return a.startsWith('b+') ? Number(a.slice(2)) || 0 : Number(a) || 0; };
+const better = (x, y) => !y || setWeight(x) > setWeight(y) || (setWeight(x) === setWeight(y) && (Number(x.b) || 0) > (Number(y.b) || 0));
+const topSet = sets => sets.reduce((b, z) => better(z, b) ? z : b, null);
+
+export async function moveReport(from, to) {
+  const st = get(), art = await prep(['cheer']);
+  const name = st.settings.name;
+  const sessions = st.sessions.filter(x => x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date) || (Number(a.ts) || 0) - (Number(b.ts) || 0));
+  const acts = (st.activities || []).filter(x => x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
+  const all = days(from, to), nDays = all.length;
+  const doc = new Doc('Move report', range(from, to));
+  cover(doc, 'MOVE REPORT' + (name ? ' · ' + name.toUpperCase() : ''), 'How I\'ve moved', range(from, to), art.cheer);
+
+  // what happened on each day
+  const byDay = {}; all.forEach(d => { byDay[d] = { gym: [], acts: [] }; });
+  sessions.forEach(x => byDay[x.date].gym.push(x)); acts.forEach(x => byDay[x.date].acts.push(x));
+  const activeDays = all.filter(d => byDay[d].gym.length || byDay[d].acts.length);
+  const mins = acts.reduce((n, a) => n + (Number(a.mins) || 0), 0);
+
+  // at a glance
+  doc.heading('At a glance', 'the ' + nDays + ' days from ' + longDate(from) + ' to ' + longDate(to));
+  const tiles = [[activeDays.length + ' of ' + nDays, 'days I moved']];
+  if (sessions.length) tiles.push([sessions.length, sessions.length === 1 ? 'gym session' : 'gym sessions']);
+  if (acts.length) tiles.push([acts.length, acts.length === 1 ? 'other activity' : 'other activities']);
+  if (mins) tiles.push([dur(mins), 'active time, where I noted it']);
+  doc.tiles(tiles, { big: 46 });
+  const perWeek = Math.round(activeDays.length / nDays * 7 * 10) / 10;
+  if (activeDays.length) doc.para('That\'s about ' + perWeek + (perWeek === 1 ? ' day' : ' days') + ' a week.', '700 24px ' + BODY, INK);
+  // what I did
+  const types = {}; if (sessions.length) types.gym = sessions.length; acts.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; });
+  const did = Object.entries(types).sort((a, b) => b[1] - a[1]).map(([t, n]) => (t === 'gym' ? 'Gym' : actDef(t).n) + ' ' + plural(n, 'time', 'times'));
+  if (did.length) doc.para('What I did: ' + did.join(', ') + '.', '600 23px ' + BODY, INK);
+  // how my body felt: the check-in before the gym, and how each activity felt
+  const lights = {}; sessions.forEach(x => { if (x.light) lights[x.light] = (lights[x.light] || 0) + 1; });
+  const feels = {}; acts.forEach(a => { if (a.feel) feels[a.feel] = (feels[a.feel] || 0) + 1; });
+  if (Object.keys(lights).length) doc.para('How my body felt before the gym: ' + ['green', 'yellow', 'red'].filter(k => lights[k]).map(k => MOVE_BODY[k] + ' ' + plural(lights[k], 'time', 'times')).join(', ') + '.', '600 23px ' + BODY, INK);
+  if (Object.keys(feels).length) doc.para('How the other activities felt: ' + ['Easy', 'Good', 'Tough'].filter(k => feels[k]).map(k => k.toLowerCase() + ' ' + plural(feels[k], 'time', 'times')).join(', ') + '.', '600 23px ' + BODY, INK);
+
+  // body weight: every weigh-in in these dates, with where (different scales read differently)
+  const W = (st.weights || []).filter(w => w.date >= from && w.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
+  if (W.length) {
+    doc.heading('Body weight', W.length > 1 ? 'from ' + W[0].kg + ' kg to ' + W[W.length - 1].kg + ' kg' : '', 120 + W.length * 46);
+    doc.table([{ label: 'Day', w: 420 }, { label: 'Weight', w: 260 }, { label: 'Where', w: 368 }], W.map(w => ({ cells: [dayDate(w.date), w.kg + ' kg', w.where || ''] })), { boldFirst: true });
+  }
+
+  // the calendar: one square a day, with a letter for each thing done (a key underneath), so it reads without colour
+  const used = ['gym'].filter(() => sessions.length).concat([...new Set(acts.map(a => a.type))]);
+  const code = {}; const taken = new Set();
+  used.forEach(t => { const n = t === 'gym' ? 'Gym' : actDef(t).n; let c = n[0].toUpperCase(); if (taken.has(c)) c = n.slice(0, 2).replace(/^./, x => x.toUpperCase()); taken.add(c); code[t] = c; });
+  doc.heading('Day by day', 'a letter for each thing I did that day', 420);
+  {
+    const cols = 7, gap = 12, cw = (PW - 2 * M - gap * (cols - 1)) / cols, ch = 132;
+    for (let i = 0; i < all.length; i += cols) {
+      const g = doc.need(ch + gap);
+      all.slice(i, i + cols).forEach((d, j) => {
+        const x = M + j * (cw + gap), y = doc.y, it = byDay[d], on = it.gym.length || it.acts.length;
+        g.fillStyle = on ? '#E4ECFF' : CARD; rr(g, x, y, cw, ch, 18); g.fill(); g.strokeStyle = on ? BLUE : LINE; g.lineWidth = on ? 3 : 2; g.stroke();
+        txt(g, shortDay(d).split(',')[0], x + 14, y + 30, '800 18px ' + BODY, SOFT);
+        txt(g, String(parseKey(d).getDate()), x + cw - 14, y + 30, '900 22px ' + BODY, INK, 'right');
+        const cs = it.gym.map(() => code.gym).concat(it.acts.map(a => code[a.type]));
+        txt(g, cs.join(' '), x + 14, y + 82, '900 34px ' + BODY, BLUE, 'left', cw - 24);
+        const m = it.acts.reduce((n, a) => n + (Number(a.mins) || 0), 0); if (m) txt(g, dur(m), x + 14, y + 116, '700 17px ' + BODY, SOFT);
+      });
+      doc.y += ch + gap;
+    }
+    const g = doc.need(50); let cx = M;
+    used.forEach(t => { cx += chip(g, cx, doc.y, code[t] + ' = ' + (t === 'gym' ? 'Gym' : actDef(t).n), '#E4ECFF', INK) + 10; if (cx > PW - M - 220) { cx = M; doc.y += 44; } });
+    doc.y += 56;
+  }
+
+  // week by week: the dates in 7-day stretches from the first day (two rows for two weeks), never a zero
+  const weeks = []; for (let i = 0; i < all.length; i += 7) weeks.push(all.slice(i, i + 7));
+  if (weeks.length > 1) {
+    doc.heading('Week by week', 'each row is 7 days', 140 + weeks.length * 46);
+    doc.table([{ label: 'Dates', w: 330 }, { label: 'Days I moved', w: 190 }, { label: 'Gym', w: 150 }, { label: 'Other', w: 150 }, { label: 'Time noted', w: 228 }], weeks.map(ds => {
+      const act = ds.filter(d => byDay[d].gym.length || byDay[d].acts.length).length, gy = ds.reduce((n, d) => n + byDay[d].gym.length, 0), ot = ds.reduce((n, d) => n + byDay[d].acts.length, 0), mm = ds.reduce((n, d) => n + byDay[d].acts.reduce((a, x) => a + (Number(x.mins) || 0), 0), 0);
+      return { cells: [range(ds[0], ds[ds.length - 1]).replace(/, \d{4}$/, ''), act ? act + ' of ' + ds.length : 'a rest week', gy ? String(gy) : '–', ot ? String(ot) : '–', mm ? dur(mm) : '–'] };
+    }), { boldFirst: true });
+  }
+
+  // the gym: for each exercise, the first and latest top set in these dates, and the best one
+  const ex = {};
+  sessions.forEach(x => (x.exercises || []).forEach(e => {
+    if (!(e.sets || []).length) return;
+    const key = e.swap ? 'swap:' + e.swap : e.key, top = topSet(e.sets);
+    const r = ex[key] = ex[key] || { name: e.swap || e.name, k: e.key, n: 0, first: null, last: null, best: null, firstD: x.date, lastD: x.date };
+    r.n++; if (!r.first) { r.first = top; r.firstD = x.date; } r.last = top; r.lastD = x.date; if (better(top, r.best)) r.best = top;
+  }));
+  const rows = Object.values(ex).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  if (rows.length) {
+    doc.heading('The gym', 'the heaviest set each time; best = heaviest in these dates', 200);
+    doc.table([{ label: 'Exercise', w: 300 }, { label: 'Times', w: 100 }, { label: 'First', w: 216 }, { label: 'Latest', w: 216 }, { label: 'Best', w: 216 }],
+      rows.map(r => ({ cells: [r.name, String(r.n), setText(r.first, r.k, st), r.n > 1 ? setText(r.last, r.k, st) : 'same day', setText(r.best, r.k, st)] })), { boldFirst: true, fs: 19 });
+    doc.para('“First” and “latest” are the heaviest set on the first and the latest day I did that exercise in these dates.', '600 19px ' + BODY, SOFT);
+  } else if (sessions.length) doc.para('Gym sessions in these dates were logged without sets.', '600 22px ' + BODY, SOFT);
+
+  // other activities: totals per kind
+  const kinds = [...new Set(acts.map(a => a.type))];
+  if (kinds.length) {
+    doc.heading('Other activities', 'totals for these dates', 160);
+    doc.table([{ label: 'Activity', w: 300 }, { label: 'Times', w: 120 }, { label: 'Time noted', w: 200 }, { label: 'Totals', w: 428 }], kinds.map(t => {
+      const L = acts.filter(a => a.type === t), d = actDef(t), m = L.reduce((n, a) => n + (Number(a.mins) || 0), 0);
+      const tot = d.f.filter(f => f.num).map(f => [f, L.reduce((n, a) => n + (Number((a.f || {})[f.k]) || 0), 0)]).filter(x => x[1] > 0).map(([f, v]) => (Math.round(v * 10) / 10) + ' ' + f.u);
+      return { cells: [d.n, String(L.length), m ? dur(m) : '–', tot.join(', ')] };
+    }), { boldFirst: true });
+  }
+
+  // every session, in order (no highlights or notes)
+  doc.heading('Every session', plural(sessions.length + acts.length, 'entry', 'entries'));
+  const list = sessions.map(x => ({ d: x.date, t: Number(x.ts) || 0, what: 'Gym · ' + x.workoutName, det: [plural((x.exercises || []).length, 'exercise', 'exercises'), x.light ? 'felt ' + x.light : ''].filter(Boolean).join(' · ') }))
+    .concat(acts.map(a => ({ d: a.date, t: a.ts, what: actDef(a.type).n, det: summary(a) }))).sort((a, b) => a.d.localeCompare(b.d) || a.t - b.t);
+  let lastD = null;
+  doc.table([{ label: 'Day', w: 330 }, { label: 'What', w: 330 }, { label: 'Details', w: 388 }], list.map(r => { const c = [r.d !== lastD ? dayDate(r.d) : '', r.what, r.det]; lastD = r.d; return { cells: c }; }), { boldFirst: true, fs: 19 });
+  doc.para('Logged by me in the Prequel app. Times are only where I noted them; highlights and notes are left out.', '600 20px ' + BODY, SOFT);
+  return doc.finish('Move report ' + longDate(from) + ' to ' + longDate(to) + '.pdf', 'Move report · ' + range(from, to));
+}
+
 // ---------- the sheets that ask which dates, then hand you the file ----------
 function ready(file, doc, what) {
   openSheet('<h2>Your ' + esc(what) + ' is ready</h2><p class="muted">' + esc(file.name.replace(/\.pdf$/, '')) + ' · ' + Math.max(1, Math.round(file.size / 1024)) + ' KB</p>' +
@@ -373,4 +509,12 @@ export function openFoodReport() {
   markEmpty(opts, dates);
   const months = monthsWith(dates);
   rangeSheet('Food report', 'Everything you ate, a typical day, and a few gentle ideas, as a PDF.', opts, months, (a, b, label) => build(() => foodReport(a, b, label), 'food report'));
+}
+export function openMoveReport() {
+  const t = today(), st = get(), from = addDays(t, -13);
+  const dates = st.sessions.map(x => x.date).concat((st.activities || []).map(a => a.date));
+  if (!dates.length) { notYet('cheer', 'Your first Move report is on its way', 'Log a gym session or any activity, and your report will be ready to make.'); return; }
+  const opts = [['Last 2 weeks', from, t]];
+  markEmpty(opts, dates);
+  rangeSheet('Move report', 'How you\'ve moved, as a PDF for you, your doctor or a coach. Highlights and notes stay private.', opts, [], (a, b) => build(() => moveReport(a, b), 'Move report'));
 }

@@ -2,7 +2,7 @@ import { get } from '../store.js';
 import { EXERCISES, AREAS } from '../data.js';
 import { esc, nav, him, prettyDate } from '../ui.js';
 import { ensureGoals, count, unitOf, checkFinished, openNewGoal, openEditGoal, openLog } from '../goals.js';
-import { hill, wireHills, ribbon, restClock, noticing } from '../charts.js';
+import { hill, wireHills, ribbon, nightsChart, noticing } from '../charts.js';
 import { dateKey } from '../store.js';
 import { actDef, logsOf } from '../activities.js';
 
@@ -71,7 +71,7 @@ function render(root) {
     '<div class="card"><b>Your hill</b><p class="muted" style="font-size:13px;margin:0">It only ever climbs. A break is just a flat bit of the path.</p>' +
       '<div class="chips">' + Object.keys(HILLS).map(k => '<button type="button" class="chip small" data-hill="' + k + '" aria-pressed="' + (k === hillKey) + '">' + HILLS[k][0] + '</button>').join('') + '</div>' + hill(H[1], H[2], H[3]) + '</div>' +
     '<div class="card"><b>Your weather ribbon</b><p class="muted" style="font-size:13px;margin:0">Every day you checked in, as a stripe. No good or bad, just weather.</p>' + ribbon(st.weather) + '</div>' +
-    '<div class="card"><b>When you rest</b><p class="muted" style="font-size:13px;margin:0">All your rests on one clock. Your real pattern, no score.</p>' + restClock(st.rests) + '</div>' +
+    '<div class="card"><b>Your last two weeks of nights</b><p class="muted" style="font-size:13px;margin:0">One row a day, from 6pm the evening before to 6pm that day. Your real pattern, no score.</p>' + nightsChart(st.rests) + '</div>' +
     (notice ? '<div class="lookback" style="background:#DFF0DC">' + esc(notice) + '</div>' : '') +
     (looks.length ? looks.map(l => '<div class="lookback" style="background:' + l[0] + '">' + esc(l[1]) + '</div>').join('') : '') +
     nav('me');

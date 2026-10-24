@@ -57,21 +57,48 @@ export function ribbon(weather) {
 }
 
 // ---------- the rest clock: every rest laid on one 24-hour circle. It shows your pattern, never a score. ----------
-export function restClock(rests) {
-  const R = rests.filter(r => r.start && r.end && r.end > r.start).slice(-90);
-  if (R.length < 3) return '<p class="empty" style="margin:0">Log a few rests and your clock fills in.</p>';
-  const C = 80, rad = 58, ang = ts => { const d = new Date(ts); return ((d.getHours() + d.getMinutes() / 60) / 24) * Math.PI * 2 - Math.PI / 2; };
-  const pt = a => [C + Math.cos(a) * rad, C + Math.sin(a) * rad];
-  const arcs = R.map(r => {
-    let a0 = ang(r.start), a1 = ang(r.end); if (a1 <= a0) a1 += Math.PI * 2;
-    const large = a1 - a0 > Math.PI ? 1 : 0, [x0, y0] = pt(a0), [x1, y1] = pt(a1);
-    return '<path d="M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' A' + rad + ' ' + rad + ' 0 ' + large + ' 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + '" fill="none" stroke="#D9A400" stroke-width="14" opacity="' + Math.max(0.12, 0.6 / Math.sqrt(R.length)).toFixed(2) + '"/>';
-  }).join('');
-  const lbl = (t, a) => { const [x, y] = [C + Math.cos(a) * (rad + 18), C + Math.sin(a) * (rad + 18)]; return '<text x="' + x + '" y="' + (y + 4) + '" class="axlbl" text-anchor="middle">' + t + '</text>'; };
-  return '<svg class="restclock" viewBox="-26 -6 212 172" role="img" aria-label="Your last ' + R.length + ' rests on a 24-hour clock">' +
-    '<circle cx="' + C + '" cy="' + C + '" r="' + rad + '" fill="none" stroke="var(--line)" stroke-width="14"/>' + arcs +
-    lbl('12am', -Math.PI / 2) + lbl('6am', 0) + lbl('12pm', Math.PI / 2) + lbl('6pm', Math.PI) + '</svg>';
+// ---------- your last two weeks of nights (v61, replaces the rest clock) ----------
+// One row per day, running from 6 pm the evening before to 6 pm that day (the same rows as the sleep diary).
+// Sleep is a solid blue bar; a daytime rest (starting 9 am to 6 pm) is striped. Nothing depends on colour alone.
+const minOfDay = ts => { const d = new Date(ts); return d.getHours() * 60 + d.getMinutes(); };
+const ampm = m => { m = Math.round(m) % 1440; let h = Math.floor(m / 60); const mm = m % 60, ap = h < 12 ? 'am' : 'pm'; h = h % 12 || 12; return h + (mm ? ':' + String(mm).padStart(2, '0') : '') + ap; };
+const med = a => { const s = a.slice().sort((x, y) => x - y), h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; };
+export function usualNight(rests) {
+  const byDay = {}; rests.forEach(r => { (byDay[r.date] = byDay[r.date] || []).push(r); });
+  const nights = Object.keys(byDay).map(d => byDay[d].filter(r => { const h = new Date(r.start).getHours(); return h >= 18 || h < 9; }).sort((a, b) => a.start - b.start)).filter(n => n.length);
+  if (nights.length < 3) return null;
+  const asleep = med(nights.map(n => { let m = minOfDay(n[0].start); if (m < 720) m += 1440; return m; })), up = med(nights.map(n => minOfDay(n[n.length - 1].end)));
+  return { asleep: ampm(asleep), up: ampm(up) };
 }
+export function nightsChart(rests) {
+  const t = today(), list = [];
+  for (let i = 13; i >= 0; i--) { const d = dateKey(new Date(parseKey(t).getTime() - i * 86400000)); list.push(d); }
+  const R = rests.filter(r => r.start && r.end && r.end > r.start && r.date >= list[0] && r.date <= t);
+  if (R.length < 2) return '<p class="empty" style="margin:0">Log a few nights and they\'ll line up here.</p>';
+  const usual = usualNight(R);
+  const W = 340, lw = 58, x0 = lw, x1 = W - 8, rh = 17, top = 22, H = top + list.length * rh + 6;
+  const X = f => x0 + (x1 - x0) * f;
+  let svg = '<svg class="nights" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Your last two weeks of nights">' +
+    '<defs><pattern id="napHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#C9D8FB"/><rect width="2.4" height="6" fill="#1F55D0"/></pattern></defs>';
+  [['6pm', 0], ['12am', 0.25], ['6am', 0.5], ['12pm', 0.75], ['6pm', 1]].forEach(([l, f]) => {
+    svg += '<text x="' + X(f).toFixed(1) + '" y="13" class="nlbl" text-anchor="' + (f === 0 ? 'start' : f === 1 ? 'end' : 'middle') + '">' + l + '</text>' +
+      '<line x1="' + X(f).toFixed(1) + '" y1="' + (top - 3) + '" x2="' + X(f).toFixed(1) + '" y2="' + (H - 4) + '" class="ngrid' + (f === 0.25 ? ' mid' : '') + '"/>';
+  });
+  list.forEach((d, i) => {
+    const y = top + i * rh, base = parseKey(d).getTime() - 6 * 3600000, dd = parseKey(d);
+    if (i % 2 === 0) svg += '<rect x="0" y="' + y + '" width="' + W + '" height="' + rh + '" class="nband"/>';
+    svg += '<text x="2" y="' + (y + rh * 0.72).toFixed(1) + '" class="nday">' + esc(d === t ? 'Today' : dd.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric' })) + '</text>';
+    R.filter(r => r.date === d).forEach(r => {
+      const a = Math.max(0, (r.start - base) / 86400000), b = Math.min(1, (r.end - base) / 86400000); if (b <= a) return;
+      const h = new Date(r.start).getHours(), nap = h >= 9 && h < 18;
+      svg += '<rect x="' + X(a).toFixed(1) + '" y="' + (y + 3) + '" width="' + Math.max(4, X(b) - X(a)).toFixed(1) + '" height="' + (rh - 6) + '" rx="4" fill="' + (nap ? 'url(#napHatch)' : '#1F55D0') + '"' + (nap ? ' stroke="#1F55D0" stroke-width="1.2"' : '') + '/>';
+    });
+  });
+  svg += '</svg>';
+  return (usual ? '<p class="nsum">Usually asleep around <b>' + usual.asleep + '</b>, up around <b>' + usual.up + '</b>.</p>' : '') + svg +
+    '<p class="nkey"><span class="k solid"></span>Sleep <span class="k striped"></span>Daytime rest</p>';
+}
+
 
 // ---------- one gentle noticing, only when there's enough to go on, only ever kind ----------
 const LIGHT = ['Clear sun', 'Golden hour', 'Partly cloudy', 'Rainbow', 'Clear night'];
