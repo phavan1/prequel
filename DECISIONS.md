@@ -266,6 +266,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
+- v65: Fix this workout can add a set (a copy of the last one, ready to change); picking Bar + there works.
 - v64: Bar + shows on every weight exercise in kg; "plate" mode is the only thing that hides it. (The playbook's machine flag was wrong for how Phavan does chest press.)
 - v63: the Move report cover is him with his notebook after a workout (Phavan didn't like the jumping one); a white sticker outline keeps his blue hoodie readable on the blue cover.
 - v62: the Move report offers the last 2 weeks or the last 4 weeks (Phavan).

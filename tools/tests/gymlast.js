@@ -101,6 +101,23 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.screenshot({ path: OUT + '/gl-days-barplus.png' });
   await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
   ok('saving in Days keeps bar + 2.5', JSON.stringify((await st()).sessions.slice(-1)[0]).includes('"b+2.5"'));
+  // v65: in Fix this workout, picking "Bar + kg each side" sticks, and a set can be added
+  await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().sessions.push({ id: 'fx1', date: '2026-10-20', ts: 9, workoutId: 'uA', workoutName: 'Upper A', exercises: [{ key: 'chest', name: 'Chest press', swap: null, sets: [{ a: 'bar', b: '12' }] }] }); S.save(); });
+  await p.evaluate(async () => { const D = await import('./js/screens/days.js'); D.editSession(document.querySelector('main'), 'fx1', () => {}); }); await p.waitForTimeout(300);
+  await p.locator('#sheet select[data-ak="0:0"]').selectOption('b+'); await p.waitForTimeout(200);
+  ok('picking "Bar + kg each side" sticks and shows a box for the kg', await p.locator('#sheet select[data-ak="0:0"]').inputValue() === 'b+' && await p.locator('#sheet input[data-a="0:0"]').isVisible());
+  await p.fill('#sheet input[data-a="0:0"]', '1.25');
+  await p.click('#sheet [data-addset="0"]'); await p.waitForTimeout(200);
+  ok('"+ Add a set" adds a copy of the last set', await p.locator('#sheet input[data-b="0:1"]').inputValue() === '12' && await p.locator('#sheet select[data-ak="0:1"]').inputValue() === 'b+' && await p.locator('#sheet input[data-a="0:1"]').inputValue() === '1.25');
+  await p.fill('#sheet input[data-b="0:1"]', '10');
+  await p.screenshot({ path: OUT + '/gl-fix-barplus.png' });
+  await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
+  ok('saved as bar + 1.25 each side, two sets', JSON.stringify((await st()).sessions.find(x => x.id === 'fx1').exercises[0].sets) === JSON.stringify([{ a: 'b+1.25', b: '12' }, { a: 'b+1.25', b: '10' }]), JSON.stringify((await st()).sessions.find(x => x.id === 'fx1').exercises[0].sets));
+  // Bar + with no number saves as Bar only
+  await p.evaluate(async () => { const D = await import('./js/screens/days.js'); D.editSession(document.querySelector('main'), 'fx1', () => {}); }); await p.waitForTimeout(300);
+  await p.fill('#sheet input[data-a="0:1"]', ''); await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
+  ok('Bar + left without a number saves as Bar only', (await st()).sessions.find(x => x.id === 'fx1').exercises[0].sets[1].a === 'bar');
+
   // the Weight button: the same log as Food
   await p.goto(BASE + '#/home'); await p.goto(BASE + '#/move'); await p.waitForTimeout(300);
   await p.click('[data-weight]'); await p.waitForTimeout(300);

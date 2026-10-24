@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v65) Fix this workout: change a set to Bar + and type the kg each side; + Add a set adds a copy; Save keeps them.
 - [ ] (v61) Move → Move report makes a PDF of the last 2 weeks (share or save it); Me shows "Your last two weeks of nights" with the usual asleep/up line.
 - [ ] (v60) Mind: the × on a note and on a lantern asks once, then removes it (the lantern's star leaves the sky). The gym page shows his talking head.
 - [ ] (v59) In the gym: Bar + on a free-weight exercise (type kg each side, ±1.25), hidden on machines; Next then Log on an empty first set logs the faint "last" numbers.
