@@ -54,7 +54,8 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   s = await st();
   ok('typing a set works as before', s.active.log[5].length === 2 && s.active.log[5][1].a === '10' && s.active.log[5][1].b === '9');
   // Bar +: a bar you don't know the weight of, plus kg on each side
-  ok('a machine (triceps pushdown) has no Bar +', await (async () => { await p.click('[data-ex="6"]'); await p.waitForTimeout(150); return await p.locator('[data-bp]').count() === 0; })());
+  ok('a machine exercise in kg has Bar + too (chest press can be on a bar, v64)', await (async () => { await p.click('[data-ex="0"]'); await p.waitForTimeout(150); return await p.locator('[data-bp]').count() === 1; })());
+  ok('switched to plates (the pin on a stack), Bar + is hidden', await (async () => { await p.click('[data-unit]'); await p.waitForTimeout(150); const n = await p.locator('[data-bp]').count(); await p.click('[data-unit]'); await p.waitForTimeout(100); return n === 0; })());
   await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().active.items.push(['lateral', '2', '12-15']); S.save(); });
   await p.click('[data-ex="5"]'); await p.waitForTimeout(100); await p.click('[data-ex="7"]'); await p.waitForTimeout(200);
   await p.click('[data-bp]'); await p.waitForTimeout(100);

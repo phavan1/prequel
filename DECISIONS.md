@@ -266,6 +266,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
+- v64: Bar + shows on every weight exercise in kg; "plate" mode is the only thing that hides it. (The playbook's machine flag was wrong for how Phavan does chest press.)
 - v63: the Move report cover is him with his notebook after a workout (Phavan didn't like the jumping one); a white sticker outline keeps his blue hoodie readable on the blue cover.
 - v62: the Move report offers the last 2 weeks or the last 4 weeks (Phavan).
 - v61: Move report for him first, but readable by a doctor or coach: plain words and tables, first / latest / best per exercise (not every set), body weight in, highlights and notes out, last 2 weeks for now. The Me rest clock became "Your last two weeks of nights" (Claude's option B), because the faint yellow circle was hard to read, especially for Phavan (partly colour blind): one strong blue, stripes for naps, never colour alone. Me's other charts (hill, heaviest lifts) are next, after this.
