@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 60, date: '2026-10-24', items: [
+    'Every note on Mind, and every lantern you\'ve let go, now has a little × to remove it. It asks once first.',
+    'In the gym, he now talks you through your workout, head and shoulders, instead of jumping about.'
+  ] },
   { v: 59, date: '2026-10-24', items: [
     'New in the gym: "Bar +", for when you load plates on a bar but don\'t know what the bar weighs. Type the kg on each side, and it\'s saved as "bar + 2.5kg each side". It doesn\'t show on machines.',
     'The faint "last 10" on your first set now counts: tap Next and Log without typing, and it logs last time\'s numbers.',

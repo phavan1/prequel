@@ -266,6 +266,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
+- v60: Mind notes and lanterns get a × (asks once); "Remove it completely" stays where it is in the sheet, and lanterns stay as they are (readable, can be brought back): Phavan will explain the idea rather than change it. The gym page uses his talking head instead of the jumping picture.
 - v59: "plate" stays the name for a machine stack's pin position (Phavan: keep "plates"). New "Bar +" for plates on a bar of unknown weight, typed **per side**; the discs get no name of their own, so "plate" never means two things, and Bar + never shows on machines. Next/Log on an empty first set takes the faint "last" hint (Phavan wanted it back); the hint is in Gaegu.
 - v58: body weight is one per place per day (Phavan); a second save that day for the same place replaces the first (Claude's pick, so a typo is easy to fix). Weights already doubled up before v58 are left as they are.
 - v57: the gym never pre-fills the first set of an exercise any more (a grey pre-fill looked like a hint but was saved, so a wrong 12.5 kg kept copying itself). Last time is a faint hint plus Same again (Phavan approved A and B). Last time comes from saved workouts, all sets. Body weight logging is on Move too (same log as Food).

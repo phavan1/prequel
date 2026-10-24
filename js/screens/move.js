@@ -197,13 +197,13 @@ function renderWk() {
   }
   const nextLabel = (!one && field === 'a') ? 'Next →' : (edit >= 0 ? 'Save set ' + (edit + 1) + ' ✓' : 'Log ✓');
   const banner = a.id === 'min20' ? '<div class="banner min">If you feel better after these three, continue. If not, leave. The session still counts.</div>' : (a.light === 'yellow' ? '<div class="banner yellow">Yellow day · 2 sets is plenty, optional extras skipped.</div>' : '');
-  const pose = a.items.some(x => x[0] === 'legpress') && k === 'legpress' ? 'legday' : 'cheer';
+  const pose = 'talking'; // v60: his head and shoulders, talking to you (Phavan didn't like the jumping one here)
   root.innerHTML =
     '<div class="wk">' +
     '<div class="wkhead"><button type="button" class="back" data-leave="1" style="border:0;background:transparent;color:var(--blue)">‹ Move</button><h1>' + esc(a.n) + (a.date !== today() ? '<br><small class="muted" style="font-size:11px">for ' + esc(prettyDate(a.date)) + '</small>' : '') + '</h1><button type="button" class="fin" data-finish="1">Finish</button></div>' + banner +
     '<div class="hscroll exs" id="exs">' + a.items.map((x, j) => { const done = (a.log[j] || []).length >= Math.min(2, baseSets(x)), n = (a.order || []).indexOf(j); return '<button type="button" data-ex="' + j + '" aria-pressed="' + (j === a.i) + '">' + (n >= 0 ? '<span class="ord' + (done ? ' done' : '') + '" aria-label="done ' + ordinal(n + 1) + '">' + (n + 1) + '</span>' : '') + esc(nameOf(j)) + (a.hinted[j] ? ' ↑' : '') + '</button>'; }).join('') + '<button type="button" class="addex" data-addex="1">+ Add</button></div>' +
     lastOrderLine(a) +
-    '<div class="strip">' + him(pose, 'breathe', 'Your character, training with you').replace('class="him', 'id="him" class="him') + '<div class="say">' + esc(say) + '</div><span class="pill" id="since">' + (a.lastAt ? 'Since last set 0:00' : 'No sets yet') + '</span></div>' +
+    '<div class="strip">' + him(pose, 'breathe', 'Your character, talking you through it').replace('class="him', 'id="him" class="him') + '<div class="say">' + esc(say) + '</div><span class="pill" id="since">' + (a.lastAt ? 'Since last set 0:00' : 'No sets yet') + '</span></div>' +
     '<div class="info"><div class="t"><b>' + esc(nameOf(a.i)) + (a.swap[a.i] ? ' <span style="font-weight:700;color:var(--ink-soft);font-size:12px">for ' + esc(e.n.toLowerCase()) + '</span>' : '') + '</b>' + [setsLabel, it[2], restTxt].filter(Boolean).map(esc).join(' · ') + '</div>' + '<div class="infobtns"><button type="button" class="busy" data-busy="1">Machine busy?</button><button type="button" class="busy more" data-exmenu="1" aria-label="More for ' + esc(nameOf(a.i)) + '">⋯</button></div></div>' +
     '<div class="hscroll" id="sets">' + setsHtml() + '</div>' +
     fields +

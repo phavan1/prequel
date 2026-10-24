@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v60) Mind: the × on a note and on a lantern asks once, then removes it (the lantern's star leaves the sky). The gym page shows his talking head.
 - [ ] (v59) In the gym: Bar + on a free-weight exercise (type kg each side, ±1.25), hidden on machines; Next then Log on an empty first set logs the faint "last" numbers.
 - [ ] (v57) In the gym: the first set's boxes show "last 10" faintly; Same again fills last time's first set; "Last time" lists every set from your real last session; Move's Weight button saves to the same log as Food.
 - [ ] (v56) Keep it up: sliding the pillow follows your finger without the page scrolling or bouncing; it feels fast but fair; your own emoji from the emoji keyboard works.

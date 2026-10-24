@@ -30,6 +30,7 @@ export function mount(root) {
       save(); render(root); recallBar(root, n.id); return;
     }
     if ((b = t.closest('[data-editnote]'))) { editNote(root, b.dataset.editnote); return; }
+    if ((b = t.closest('[data-rmnote]'))) { confirmRemove(root, b.dataset.rmnote); return; }
   });
 }
 
@@ -49,6 +50,15 @@ function recallBar(root, id) {
   s.classList.add('show'); clearTimeout(recallTimer); recallTimer = setTimeout(() => s.classList.remove('show'), 7000);
 }
 
+// the × on a note or a lantern (v60): asks once, then it's gone (its star leaves the sky too)
+function confirmRemove(root, id) {
+  const n = get().mind.find(x => x.id === id); if (!n) return;
+  openSheet('<h2>Remove it completely?</h2><p class="muted">"' + esc(n.text) + '"' + (n.letGo ? ' will leave your sky too.' : '') + '</p>' +
+    '<button type="button" class="btn danger" data-o="del">Remove it</button><button type="button" class="btn ghost" data-close>Keep it</button>', ev => {
+    if (!ev.target.closest('[data-o="del"]')) return;
+    removeById('mind', id); closeSheet(); render(root); toast('Gone, like it was never written.');
+  });
+}
 // tap a note (or a lantern) to change it, bring it back, or remove it completely
 function editNote(root, id) {
   const st = get(), n = st.mind.find(x => x.id === id); if (!n) return;
@@ -87,10 +97,10 @@ function render(root, keep) {
       ? '<div class="notes">' + open.map((n, i) => {
           const due = n.remindOn && n.remindOn <= d;
           const meta = !n.remindOn ? 'no nudge' : due ? 'hey, this one' : 'around ' + prettyDate(n.remindOn).toLowerCase();
-          return '<div class="sticky" style="background:' + COLOURS[i % COLOURS.length] + ';transform:rotate(' + ((i % 3) - 1) * 1.5 + 'deg)"><button type="button" class="tx" data-editnote="' + n.id + '" aria-label="Change this note">' + esc(n.text) + '</button><span class="mt">' + esc(meta) + '</span><button type="button" data-letgo="' + n.id + '">Let it go</button></div>';
+          return '<div class="sticky" style="background:' + COLOURS[i % COLOURS.length] + ';transform:rotate(' + ((i % 3) - 1) * 1.5 + 'deg)"><button type="button" class="tx" data-editnote="' + n.id + '" aria-label="Change this note">' + esc(n.text) + '</button><span class="mt">' + esc(meta) + '</span><button type="button" data-letgo="' + n.id + '">Let it go</button><button type="button" class="rmx" data-rmnote="' + n.id + '" aria-label="Remove this note">×</button></div>';
         }).join('') + '</div>'
       : '<p class="empty">Nothing on your mind here right now. That\'s a nice kind of empty.</p>') +
-    (lanterns ? '<details class="letgo"><summary>Lanterns you\'ve let go · call one back any time</summary>' + st.mind.filter(n => n.letGo).sort((a, b) => b.letGo - a.letGo).map(n => '<div class="item lantern"><i style="background:#3E9E6E"></i><button type="button" class="tap" data-editnote="' + n.id + '">' + esc(n.text) + '</button><button type="button" class="recall" data-recall="' + n.id + '">Bring back</button></div>').join('') + '</details>' : '') +
+    (lanterns ? '<details class="letgo"><summary>Lanterns you\'ve let go · call one back any time</summary>' + st.mind.filter(n => n.letGo).sort((a, b) => b.letGo - a.letGo).map(n => '<div class="item lantern"><i style="background:#3E9E6E"></i><button type="button" class="tap" data-editnote="' + n.id + '">' + esc(n.text) + '</button><button type="button" class="recall" data-recall="' + n.id + '">Bring back</button><button type="button" class="rmx" data-rmnote="' + n.id + '" aria-label="Remove this lantern">×</button></div>').join('') + '</details>' : '') +
     // never a zero: the count only shows once there's a lantern
     '<p class="muted" style="font-size:13px">' + (lanterns ? lanterns + (lanterns === 1 ? ' lantern' : ' lanterns') + ' let go so far. ' : '') + 'Doing it or not doing it, both count as letting go.</p>' +
     '<a class="rowlink" href="#/letters"><span>Letters from good-day you</span><b>' + (st.letters.length ? st.letters.length + ' ›' : '›') + '</b></a>' +
