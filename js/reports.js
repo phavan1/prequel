@@ -340,13 +340,13 @@ const better = (x, y) => !y || setWeight(x) > setWeight(y) || (setWeight(x) === 
 const topSet = sets => sets.reduce((b, z) => better(z, b) ? z : b, null);
 
 export async function moveReport(from, to) {
-  const st = get(), art = await prep(['cheer']);
+  const st = get(), art = await prep(['moving']); // v63: him with his notebook after a workout, white sticker outline for the blue cover
   const name = st.settings.name;
   const sessions = st.sessions.filter(x => x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date) || (Number(a.ts) || 0) - (Number(b.ts) || 0));
   const acts = (st.activities || []).filter(x => x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
   const all = days(from, to), nDays = all.length;
   const doc = new Doc('Move report', range(from, to));
-  cover(doc, 'MOVE REPORT' + (name ? ' · ' + name.toUpperCase() : ''), 'How I\'ve moved', range(from, to), art.cheer);
+  cover(doc, 'MOVE REPORT' + (name ? ' · ' + name.toUpperCase() : ''), 'How I\'ve moved', range(from, to), art.moving);
 
   // what happened on each day
   const byDay = {}; all.forEach(d => { byDay[d] = { gym: [], acts: [] }; });
