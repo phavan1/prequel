@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 62, date: '2026-10-24', items: [
+    'The Move report can cover the last 4 weeks as well as the last 2.'
+  ] },
   { v: 61, date: '2026-10-24', items: [
     'New: a Move report. On Move, tap "Move report" for a PDF of your last 2 weeks: days you moved, your gym exercises (first, latest and best), other activities, how your body felt and your weight. Highlights and notes stay private.',
     'On Me, the sleep circle is now "Your last two weeks of nights": one row a day, solid bars for sleep, striped bars for daytime rests, and a plain line with when you usually fall asleep and wake up.'

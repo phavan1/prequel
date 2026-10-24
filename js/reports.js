@@ -384,9 +384,9 @@ export async function moveReport(from, to) {
   const used = ['gym'].filter(() => sessions.length).concat([...new Set(acts.map(a => a.type))]);
   const code = {}; const taken = new Set();
   used.forEach(t => { const n = t === 'gym' ? 'Gym' : actDef(t).n; let c = n[0].toUpperCase(); if (taken.has(c)) c = n.slice(0, 2).replace(/^./, x => x.toUpperCase()); taken.add(c); code[t] = c; });
-  doc.heading('Day by day', 'a letter for each thing I did that day', 420);
   {
-    const cols = 7, gap = 12, cw = (PW - 2 * M - gap * (cols - 1)) / cols, ch = 132;
+    const cols = 7, gap = 12, cw = (PW - 2 * M - gap * (cols - 1)) / cols, ch = all.length > 14 ? 108 : 132, nRows = Math.ceil(all.length / cols);
+    doc.heading('Day by day', 'a letter for each thing I did that day', nRows * (ch + gap) + 60); // the whole calendar stays on one page
     for (let i = 0; i < all.length; i += cols) {
       const g = doc.need(ch + gap);
       all.slice(i, i + cols).forEach((d, j) => {
@@ -395,8 +395,8 @@ export async function moveReport(from, to) {
         txt(g, shortDay(d).split(',')[0], x + 14, y + 30, '800 18px ' + BODY, SOFT);
         txt(g, String(parseKey(d).getDate()), x + cw - 14, y + 30, '900 22px ' + BODY, INK, 'right');
         const cs = it.gym.map(() => code.gym).concat(it.acts.map(a => code[a.type]));
-        txt(g, cs.join(' '), x + 14, y + 82, '900 34px ' + BODY, BLUE, 'left', cw - 24);
-        const m = it.acts.reduce((n, a) => n + (Number(a.mins) || 0), 0); if (m) txt(g, dur(m), x + 14, y + 116, '700 17px ' + BODY, SOFT);
+        txt(g, cs.join(' '), x + 14, y + ch * 0.62, '900 34px ' + BODY, BLUE, 'left', cw - 24);
+        const m = it.acts.reduce((n, a) => n + (Number(a.mins) || 0), 0); if (m) txt(g, dur(m), x + 14, y + ch - 16, '700 17px ' + BODY, SOFT);
       });
       doc.y += ch + gap;
     }
@@ -514,7 +514,7 @@ export function openMoveReport() {
   const t = today(), st = get(), from = addDays(t, -13);
   const dates = st.sessions.map(x => x.date).concat((st.activities || []).map(a => a.date));
   if (!dates.length) { notYet('cheer', 'Your first Move report is on its way', 'Log a gym session or any activity, and your report will be ready to make.'); return; }
-  const opts = [['Last 2 weeks', from, t]];
+  const opts = [['Last 2 weeks', from, t], ['Last 4 weeks', addDays(t, -27), t]]; // v62: 4 weeks too
   markEmpty(opts, dates);
   rangeSheet('Move report', 'How you\'ve moved, as a PDF for you, your doctor or a coach. Highlights and notes stay private.', opts, [], (a, b) => build(() => moveReport(a, b), 'Move report'));
 }

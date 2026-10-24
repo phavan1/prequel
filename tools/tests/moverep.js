@@ -57,6 +57,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('Move has a "Move report" button', await p.locator('[data-movereport]').count() === 1);
   await p.click('[data-movereport]'); await p.waitForTimeout(300);
   ok('it offers the last 2 weeks', /Last 2 weeks/.test(await p.locator('#sheet').innerText()));
+  ok('and the last 4 weeks', /Last 4 weeks/.test(await p.locator('#sheet').innerText()));
   await p.screenshot({ path: OUT + '/mr-sheet.png' });
   await p.click('#sheet [data-o="0"]'); await p.waitForTimeout(3000);
   ok('the report gets made', /Move report is ready/.test(await p.locator('#sheet').innerText()));
@@ -67,6 +68,13 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
     const R = await import('./js/reports.js'); const f = await R.moveReport('2026-10-11', '2026-10-24');
     CanvasRenderingContext2D.prototype.fillText = orig; window.__pdf = Array.from(new Uint8Array(await f.arrayBuffer())); return out.join(' | ');
   });
+  const said4 = await p.evaluate(async () => {
+    const out = [], orig = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...r) { out.push(String(t)); return orig.call(this, t, ...r); };
+    const R = await import('./js/reports.js'); const f = await R.moveReport('2026-09-27', '2026-10-24');
+    CanvasRenderingContext2D.prototype.fillText = orig; window.__pdf4 = Array.from(new Uint8Array(await f.arrayBuffer())); return out.join(' | ');
+  });
+  fs.writeFileSync(OUT + '/moverep4.pdf', Buffer.from(await p.evaluate(() => window.__pdf4)));
+  ok('4 weeks: 28 days and four week rows', /6 of 28/.test(said4) && (said4.match(/ of 7 \|| a rest week/g) || []).length === 4, said4.slice(0, 120));
   fs.writeFileSync(OUT + '/moverep.pdf', Buffer.from(await p.evaluate(() => window.__pdf)));
   ok('at a glance: days moved and sessions', /6 of 14/.test(said) && /gym sessions/.test(said), said.slice(0, 160));
   ok('body check-ins and how activities felt', /How my body felt before the gym: Green/.test(said) && /How the other activities felt/.test(said));
