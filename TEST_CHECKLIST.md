@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v67) Me: the moving journey scene card after the goals (him on the hill, the next flag); Move's row opens it with Move lit.
 - [ ] (v66) Me → Your journey: the filter, cards, dots (tap one), weeks, lifts and hill look right on the phone; a workout's length appears after Finish and can be fixed.
 - [ ] (v65) Fix this workout: change a set to Bar + and type the kg each side; + Add a set adds a copy; Save keeps them.
 - [ ] (v61) Move → Move report makes a PDF of the last 2 weeks (share or save it); Me shows "Your last two weeks of nights" with the usual asleep/up line.

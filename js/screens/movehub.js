@@ -36,7 +36,7 @@ export function hubHtml(lightsHtml) {
     '<div class="lbl">What did you get up to?</div>' +
     '<div class="acttiles">' + order().map(id => { const d = actDef(id); return '<button type="button" class="acttile" data-act="' + esc(id) + '"><span class="emo" aria-hidden="true">' + d.e + '</span><b>' + esc(d.n) + '</b><small>' + esc(tileSub(id)) + '</small></button>'; }).join('') + '</div>' +
     (() => { const w = weights().slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts)[0]; return '<div class="grid2"><button type="button" class="rowlink" data-actsetup><span>Your activities</span><b>›</b></button><button type="button" class="rowlink" data-weight><span>Weight</span><b>' + (w ? w.kg + ' kg ›' : '+') + '</b></button></div>'; })() + // body weight, same log as Food (v57)
-    '<button type="button" class="rowlink" data-movereport style="width:100%"><span>Move report</span><b>PDF ›</b></button>' + // v61
+    '<div class="grid2"><a class="rowlink" href="#/journey?from=move"><span>Your moving journey</span><b>›</b></a><button type="button" class="rowlink" data-movereport><span>Move report</span><b>PDF ›</b></button></div>' + // v61, v67
     (recent.length ? '<button type="button" class="lately" data-lately><b>Lately</b> ' + recent.map(r => { const w = prettyDate(r.date); return esc(r.n) + ' ' + esc(/^(Today|Yesterday)$/.test(w) ? w.toLowerCase() : w); }).join(' · ') + ' ›</button>' : '');
 }
 const timerText = () => { const t = get().actTimer; if (!t) return ''; const m = Math.floor((Date.now() - t.start) / 60000); return m < 1 ? 'Just started' : (m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min' : m + ' min') + ' so far'; };

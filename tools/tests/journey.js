@@ -32,16 +32,17 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
 
   // 1. Me: the preview card replaces the hill and the heaviest cards
   await p.goto(BASE + '#/me'); await p.waitForTimeout(500);
-  ok('Me has the Your journey card', await p.locator('a.jpreview').count() === 1 && /Your journey/.test(await p.locator('a.jpreview').innerText()));
-  ok('…with this month\'s days and a strip of dots', /\d+\s*days\s*moved in October/.test(await p.locator('a.jpreview').innerText()) && await p.locator('a.jpreview svg.jmini .jdot.on').count() > 5, await p.locator('a.jpreview').innerText());
+  ok('Me has the Your moving journey scene card', await p.locator('a.jscene').count() === 1 && /Your moving journey/.test(await p.locator('a.jscene').innerText()));
+  ok('…with him on the hill and one line', /\d+ days moved in October · you just passed 10!/.test(await p.locator('a.jscene').innerText()) && /flagplant\.webp/.test(await p.locator('a.jscene image').getAttribute('href')), await p.locator('a.jscene').innerText());
+  ok('…right after your goals', await p.evaluate(() => { const a = document.querySelector('a.jscene'), g = document.querySelector('[data-newgoal]'); return !!(g.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) && !(document.querySelector('.sharecta').compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING); }));
   ok('the old hill and "heaviest" cards are gone from Me', !/Your hill/.test(await p.locator('main').innerText()) && !/heaviest you've ever/.test(await p.locator('main').innerText()));
-  await p.locator('a.jpreview').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-me.png' });
+  await p.locator('a.jscene').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-me.png' });
 
   // 2. the page
-  await p.click('a.jpreview'); await p.waitForTimeout(500);
-  ok('it opens Your journey, with Me lit and a way back', /#\/journey/.test(p.url()) && /Your journey/.test(await p.locator('h1.jtitle').innerText()) && (await p.locator('nav.tabbar a[aria-current="page"]').innerText()) === 'Me' && /Me/.test(await p.locator('.top .back').innerText()));
+  await p.click('a.jscene'); await p.waitForTimeout(500);
+  ok('it opens Your journey, with Me lit and a way back', /#\/journey/.test(p.url()) && /Your moving journey/.test(await p.locator('h1.jtitle').innerText()) && (await p.locator('nav.tabbar a[aria-current="page"]').innerText()) === 'Me' && /Me/.test(await p.locator('.top .back').innerText()));
   const chips = await p.locator('[data-jf]').allInnerTexts();
-  ok('the filter: everything, gym, each activity, sleep', chips.join('|').replace(/[^\w|]/g, '') === 'Everything|Gym|Badminton|Walk|Sleep', chips.join(' | '));
+  ok('the filter: everything, gym, each activity (no sleep)', chips.join('|').replace(/[^\w|]/g, '') === 'Everything|Gym|Badminton|Walk', chips.join(' | '));
   const cards = await p.locator('.jcard').allInnerTexts();
   ok('Habit-style cards: a number, a unit, a short label', cards.length >= 4 && cards.every(c => /\d/.test(c)), cards.join(' / ').replace(/\n/g, ' '));
   ok('no zeros, streaks, rates or averages anywhere', !/\b0\b|streak|rate|avg|average|unmet/i.test(await p.locator('main').innerText()));
@@ -55,7 +56,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const lifts = await p.locator('.jlift').allInnerTexts();
   ok('your lifts: first → latest with a line', /Biceps curl\s*7\.5 kg → 15 kg/.test(lifts.join(' ')) && await p.locator('svg.jspark').count() === lifts.length, lifts.join(' / ').replace(/\n/g, ' '));
   ok('Bar + shows as bar + kg', /bar \+ 1\.25 kg/.test(lifts.join(' ')));
-  ok('the hill: him walking, flags, numbers', await p.locator('svg.jhill image').count() === 1 && await p.locator('svg.jhill .jflag.got').count() >= 1 && /next flag at 25/.test(await p.locator('.jcap').innerText()));
+  ok('the hill: him walking, flags, numbers', /flagplant\.webp/.test(await p.locator('svg.jhill image').getAttribute('href')) && await p.locator('svg.jhill .jflag').count() >= 1 && /you just passed 10! · next flag at 25/.test(await p.locator('.jcap').innerText()));
   await p.locator('svg.jweeks').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-mid.png' });
   await p.locator('svg.jhill').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-bottom.png' });
 
@@ -63,14 +64,30 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.click('[data-jf="badminton"]'); await p.waitForTimeout(300);
   const bc = (await p.locator('.jcard').allInnerTexts()).join(' / ');
   ok('Badminton: times, hours and games', /2\s*times/.test(bc) && /14\s*games/.test(bc) && await p.locator('.jlift').count() === 0, bc.replace(/\n/g, ' '));
-  await p.click('[data-jf="sleep"]'); await p.waitForTimeout(300);
-  const sc = (await p.locator('.jcard').allInnerTexts()).join(' / ');
-  ok('Sleep: nights, typical hours, usual asleep and up', /nights/.test(sc) && /hours\s*typical sleep/.test(sc) && /usually asleep around/.test(sc) && await p.locator('svg.jhill').count() === 0, sc.replace(/\n/g, ' '));
-  await p.screenshot({ path: OUT + '/jo-sleep.png' });
   await p.click('[data-jf="gym"]'); await p.waitForTimeout(300);
   const gc = (await p.locator('.jcard').allInnerTexts()).join(' / ');
   ok('Gym: sessions, sets and your heaviest', /11\s*sessions/.test(gc) && /sets/.test(gc) && /heaviest/.test(gc), gc.replace(/\n/g, ' '));
   await p.screenshot({ path: OUT + '/jo-gym.png' });
+
+  // between flags he's walking up
+  await p.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(); st.sessions.forEach(x => { if (x.date >= '2026-10-13') x.date = x.date.replace('2026-10-', '2026-09-0').replace(/09-0(\d\d)/, '09-$1'); }); S.save(); });
+  await p.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(); st.sessions.forEach((x, i) => { x.date = '2026-09-' + String(1 + i).padStart(2, '0'); }); S.save(); });
+  await p.goto(BASE + '#/home'); await p.goto(BASE + '#/me'); await p.waitForTimeout(300);
+  ok('between flags, he\'s walking up the hill', /climbing\.webp/.test(await p.locator('a.jscene image').getAttribute('href')) && /next flag at 25/.test(await p.locator('a.jscene').innerText()), await p.locator('a.jscene').innerText());
+  await p.locator('a.jscene').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-me-walk.png' });
+  // passing a flag this week: he plants it
+  await p.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(); for (let i = 0; i < 11; i++) st.activities.push({ id: 'x' + i, date: '2026-10-' + String(10 + i).padStart(2, '0'), ts: i, type: 'walk', mins: 20 }); S.save(); });
+  await p.goto(BASE + '#/home'); await p.goto(BASE + '#/me'); await p.waitForTimeout(400);
+  ok('the week you pass a flag, he plants it', /flagplant\.webp/.test(await p.locator('a.jscene image').getAttribute('href')) && /you just passed 25!/.test(await p.locator('a.jscene').innerText()), await p.locator('a.jscene').innerText());
+  await p.locator('a.jscene').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-me-flag.png' });
+  // the row on Move, and back goes to Move
+  await p.goto(BASE + '#/move'); await p.waitForTimeout(400);
+  if (await p.locator('.picker [data-picksave]').count()) { if ((await p.locator('[data-pick="gym"]').getAttribute('aria-pressed')) !== 'true') await p.click('[data-pick="gym"]'); await p.click('[data-picksave]'); await p.waitForTimeout(300); }
+  await p.click('#sheet [data-close]').catch(() => {});
+  ok('Move has a "Your moving journey" row', await p.locator('a[href="#/journey?from=move"]').count() === 1);
+  await p.locator('a[href="#/journey?from=move"]').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-movehub.png' });
+  await p.click('a[href="#/journey?from=move"]'); await p.waitForTimeout(400);
+  ok('opened from Move: Move stays lit and Back goes to Move', (await p.locator('nav.tabbar a[aria-current="page"]').innerText()) === 'Move' && /Move/.test(await p.locator('.top .back').innerText()));
 
   // 3. workout length: saved at Finish from start to your last set (+3 min), editable in Fix this workout
   await p.goto(BASE + '#/move'); await p.waitForTimeout(400);

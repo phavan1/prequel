@@ -1,6 +1,6 @@
 # Prequel: development handover
 
-_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**, **v40**, **v41**, **v42**, **v43**, **v44**; 17 October: **v45**, **v46**, **v47**, **v48**, **v49**; 18 October: **v50**, **v51**, **v52**, **v53**; 19 October: **v54**, **v55**, **v56**; 21 October: **v57**, **v58**; 24 October: **v59**, **v60**, **v61**, **v62**, **v63**, **v64**, **v65**; 25 October: **v66**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
+_Written on 12 October 2026, at version **v36**; updated the same day after the backup audit and tool preservation, and on 14 October 2026 (docs cleanup, **v37**, **v38**; 15 October: **v39**, **v40**, **v41**, **v42**, **v43**, **v44**; 17 October: **v45**, **v46**, **v47**, **v48**, **v49**; 18 October: **v50**, **v51**, **v52**, **v53**; 19 October: **v54**, **v55**, **v56**; 21 October: **v57**, **v58**; 24 October: **v59**, **v60**, **v61**, **v62**, **v63**, **v64**, **v65**; 25 October: **v66**, **v67**). Reading order: `START_HERE.md`, this file, `DECISIONS.md`, `TEST_CHECKLIST.md`, `tools/README.md`, then the Project tracker (see `START_HERE.md` section 3). From now on this file is kept current as work happens (`START_HERE.md` 8b)._
 
 **How sure each fact is:**
 - **[verified]**: checked against the code on the laptop or the git log on 12 October 2026.
@@ -90,7 +90,7 @@ js/
     sky.js      the night sky of stars and constellations
     quilt.js    the monthly quilts (also exports PAT, patches, drawQuiltMonth, fullLayout)
     skate.js    Skate home game
-    journey.js  Your journey (v66): stats page opened from Me's preview card
+    journey.js  Your moving journey (v66, v67): stats page opened from Me's scene card and Move's row
     stack.js    Stack the stars game (v56)
     keepup.js   Keep it up game (v56)
     settings.js name, kind words, tiny-win list, Look, backup/restore, Start fresh
@@ -437,6 +437,8 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 | quietyes | standing, small fist pump, eyes closed, towel (v66) | Session done |
 | proudstar | holding up a paper star, beaming (v66) | Quick session done, Move report "on its way" |
 | sitback | sitting back on his hands, happy and relieved (v66) | goal finished, Rainbow weather |
+| climbing | side view, walking up with a backpack and a bottle (v67) | the hill (Me's scene card and the journey page) |
+| flagplant | holding up a small blue flag (v67) | the hill, the week you pass a flag |
 | legday, cheer | leg press; jumping for joy | Move; goal reached and some weather moods |
 | standing, umbrella, sunny | weather moods | Weather screen (`WEATHERS`) |
 | letter | with a letter | Letters, Me |
@@ -519,7 +521,7 @@ The project has no root `.gitignore`. Nothing important is excluded from git; on
 
 ## 11. Status right now
 
-- **Last completed:** **v66** (25 Oct 2026, not yet committed):
+- **Last completed:** **v67** (25 Oct 2026, not yet committed): **Your moving journey**: moving only (the Sleep filter is gone; sleep is the diary and Me's nights chart); `previewCard()` is now a scene card (title in Gaegu, one line, a round ›, and `hillSvg` with him on it) right after the goals on Me; a "Your moving journey ›" row next to Move report on Move (`?from=move`, so Move stays lit and Back goes to Move; `FROM.move` in `ui.js`; the page's back link follows `from`). Hill pictures: `climbing` (walking up with a backpack and bottle) and `flagplant` (holding a flag), shown for 7 days after the entry that passed a flag (`hillState().planted`), standing at that flag. Before that, **v66** (25 Oct 2026):
   - **Your journey** (`js/screens/journey.js`, `#/journey?from=me`), inspired by Phavan's Habit app but calm: no streaks, rates, averages or "unmet". Me shows `previewCard()` (this month's days as a big number, 26 weeks of dots, "Your journey ›") in place of the old hill card and the "heaviest" look-backs (removed from Me). The page: a filter (Everything moving · Gym · each activity used · Sleep), Habit-style cards (round tinted icon, big number, small unit, short label; only above zero; e.g. days this month, all together, hours where timed, weeks since you started, days this year, kinds of moving, sets, heaviest, sport totals, rest weeks "taken kindly"; Sleep: nights, typical sleep, usually asleep/up), This week (7 circles), Your year (two half-year rows of dots; filled = something that day, bigger = more than once; tap for the day), Your weeks (last 12 weeks, bars scaled to the busiest week, number on top, ☾ for a rest week), Your lifts (top 5 exercises: first → latest heaviest set, sparkline with numbers; Bar + as "bar + kg"), Your hill (him walking up with flags at 10, 25, 50, 100…). One strong blue; size, ticks and words carry meaning.
   - **Workout length:** at Finish, `session.mins` = start → last set + 3 min, only when logged live on the day and 5–240 min. Editable in Fix this workout ("How long · minutes"). Counted in Journey hours and the Move report's time; shown in a session's copied text.
   - **Celebration pictures:** `cheer` (jumping) replaced by `quietyes` (workout done), `proudstar` (Quick session done, Move report "on its way"), `sitback` (goal finished, Rainbow weather). `cheer.webp` is no longer cached or used.

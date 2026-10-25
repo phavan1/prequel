@@ -1,4 +1,5 @@
-// Your journey (v66): the calm version of a habit tracker's stats, opened from the preview card on Me.
+// Your moving journey (v66, moving only since v67): the calm version of a habit tracker's stats, opened from the
+// scene card on Me and the row on Move. Sleep lives in the sleep diary and Me's nights chart instead.
 // What makes progress exciting, without the pressure: counts that only go up (no streaks, rates, averages or
 // "unmet"), a year of dots that only fills in, your weeks as bars (a quiet week is a ☾ rest week, never a zero),
 // your lifts over time with the numbers written on, and a hill with flags. One strong blue; size, shape and
@@ -7,7 +8,6 @@ import { get, today, addDays, parseKey, dateKey } from '../store.js';
 import { esc, nav, backLink, prettyDate } from '../ui.js';
 import { EXERCISES } from '../data.js';
 import { actDef } from '../activities.js';
-import { usualNight } from '../charts.js';
 
 let filter = 'all', year = null, root = null;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -21,7 +21,6 @@ export function filters(st = get()) {
   const out = [['all', 'Everything', '🌿']];
   if (st.sessions.length) out.push(['gym', 'Gym', '🏋️']);
   [...new Set((st.activities || []).map(a => a.type))].forEach(t => { const d = actDef(t); out.push([t, d.n, d.e]); });
-  if ((st.rests || []).some(r => r.end > r.start)) out.push(['sleep', 'Sleep', '🌙']);
   return out;
 }
 // every entry for a filter: {date, mins, kind, ref}
@@ -30,11 +29,10 @@ export function entries(f, st = get()) {
   const acts = t => (st.activities || []).filter(a => !t || a.type === t).map(a => ({ date: a.date, mins: Number(a.mins) || 0, kind: a.type, ref: a }));
   if (f === 'all') return gym().concat(acts());
   if (f === 'gym') return gym();
-  if (f === 'sleep') return (st.rests || []).filter(r => r.end > r.start).map(r => ({ date: r.date, mins: (r.end - r.start) / 60000, kind: 'sleep', ref: r }));
   return acts(f);
 }
 const byDate = list => { const m = {}; list.forEach(e => { (m[e.date] = m[e.date] || []).push(e); }); return m; };
-const kindName = k => k === 'gym' ? 'Gym' : k === 'sleep' ? 'Sleep' : actDef(k).n;
+const kindName = k => k === 'gym' ? 'Gym' : actDef(k).n;
 
 // ---------- the cards: an icon, a big number, a small unit, a short label. Only ever above zero ----------
 const ICON = {
@@ -66,15 +64,6 @@ export function cardsFor(f, st = get()) {
   if (!list.length) return out;
   const ym = t.slice(0, 7), y = t.slice(0, 4), month = LONG[Number(t.slice(5, 7)) - 1];
   const daysThisMonth = dates.filter(d => d.startsWith(ym)).length, daysThisYear = dates.filter(d => d.startsWith(y)).length;
-  if (f === 'sleep') {
-    if (daysThisMonth) out.push(['moon', daysThisMonth, daysThisMonth === 1 ? 'night' : 'nights', 'logged in ' + month]);
-    out.push(['stack', dates.length, dates.length === 1 ? 'night' : 'nights', 'all together']);
-    const per = Object.values(byDate(list)).map(l => l.reduce((n, e) => n + e.mins, 0)).sort((a, b) => a - b), mid = per[per.length >> 1];
-    if (mid) out.push(['clock', fmtNum(mid / 60), 'hours', 'typical sleep in a day']);
-    const u = usualNight(list.map(e => e.ref));
-    if (u) { out.push(['moon', u.asleep.replace(/(am|pm)$/, ''), u.asleep.slice(-2), 'usually asleep around']); out.push(['sun', u.up.replace(/(am|pm)$/, ''), u.up.slice(-2), 'usually up around']); }
-    return out;
-  }
   const word = f === 'gym' ? ['session', 'sessions'] : ['time', 'times'];
   if (daysThisMonth) out.push(['cal', daysThisMonth, daysThisMonth === 1 ? 'day' : 'days', (f === 'all' ? 'moved' : 'active') + ' in ' + month]);
   out.push(['stack', list.length, list.length === 1 ? word[0] : word[1], 'all together']);
@@ -163,17 +152,33 @@ function thisWeek(f) {
 
 // ---------- the hill: him walking up, with a flag at each milestone ----------
 const FLAGS = [10, 25, 50, 100, 250, 500, 1000];
-function theHill(f) {
-  const n = entries(f).length; if (!n) return '';
-  const next = FLAGS.find(x => x > n) || n, W = 340, H = 170;
-  const P = t => { const x = 16 + t * (W - 40), y = H - 22 - (Math.sin(t * Math.PI / 2) ** 1.4) * (H - 70); return [x, y]; };
+// where he is: n so far, the next flag, and whether he passed one this week (then he's planting it)
+export function hillState(f = 'all') {
+  const list = entries(f).sort((a, b) => a.date.localeCompare(b.date)), n = list.length; if (!n) return null;
+  const next = FLAGS.find(x => x > n) || n, last = FLAGS.filter(x => x <= n).pop();
+  const planted = last && between(list[last - 1].date, today()) < 7 ? last : null;
+  return { n, next, last, planted };
+}
+export function hillSvg(f, o = {}) {
+  const h = hillState(f); if (!h) return '';
+  const W = o.W || 340, H = o.H || 170, L = o.left || 16, R = o.right || 24, fs = o.flag || 26;
+  const P = t => { const x = L + t * (W - L - R), y = H - 22 - (Math.sin(t * Math.PI / 2) ** 1.4) * (H - (o.top || 70)); return [x, y]; };
   let path = ''; for (let i = 0; i <= 40; i++) { const [x, y] = P(i / 40); path += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1); }
-  let s = '<svg class="jhill" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Your hill: ' + n + ' so far, next flag at ' + next + '">' +
-    '<path d="' + path + ' L' + (W - 24) + ' ' + H + ' L16 ' + H + 'Z" class="jground"/><path d="' + path + '" class="jpath"/>';
-  FLAGS.filter(x => x <= next).forEach(x => { const [fx, fy] = P(x / next), got = n >= x; s += '<line x1="' + fx.toFixed(1) + '" y1="' + fy.toFixed(1) + '" x2="' + fx.toFixed(1) + '" y2="' + (fy - 26).toFixed(1) + '" class="jpole"/><path d="M' + fx.toFixed(1) + ' ' + (fy - 26).toFixed(1) + 'l16 5-16 5z" class="jflag' + (got ? ' got' : '') + '"/><text x="' + (fx + 3).toFixed(1) + '" y="' + (fy - 30).toFixed(1) + '" class="jfl">' + x + '</text>'; });
-  const [hx, hy] = P(Math.min(1, n / next));
-  s += '<image href="art/cwalk.webp" x="' + (hx - 14).toFixed(1) + '" y="' + (hy - 60).toFixed(1) + '" width="30" height="62"/></svg>';
-  return s + '<p class="jcap">' + n + ' so far' + (next > n ? ' · next flag at ' + next : '') + '. It only ever climbs.</p>';
+  let s = '<svg class="' + (o.cls || 'jhill') + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Your hill: ' + h.n + ' so far, next flag at ' + h.next + '">' +
+    '<path d="M0 ' + P(0)[1].toFixed(1) + ' L' + path.slice(1) + ' L' + W + ' ' + P(1)[1].toFixed(1) + ' L' + W + ' ' + H + ' L0 ' + H + 'Z" class="jground"/><path d="' + path + '" class="jpath"/>';
+  FLAGS.filter(x => x <= h.next).forEach(x => {
+    if (x === h.planted) return; // he's holding that one
+    const [fx, fy] = P(x / h.next), got = h.n >= x;
+    s += '<line x1="' + fx.toFixed(1) + '" y1="' + fy.toFixed(1) + '" x2="' + fx.toFixed(1) + '" y2="' + (fy - fs).toFixed(1) + '" class="jpole"/><path d="M' + fx.toFixed(1) + ' ' + (fy - fs).toFixed(1) + 'l' + (fs * 0.6).toFixed(1) + ' ' + (fs * 0.2).toFixed(1) + '-' + (fs * 0.6).toFixed(1) + ' ' + (fs * 0.2).toFixed(1) + 'z" class="jflag' + (got ? ' got' : '') + '"/><text x="' + (fx + 3).toFixed(1) + '" y="' + (fy - fs - 4).toFixed(1) + '" class="jfl">' + x + '</text>';
+  });
+  const at = h.planted ? h.planted / h.next : Math.min(1, h.n / h.next), [hx, hy] = P(at), ph = o.him || 62, img = h.planted ? 'flagplant' : 'climbing', ratio = h.planted ? 286 / 640 : 339 / 640;
+  s += '<image href="art/' + img + '.webp" x="' + (hx - ph * ratio / 2).toFixed(1) + '" y="' + (hy - ph + 2).toFixed(1) + '" width="' + (ph * ratio).toFixed(1) + '" height="' + ph + '"/>';
+  if (h.planted) s += '<text x="' + (hx + ph * ratio * 0.45).toFixed(1) + '" y="' + (hy - ph - 2).toFixed(1) + '" class="jfl">' + h.planted + '</text>';
+  return s + '</svg>';
+}
+function theHill(f) {
+  const h = hillState(f); if (!h) return '';
+  return hillSvg(f) + '<p class="jcap">' + h.n + ' so far' + (h.planted ? ' · you just passed ' + h.planted + '!' : '') + (h.next > h.n ? ' · next flag at ' + h.next : '') + '. It only ever climbs.</p>';
 }
 
 // ---------- the page ----------
@@ -183,9 +188,9 @@ function render() {
   if (!fs.some(x => x[0] === filter)) filter = 'all';
   const t = today(), list = entries(filter, st), years = [...new Set(list.map(e => e.date.slice(0, 4)).concat(t.slice(0, 4)))].sort().reverse();
   if (!year || !years.includes(year)) year = years[0];
-  const cards = cardsFor(filter, st), isMove = filter !== 'sleep', L = (filter === 'all' || filter === 'gym') ? lifts(st).filter(x => x.pts.length).slice(0, 5) : [];
-  root.innerHTML = '<div class="top">' + backLink('#/me', 'Me') + '</div>' +
-    '<h1 class="jtitle">Your journey</h1><p class="muted jsub">Everything here only goes up.</p>' +
+  const cards = cardsFor(filter, st), isMove = true, L = (filter === 'all' || filter === 'gym') ? lifts(st).filter(x => x.pts.length).slice(0, 5) : [];
+  root.innerHTML = '<div class="top">' + backLink() + '</div>' +
+    '<h1 class="jtitle">Your moving journey</h1><p class="muted jsub">Everything here only goes up.</p>' +
     '<div class="chips jfilter" role="group" aria-label="What to look at">' + fs.map(x => '<button type="button" class="chip small" data-jf="' + esc(x[0]) + '" aria-pressed="' + (x[0] === filter) + '"><span aria-hidden="true">' + x[2] + '</span> ' + esc(x[1]) + '</button>').join('') + '</div>' +
     (list.length
       ? '<div class="jcards">' + cards.map((c, i) => card(c[0], c[1], c[2], c[3], i)).join('') + '</div>' +
@@ -209,10 +214,12 @@ function onClick(e) {
   }
 }
 
-// ---------- the preview card on Me ----------
+// ---------- the scene card on Me (v67): a little hillside with him on it, a title you can't miss, one line ----------
 export function previewCard() {
   const st = get(), list = entries('all', st); if (!list.length) return '';
-  const t = today(), month = LONG[Number(t.slice(5, 7)) - 1], days = new Set(list.filter(e => e.date.startsWith(t.slice(0, 7))).map(e => e.date)).size;
-  return '<a class="jpreview card" href="#/journey?from=me"><div class="jph"><span class="jn">' + (days ? days + '<small>' + (days === 1 ? 'day' : 'days') + '</small>' : list.length + '<small>' + (list.length === 1 ? 'time' : 'times') + '</small>') + '</span><span class="jl">' + (days ? 'moved in ' + month : 'you\'ve moved') + '</span></div>' +
-    yearDots('all', t.slice(0, 4), { weeks: 26, cs: 9, cls: 'jmini' }) + '<span class="jgo"><b>Your journey</b> ›</span></a>';
+  const t = today(), month = LONG[Number(t.slice(5, 7)) - 1], days = new Set(list.filter(e => e.date.startsWith(t.slice(0, 7))).map(e => e.date)).size, h = hillState('all');
+  const line = (days ? days + (days === 1 ? ' day' : ' days') + ' moved in ' + month : list.length + (list.length === 1 ? ' time' : ' times') + ' so far') + (h.planted ? ' · you just passed ' + h.planted + '!' : h.next > h.n ? ' · next flag at ' + h.next : '');
+  return '<a class="jscene" href="#/journey?from=me" aria-label="Your moving journey: ' + esc(line) + '">' +
+    '<span class="jsthead"><span class="jst"><b>Your moving journey</b><small>' + esc(line) + '</small></span><span class="jgo2" aria-hidden="true">›</span></span>' +
+    hillSvg('all', { W: 340, H: 150, cls: 'jhill jscenehill', left: 18, right: 46, top: 96, him: 64, flag: 22 }) + '</a>';
 }

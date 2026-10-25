@@ -1,5 +1,5 @@
 // Offline support: the app opens even with no signal. Change VERSION when you publish an update.
-const VERSION = 'prequel-v66';
+const VERSION = 'prequel-v67';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/store.js', 'js/data.js', 'js/ui.js', 'js/sky-model.js', 'js/goals.js', 'js/charts.js', 'js/nutrition.js', 'data/foods.json',
@@ -7,7 +7,7 @@ const SHELL = [
   'js/screens/wins.js', 'js/screens/mind.js', 'js/screens/letters.js', 'js/screens/days.js', 'js/screens/me.js', 'js/screens/sky.js', 'js/screens/quilt.js', 'js/screens/skate.js', 'js/screens/keepup.js', 'js/screens/stack.js', 'js/screens/journey.js', 'js/gamekit.js', 'js/weight.js', 'js/screens/settings.js', 'js/screens/share.js', 'js/cards.js', 'js/pdf.js', 'js/reports.js', 'js/news.js', 'js/cycle.js', 'js/activities.js', 'js/screens/movehub.js', 'js/music.js', 'js/screens/ontape.js',
   ...['nunito-latin-500', 'nunito-latin-700', 'nunito-latin-800', 'nunito-latin-900', 'gaegu-latin-700'].map(n => 'fonts/' + n + '-normal.woff2'),
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
-  ...['standing', 'waving', 'lying', 'asleep', 'eating', 'cooking', 'umbrella', 'sunny', 'nightwatch', 'letter', 'stickynote', 'skate', 'legday', 'sitting', 'skatego', 'afternoon', 'cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve', 'sewing', 'onrepeat', 'talking', 'moving', 'proudstar', 'quietyes', 'sitback'].map(n => 'art/' + n + '.webp')
+  ...['standing', 'waving', 'lying', 'asleep', 'eating', 'cooking', 'umbrella', 'sunny', 'nightwatch', 'letter', 'stickynote', 'skate', 'legday', 'sitting', 'skatego', 'afternoon', 'cwalk', 'cgrab', 'cflip', 'cfloat', 'cmanual', 'ccarve', 'sewing', 'onrepeat', 'talking', 'moving', 'proudstar', 'quietyes', 'sitback', 'climbing', 'flagplant'].map(n => 'art/' + n + '.webp')
 ];
 
 self.addEventListener('install', e => {
