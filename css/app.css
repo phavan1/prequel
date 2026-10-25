@@ -972,3 +972,63 @@ html[data-theme="dark"] .nsum b { color: #8FB0FF; }
 html[data-theme="dark"] .nights .nband { fill: rgba(143, 176, 255, 0.07); }
 html[data-theme="dark"] .nights rect[fill="#1F55D0"] { fill: #5B86F0; }
 .addset { align-self: flex-start; margin: 2px 0 6px 34px; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px dashed var(--line); background: transparent; color: var(--blue); font-weight: 800; font-size: 14px; } /* v65 */
+
+/* v66: Your journey. Cards like a habit app's (icon, big number, small unit, short label), all calm: only counts
+   that go up. One strong blue; dot size, shapes and words carry the meaning, never colour alone. */
+.jtitle { margin: 4px 0 0; }
+.jsub { margin: 0 0 4px; }
+.jfilter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.jfilter::-webkit-scrollbar { display: none; }
+.jfilter .chip { flex: none; }
+.jcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.jcard { background: var(--paper); border: 1px solid var(--line); border-radius: 22px; padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 4px; min-height: 132px; }
+.jic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #1F55D0; margin-bottom: 6px; }
+.jic svg { width: 22px; height: 22px; }
+.jn { font-size: 32px; font-weight: 900; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.jn small { font-size: 14px; font-weight: 800; color: var(--ink-soft); margin-left: 5px; }
+.jl { font-size: 13px; font-weight: 700; color: var(--ink-soft); line-height: 1.25; }
+.jhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.jhead .chips { flex-wrap: nowrap; }
+.jyear, .jmini, .jweeks, .jhill { width: 100%; display: block; }
+.jyear .jmon { font: 800 10px var(--font-body); fill: var(--ink-soft); }
+.jyear + .jyear { margin-top: 6px; }
+.jdot { fill: none; stroke: #C9BFA6; stroke-width: 0.7; }
+.jdot.on { fill: #1F55D0; stroke: none; }
+.jdot.sel { stroke: var(--ink); stroke-width: 1.2; }
+.jread { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.jweek { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.jwd { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.jwd i { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #C9BFA6; display: grid; place-items: center; font-style: normal; font-weight: 900; color: #FFFFFF; }
+.jwd.on i { background: #1F55D0; border-color: #1F55D0; }
+.jwd.today i { box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px #1F55D0; }
+.jwd.later i { border-style: dashed; opacity: .5; }
+.jwd b { font-size: 12px; color: var(--ink-soft); }
+.jweeks .jbn { font: 900 12px var(--font-body); fill: var(--ink); }
+.jweeks .jrest { font: 700 15px var(--font-body); fill: #8FA9C7; }
+.jweeks .jwl { font: 700 9.5px var(--font-body); fill: var(--ink-soft); }
+.jweeks .jbase { stroke: var(--line); stroke-width: 1.5; }
+.jlift { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.jlift > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.jlift b { font-size: 15px; }
+.jlift span { font-size: 15px; font-weight: 800; color: #1F55D0; }
+.jlift small { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.jspark { width: 150px; flex: none; }
+.jspark .jslbl { font: 800 9.5px var(--font-body); fill: var(--ink); }
+.jhill .jground { fill: #E2F3E8; }
+.jhill .jpath { fill: none; stroke: #8DBF9E; stroke-width: 3; stroke-dasharray: 2 6; stroke-linecap: round; }
+.jhill .jpole { stroke: #6B6456; stroke-width: 1.6; }
+.jhill .jflag { fill: none; stroke: #1F55D0; stroke-width: 1.6; }
+.jhill .jflag.got { fill: #1F55D0; }
+.jhill .jfl { font: 800 10px var(--font-body); fill: var(--ink); }
+.jcap { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.jpreview { color: var(--ink); gap: 10px; }
+.jpreview .jph { display: flex; align-items: baseline; gap: 8px; }
+.jpreview .jgo { align-self: flex-end; color: #1F55D0; font-size: 15px; font-weight: 800; }
+.jpreview .jgo b { font-weight: 900; }
+html[data-theme="dark"] .jic { color: #1F55D0; }
+html[data-theme="dark"] .jdot.on, html[data-theme="dark"] .jwd.on i { fill: #5B86F0; background: #5B86F0; border-color: #5B86F0; }
+html[data-theme="dark"] .jlift span { color: #8FB0FF; }
+html[data-theme="dark"] .jhill .jground { fill: #23352A; }
+html[data-theme="dark"] .jweeks rect, html[data-theme="dark"] .jspark circle { fill: #5B86F0; }
+html[data-theme="dark"] .jspark polyline { stroke: #5B86F0; }
+html[data-theme="dark"] .jpreview .jgo { color: #8FB0FF; }

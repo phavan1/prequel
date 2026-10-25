@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 66, date: '2026-10-25', items: [
+    'New on Me: Your journey. Tap the card for your moving at a glance: big numbers that only go up, this week, a year of dots that fills in, your weeks, your lifts over time and a little hill with flags. Pick Everything, Gym, any activity or Sleep at the top.',
+    'Workouts now remember how long they took (from starting to your last set). You can change it in Fix this workout.',
+    'New pictures for the happy moments: when you finish a workout or a goal, he\'s proud and calm instead of jumping about.'
+  ] },
   { v: 65, date: '2026-10-24', items: [
     'Fix this workout: picking "Bar +" for a set now sticks, with a box for the kg on each side.',
     'Fix this workout also has "+ Add a set" under each exercise, for a set you forgot to log.'

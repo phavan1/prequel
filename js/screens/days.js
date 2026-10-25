@@ -150,11 +150,13 @@ export function editSession(root, id, done) {
   if (s.noReps) { editTicked(root, s, done); return; }
   const typeOf = x => (EXERCISES[x.key] || st.customExercises[x.key] || {}).t || (x.sets.some(z => z.b !== '' && z.b != null) ? 'wr' : 'hold');
   const removed = new Set(), w = JSON.parse(JSON.stringify(s.exercises)); // a working copy, so Cancel changes nothing
+  let mins = s.mins ? String(s.mins) : '';
   // a weight can be a number or a word (v43): Not noted, Bar only, Body weight
   const KIND = '<option value="">kg</option>' + Object.keys(SPECIAL).map(v => '<option value="' + v + '">' + SPECIAL[v] + '</option>').join('') + '<option value="b+">Bar +</option>';
   const weightCell = (z, i, j) => { const sp = SPECIAL[z.a], bp = isBP(z.a); return '<div class="wcell' + (sp ? ' word' : '') + '"><input type="' + (sp ? 'hidden' : 'text') + '" inputmode="decimal" data-a="' + i + ':' + j + '" value="' + (sp ? '' : esc(bp ? bpKg(z.a) : z.a)) + '" placeholder="' + (bp ? 'kg each side' : 'kg') + '" aria-label="Set ' + (j + 1) + (bp ? ' kg on each side of the bar' : ' weight') + '">' +
     '<select data-ak="' + i + ':' + j + '" data-was="' + (sp ? z.a : bp ? 'b+' : '') + '" aria-label="Set ' + (j + 1) + ': kind of weight">' + KIND.replace('value="' + (sp ? z.a : bp ? 'b+' : '') + '"', 'value="' + (sp ? z.a : bp ? 'b+' : '') + '" selected') + '</select></div>'; };
   const draw = () => '<h2>' + esc(s.workoutName) + '</h2><p class="muted">' + esc(prettyDate(s.date, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Fix any number, mark a weight as not noted, put the exercises in the order you did them, or remove a set. It still counts.</p>' +
+    '<label class="field-label" for="sessMins">HOW LONG · MINUTES (optional)</label><input id="sessMins" type="text" inputmode="numeric" value="' + esc(mins) + '" placeholder="e.g. 60" style="max-width:140px">' + // v66
     w.map((x, i) => { const t = typeOf(x), wr = t === 'wr' || t === 'bw'; return '<div class="exhead"><span>' + esc(x.swap || x.name) + '</span>' + (w.length > 1 ? '<span class="exmove"><button type="button" data-exup="' + i + '" aria-label="Move earlier"' + (i ? '' : ' disabled') + '>↑</button><button type="button" data-exdown="' + i + '" aria-label="Move later"' + (i < w.length - 1 ? '' : ' disabled') + '>↓</button></span>' : '') + '</div>' +
       '<div class="setedit" style="font-size:11px;font-weight:800;color:var(--ink-soft)"><span></span><span style="text-align:center">' + (wr ? 'WEIGHT' : t === 'mins' ? 'MINUTES' : 'SECONDS') + '</span><span style="text-align:center">' + (wr ? 'REPS' : '') + '</span><span></span></div>' +
       x.sets.map((z, j) => removed.has(i + ':' + j) ? '' : '<div class="setedit"><span class="n">' + (j + 1) + '</span>' + (wr ? weightCell(z, i, j) : '<input type="text" inputmode="decimal" data-a="' + i + ':' + j + '" value="' + esc(z.a) + '" aria-label="Set ' + (j + 1) + ' amount">') +
@@ -182,6 +184,7 @@ export function editSession(root, id, done) {
     // only × removes a set: an empty weight on a weight exercise means "Not noted" (v43)
     w.forEach((x, i) => { const wr = ['wr', 'bw'].includes(typeOf(x)); x.sets = x.sets.filter((z, j) => !removed.has(i + ':' + j)).map(z => (z.a === 'b+' ? Object.assign(z, { a: 'bar' }) : z)).map(z => (wr && String(z.a).trim() === '' && String(z.b).trim() !== '' ? Object.assign(z, { a: 'nn' }) : z)).filter(z => String(z.a).trim() !== ''); });
     s.exercises = w.filter(x => x.sets.length);
+    const mn = Math.round(Number(mins)); if (mn > 0 && mn <= 600) s.mins = mn; else delete s.mins; // v66: how long
     const n = s.exercises.reduce((a, x) => a + x.sets.length, 0);
     st.moments.forEach(m => { if (m.ref === id) m.text = s.workoutName + (n ? ' · ' + n + (n === 1 ? ' set' : ' sets') : ''); });
     save(); closeSheet(); done ? done() : render(root);
@@ -189,6 +192,7 @@ export function editSession(root, id, done) {
   // carry what's been typed across redraws
   sheet.addEventListener('change', e => { if (e.target.matches('[data-ak]')) { keepTyped(); redraw(); } });
   function keepTyped() {
+    const mi = sheet.querySelector('#sessMins'); if (mi) mins = mi.value.trim();
     sheet.querySelectorAll('[data-a]').forEach(inp => { const [i, j] = inp.dataset.a.split(':').map(Number), sel = sheet.querySelector('[data-ak="' + inp.dataset.a + '"]'); w[i].sets[j].a = sel && sel.value === 'b+' ? 'b+' + (isBP(w[i].sets[j].a) || sel.dataset.was === 'b+' ? inp.value.trim() : '') : sel && sel.value ? sel.value : inp.value.trim(); }); // v65: Bar + stays picked while its number is still empty
     sheet.querySelectorAll('[data-b]').forEach(inp => { const [i, j] = inp.dataset.b.split(':').map(Number); w[i].sets[j].b = inp.value.trim(); });
   }

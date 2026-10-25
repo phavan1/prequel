@@ -57,7 +57,7 @@ export function checkFinished() {
   const done = st.goals.find(g => !g.finished && !g.paused && count(g) >= g.target);
   if (!done) return;
   done.finished = Date.now(); save();
-  openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">' + him('cheer', 'pop', 'Your character jumping with joy') +
+  openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">' + him('sitback', 'pop', 'Your character sitting back, happy and relieved') +
     '<div class="big">You did it.</div><p class="say" style="margin:0">' + esc(done.name) + ': ' + done.target + ' ' + esc(unitOf(done)) + '.</p>' +
     '<p class="muted">It\'s on your finished shelf now, for good. No next target. Just this.</p><button type="button" class="btn wide" data-close>Lovely</button></div>', null);
 }

@@ -273,11 +273,14 @@ function finish() {
   });
   const first = st.sessions.length === 0;
   const session = { id: uid(), date: a.date, ts: Date.now(), workoutId: a.id, workoutName: a.n, light: a.light, exercises };
+  // how long it took (v66): from starting to your last set, plus a few minutes to cool down. Only when logged live,
+  // on the day, and only if it's believable (5 min to 4 h); otherwise left out rather than made up
+  if (a.started && a.lastAt && a.date === today()) { const m = Math.round((Math.min(Date.now(), a.lastAt + 3 * 60000) - a.started) / 60000); if (m >= 5 && m <= 240) session.mins = m; }
   st.sessions.push(session);
   addMoment('move', a.n + (sets ? ' · ' + sets + (sets === 1 ? ' set' : ' sets') : ''), a.date, { ref: session.id, bright: pb || first ? 1 : 0 });
   st.active = null; save();
   const n = st.sessions.length;
-  openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + him('cheer', 'pop', 'Your character jumping with joy') +
+  openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + him('quietyes', 'pop', 'Your character, quietly proud, towel over his shoulder') +
     '<div class="big">Session ' + n + ' done.</div>' +
     '<p class="muted">' + (sets ? exercises.length + (exercises.length === 1 ? ' exercise, ' : ' exercises, ') + sets + (sets === 1 ? ' set' : ' sets') + '. ' : 'You showed up. It counts. ') + (pb ? 'A new heaviest lift, so your star shines brighter.' : 'A star just went up in your sky.') + '</p>' +
     '<p class="muted" style="font-size:13px">' + n + ' of 100.' + (n >= 100 ? ' You made it. And it keeps going.' : '') + '</p>' +
@@ -550,7 +553,7 @@ function setWords(x, e, k) {
 // the copyable text: a title, the date, then each exercise in the order you did it, sets on one line
 export function sessionText(s, n) {
   const lib = EX(), c = s.exercises.length, sets = setCount(s);
-  const lines = ['✦ Session ' + n + ' · ' + s.workoutName, dayDate(s.date) + ' · ' + c + (c === 1 ? ' exercise' : ' exercises') + (sets ? ' · ' + sets + (sets === 1 ? ' set' : ' sets') : '') + (s.light === 'yellow' ? ' · yellow day' : s.light === 'red' ? ' · gentle day' : ''), ''];
+  const lines = ['✦ Session ' + n + ' · ' + s.workoutName, dayDate(s.date) + (s.mins ? ' · ' + s.mins + ' min' : '') + ' · ' + c + (c === 1 ? ' exercise' : ' exercises') + (sets ? ' · ' + sets + (sets === 1 ? ' set' : ' sets') : '') + (s.light === 'yellow' ? ' · yellow day' : s.light === 'red' ? ' · gentle day' : ''), ''];
   s.exercises.forEach((x, i) => {
     lines.push((i + 1) + '. ' + (x.swap ? x.swap + ' (instead of ' + x.name.toLowerCase() + ')' : x.name));
     lines.push('   ' + (x.sets.length ? x.sets.map(z => setWords(z, lib[x.key], x.key)).join('  ·  ') : 'done ✓'));
@@ -665,7 +668,7 @@ function logTicked(keys) {
   addMoment('move', 'Quick session · ' + c, d, { ref: session.id, bright: first ? 1 : 0 });
   save();
   const n = st.sessions.length;
-  openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + him('cheer', 'pop', 'Your character jumping with joy') +
+  openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + him('proudstar', 'pop', 'Your character holding up a paper star, beaming') +
     '<div class="big">Session ' + n + ' done.</div>' +
     '<p class="muted">' + c + ', no numbers needed. A star just went up in your sky.</p>' +
     '<p class="muted" style="font-size:13px">' + n + ' of 100.' + (n >= 100 ? ' You made it. And it keeps going.' : '') + '</p>' +

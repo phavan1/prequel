@@ -66,7 +66,7 @@ export const WEATHERS = [
   ['Windy', 'restless, anxious', '#4FA89A', '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/>', 'Everything blowing about. Let\'s hold on to something small.', 'standing'],
   ['Heatwave', 'burnt out', '#E0663A', '<circle cx="12" cy="9" r="3.5"/><path d="M12 2.5v1.5M5.5 9H7M17 9h1.5M7.4 4.4l1 1M16.6 4.4l-1 1M4 17c2-1.5 4 1.5 6 0s4 1.5 6 0 3 .5 4 0M4 21c2-1.5 4 1.5 6 0s4 1.5 6 0 3 .5 4 0"/>', 'Too much pressure. Water and shade first.', 'nightwatch'],
   ['Snow / still', 'quiet, frozen', '#8FA9C7', '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/>', 'Very still today. Blankets count as plans.', 'asleep'],
-  ['Rainbow', 'relief', '#C77BD6', '<path d="M3 18a9 9 0 0 1 18 0M6.5 18a5.5 5.5 0 0 1 11 0M10 18a2 2 0 0 1 4 0"/>', 'After all that. Look at you.', 'cheer'],
+  ['Rainbow', 'relief', '#C77BD6', '<path d="M3 18a9 9 0 0 1 18 0M6.5 18a5.5 5.5 0 0 1 11 0M10 18a2 2 0 0 1 4 0"/>', 'After all that. Look at you.', 'sitback'],
   ['Clear night', 'calm, peaceful', '#3C4A8A', '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3l.6 1.4L19 5l-1.4.6L17 7l-.6-1.4L15 5l1.4-.6z"/>', 'Calm and quiet. Stay a while.', 'nightwatch']
 ];
 export const weatherByName = n => WEATHERS.find(w => w[0] === n);
