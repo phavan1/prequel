@@ -8,13 +8,13 @@ import { get, save } from '../store.js';
 import { esc, backLink, toast, reduceMotion } from '../ui.js';
 import { record, fullCanvas, soundOn, toggleSound, soundIcon } from '../gamekit.js';
 
-const SEG = 2;                 // metres per road segment
+export const SEG = 0.6;               // metres per road segment (v69: the road was drawn for 0.6 m but moved as if 2 m, so it felt slow and stuck)
 const SL = 200;                // segment length in world units
 const ROAD = 1050;             // half the road's width, world units (a country lane, not a highway)
 const CAM_H = 1500;            // camera height above the road
 const DEPTH = 0.84;            // camera depth (about a 100° field of view)
 const N = 170;                 // segments drawn ahead
-const KMH = 22;                // a calm cycling pace
+const GEARS = [['Easy', 22], ['Brisk', 35], ['Breezy', 50]]; // v69: tap the pill to change gear (km/h)
 const PLACE_KM = 6;
 export const PLACES = [
   { name: 'Open fields', grass: ['#A9D18E', '#9CC781'], far: '#8DB58A', near: '#7FA877', things: ['hay', 'fence', 'tree', 'flowers'] },
@@ -51,21 +51,25 @@ export function mount(root, params) {
   root.innerHTML = '<canvas id="rd" aria-label="Slow ride: an endless calm bike ride"></canvas>' +
     '<div class="sk-hud rd-hud">' + backLink().replace('class="back"', 'class="sk-back"') + '<button type="button" class="sk-back gsound" id="rdSound" aria-label="Sound on or off">' + soundIcon() + '</button></div>' +
     '<div class="rd-place" id="rdPlace"></div><div class="rd-hint" id="rdHint">Drag to steer, or just let it ride.</div>' +
-    '<div class="rd-km" id="rdKm" aria-live="off"></div>';
-  const cv = root.querySelector('#rd'), kmEl = root.querySelector('#rdKm'), placeEl = root.querySelector('#rdPlace'), hint = root.querySelector('#rdHint');
-  const { g, box, stop } = fullCanvas(cv, () => draw());
+    '<div class="rd-km" id="rdKm" aria-live="off"></div>' +
+    '<button type="button" class="rd-gear" id="rdGear"></button>';
+  const gearEl = root.querySelector('#rdGear'), cv = root.querySelector('#rd'), kmEl = root.querySelector('#rdKm'), placeEl = root.querySelector('#rdPlace'), hint = root.querySelector('#rdHint');
+  const { g, box, stop } = fullCanvas(cv, () => draw(), 1.5); // v69: a little under the iPhone's full sharpness, so every frame is quick (a soft painted look, and much smoother)
   const rider = new Image(); rider.src = 'art/biker.webp';
 
   // where you are: in segments (the total distance carries on), sideways on the road (-1..1), and steering
-  const s = { pos: startM / SEG, x: 0, tx: 0, drag: null, t: 0, sky: 0, place: -1, savedAt: 0, lean: 0 };
+  const gear0 = Math.max(0, Math.min(2, rec.gear | 0));
+  const s = { pos: startM / SEG, v: GEARS[gear0][1], gear: gear0, pedal: 0, x: 0, tx: 0, drag: null, t: 0, sky: 0, place: -1, savedAt: 0, lean: 0 };
   let sky = skyNow();
+  const showGear = () => { const [name] = GEARS[s.gear]; gearEl.innerHTML = '<span class="rd-dots" aria-hidden="true">' + GEARS.map((_, k) => '<i' + (k <= s.gear ? ' class="on"' : '') + '></i>').join('') + '</span>' + name; gearEl.setAttribute('aria-label', 'Speed: ' + name + '. Tap to change.'); };
+  showGear();
 
   // ---------- drawing helpers ----------
   const poly = (x1, y1, w1, x2, y2, w2, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(x1 - w1, y1 + 1); g.lineTo(x2 - w2, y2 - 0.5); g.lineTo(x2 + w2, y2 - 0.5); g.lineTo(x1 + w1, y1 + 1); g.closePath(); g.fill(); };
   function hills(W, H, horizon, off, amp, col, f, seed) {
     g.fillStyle = col; g.beginPath(); g.moveTo(0, H);
     for (let x = 0; x <= W + 8; x += 8) { const u = (x + off) * f; g.lineTo(x, horizon - amp * (0.55 + 0.3 * Math.sin(u + seed) + 0.15 * Math.sin(u * 2.7 + seed * 2))); }
-    g.lineTo(W, H); g.fill();
+    g.lineTo(W, horizon + 40); g.lineTo(0, horizon + 40); g.fill();
   }
   // one thing by the road, drawn at (x, y = its base on the ground) with a scale k (screen px per world unit)
   function thing(kind, x, y, k, lights) {
@@ -104,25 +108,28 @@ export function mount(root, params) {
     hills(W, H, horizon + 4, s.sky * 0.3, horizon * 0.22, mix(P.far, Q.far, bl), 0.006, 1);
     hills(W, H, horizon + 10, s.sky * 0.6, horizon * 0.12, mix(P.near, Q.near, bl), 0.011, 4);
     // the road, front to back, with hills hiding what's behind them
-    const camY = CAM_H + height(s.pos), pts = [], U = Math.min(W, H * 0.75) / 2;
-    let x = 0, dx = -curve(base) * pct, maxY = H;
+    const camY = CAM_H + height(s.pos), pts = [], U = Math.min(W, H * 0.75) / 2, depth = DEPTH * (1 - 0.1 * Math.max(0, (s.v - 22) / 28)); // a touch wider when you go faster
+    let x = 0, dx = -curve(base) * pct, maxY = H, lx = 0, lw = 0, ly = 0, chain = false; // lx, ly, lw: where the last strip drawn ended (its middle, height, half-width)
     // the ground under everything, so nothing shows through below the nearest bit of road
     g.fillStyle = mix(P.grass[0], Q.grass[0], bl); g.fillRect(0, horizon, W, H - horizon);
-    const proj = (wx, wy, wz) => { const sc = DEPTH / wz; return [W / 2 + sc * (wx - s.x * ROAD) * U, horizon - sc * (wy - camY) * U, sc * ROAD * U, sc]; };
+    const proj = (wx, wy, wz) => { const sc = depth / wz; return [W / 2 + sc * (wx - s.x * ROAD) * U, horizon - sc * (wy - camY) * U, sc * ROAD * U, sc]; };
     for (let n = 1; n < N; n++) {
       const i = base + n, z1 = (n - 1 - pct) * SL + 330, z2 = z1 + SL;
       const [x1, y1, w1, sc1] = proj(x, height(i - 1), z1), [x2, y2, w2] = proj(x + dx, height(i), z2);
       x += dx; dx += curve(i) * 3.4;
       pts.push({ i, x: x1, y: y1, w: w1, sc: sc1, clip: maxY });
       if (n === 1) pts.U = U;
-      if (y2 >= maxY || y2 >= y1) continue;
+      if (y2 >= maxY || y2 >= y1) { chain = false; continue; } // hidden behind a hill
+      if (!chain) { lx = x1; ly = y1; lw = w1; chain = true; }
+      if (ly - y2 < 1) continue; // far away a segment is thinner than a pixel: fold it into the next strip (v69: far fewer shapes per frame)
       const band = Math.floor(i / 3) % 2, pl = placeAt(i * SEG), gc = mix(pl.a.grass[band], pl.b.grass[band], pl.blend);
-      g.fillStyle = gc; g.fillRect(0, y2 - 0.5, W, y1 - y2 + 1.5);
-      if (pl.a.water || (pl.b.water && pl.blend > 0.5)) poly(0, y1, x1 - w1 * 2.2, 0, y2, x2 - w2 * 2.2, band ? '#7FB3D6' : '#86B9DB'); // water on the left
-      poly(x1, y1, w1 * 1.12, x2, y2, w2 * 1.12, band ? '#E8DCC0' : '#D9CCAE');
-      poly(x1, y1, w1, x2, y2, w2, band ? '#8E8F95' : '#888990');
-      if (band) poly(x1, y1, w1 * 0.025, x2, y2, w2 * 0.025, '#F4EFE1');
-      maxY = y2;
+      const ny = ly; // draw from the last strip's far edge, so folded segments leave no gaps
+      g.fillStyle = gc; g.fillRect(0, y2 - 0.5, W, ny - y2 + 1.5);
+      if (pl.a.water || (pl.b.water && pl.blend > 0.5)) poly(0, ny, lx - lw * 2.2, 0, y2, x2 - w2 * 2.2, band ? '#7FB3D6' : '#86B9DB'); // water on the left
+      poly(lx, ny, lw * 1.12, x2, y2, w2 * 1.12, band ? '#E8DCC0' : '#D9CCAE');
+      poly(lx, ny, lw, x2, y2, w2, band ? '#8E8F95' : '#888990');
+      if (band) poly(lx, ny, lw * 0.025, x2, y2, w2 * 0.025, '#F4EFE1');
+      maxY = y2; lx = x2; ly = y2; lw = w2;
     }
     // things by the road, far to near
     const lights = [];
@@ -130,7 +137,8 @@ export function mount(root, params) {
       const p = pts[k], U = pts.U || W / 2, pl = placeAt(p.i * SEG), src = h01(p.i) < pl.blend ? pl.b : pl.a;
       if (p.i % (src.dense ? 2 : 4)) continue;
       if (h01(p.i + 7) < (src.dense ? 0.1 : 0.35)) continue;
-      const kind = src.things[Math.floor(h01(p.i + 3) * src.things.length)], side = (src.water && kind !== 'jetty') || h01(p.i + 5) < 0.5 ? 1 : -1;
+      let kind = src.things[Math.floor(h01(p.i + 3) * src.things.length)]; if (kind === 'lighthouse' && h01(p.i + 11) > 0.08) kind = 'dune'; // a lighthouse now and then, not a row of them
+      const side = (src.water && kind !== 'jetty') || h01(p.i + 5) < 0.5 ? 1 : -1;
       const off = (kind === 'jetty' ? -1 : side) * (1.5 + h01(p.i + 9) * (kind === 'lighthouse' ? 4 : 2.2));
       const sx = p.x + off * p.w, sy = p.y; if (sy > p.clip + 2) continue;
       thing(kind, sx, sy, p.sc * U * 2.2, lights);
@@ -140,14 +148,14 @@ export function mount(root, params) {
     if (sky.tint > 0.25) lights.forEach(([lx, ly, lr0, c]) => { const lr = Math.min(lr0, 9); const gr = g.createRadialGradient(lx, ly, 0, lx, ly, lr * 3); gr.addColorStop(0, c); gr.addColorStop(0.35, c + '88'); gr.addColorStop(1, 'rgba(255,230,160,0)'); g.fillStyle = gr; g.beginPath(); g.arc(lx, ly, lr * 3, 0, 7); g.fill(); });
     // him on his bike, leaning into the bends, a gentle bob as he pedals
     if (rider.complete && rider.naturalWidth) {
-      const rh = Math.min(H * 0.34, W * 0.75), rw = rh * rider.naturalWidth / rider.naturalHeight, bob = reduceMotion ? 0 : Math.sin(s.t * 5.2) * rh * 0.006;
-      g.save(); g.translate(W / 2, H - rh * 0.06 + bob); g.rotate(s.lean);
+      const rh = Math.min(H * 0.34, W * 0.75), rw = rh * rider.naturalWidth / rider.naturalHeight, pd = reduceMotion ? 0 : s.pedal, bob = Math.abs(Math.sin(pd)) * rh * 0.008, rock = Math.sin(pd) * 0.022; // he rocks a little with each push on the pedals
+      g.save(); g.translate(W / 2, H - rh * 0.06 - bob); g.rotate(s.lean + rock);
       g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(0, -rh * 0.01, rw * 0.32, rh * 0.03, 0, 0, 7); g.fill();
       g.drawImage(rider, -rw / 2, -rh, rw, rh);
       if (sky.tint > 0.25) { const gr = g.createRadialGradient(0, -rh * 0.24, 0, 0, -rh * 0.24, rw * 0.35); gr.addColorStop(0, 'rgba(255,80,60,.55)'); gr.addColorStop(1, 'rgba(255,80,60,0)'); g.fillStyle = gr; g.fillRect(-rw / 2, -rh * 0.5, rw, rh * 0.5); }
       g.restore();
     }
-    kmEl.textContent = ((s.pos * SEG) / 1000).toFixed(1) + ' km';
+    const kmTxt = ((s.pos * SEG) / 1000).toFixed(1) + ' km'; if (kmEl.textContent !== kmTxt) kmEl.textContent = kmTxt; // only touch the page when the number changes
     // a soft name card as you come into a new place
     if (here.idx !== s.place) { const first = s.place === -1; s.place = here.idx; placeEl.textContent = P.name; placeEl.classList.remove('show'); void placeEl.offsetWidth; placeEl.classList.add('show'); if (first) placeEl.classList.add('first'); }
   }
@@ -156,8 +164,10 @@ export function mount(root, params) {
   function step(dt) {
     s.t += dt;
     const i = Math.floor(s.pos), slope = (height(i + 6) - height(i)) / (6 * SL);
-    const kmh = KMH * (1 - Math.max(-0.25, Math.min(0.3, slope * 3.2))); // a little slower uphill, a little quicker down
-    const segs = kmh / 3.6 / SEG * dt;
+    const want = GEARS[s.gear][1] * (1 - Math.max(-0.1, Math.min(0.2, slope * 3.2))); // a little slower uphill, a little quicker down
+    s.v += (want - s.v) * Math.min(1, dt * 0.9); // eases into a new gear over a second or two
+    s.pedal += dt * (2.6 + s.v * 0.09); // pedalling quicker as you go faster
+    const segs = s.v / 3.6 / SEG * dt;
     s.pos += segs;
     const c = curve(i);
     s.sky += c * segs * 6;
@@ -165,25 +175,27 @@ export function mount(root, params) {
     s.x += (s.tx - s.x) * Math.min(1, dt * 2.5);
     s.x = Math.max(-1.6, Math.min(1.6, s.x));
     s.lean += ((-c * 0.035) + (s.tx - s.x) * -0.25 - s.lean) * Math.min(1, dt * 3);
-    if (s.t - s.savedAt > 5) persist();
+    if (nodes && nodes.on && !document.hidden) { const q = (s.v - 22) / 28; nodes.v.gain.value = 0.05 + 0.05 * q; nodes.f.frequency.value = 380 + 320 * q; } // the wind gets a little louder as you speed up
+    if (s.t - s.savedAt > 120) persist(); // saving copies all your data, which can catch a frame, so only every two minutes while riding (and always when you leave or switch apps)
   }
-  function persist() { s.savedAt = s.t; rec.m = Math.round(s.pos * SEG); save(); }
+  function persist() { s.savedAt = s.t; rec.m = Math.round(s.pos * SEG); rec.gear = s.gear; save(); }
   let last = 0;
-  function loop(now) { if (!alive) return; const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now; if (Math.floor(s.t) !== Math.floor(s.t + dt)) sky = skyNow(); step(dt); draw(); raf = requestAnimationFrame(loop); }
+  function loop(now) { if (!alive) return; const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now; if (Math.floor(s.t) !== Math.floor(s.t + dt)) sky = skyNow(); step(dt); draw(); raf = requestAnimationFrame(loop); }
 
   // ---------- steering: drag left or right ----------
   root.addEventListener('pointerdown', e => { if (e.target.closest('a, button')) return; s.drag = { x: e.clientX, tx: s.tx }; hint.classList.add('gone'); });
   root.addEventListener('pointermove', e => { if (!s.drag) return; e.preventDefault(); s.tx = Math.max(-1.4, Math.min(1.4, s.drag.tx + (e.clientX - s.drag.x) / (box.W * 0.35))); });
   const up = () => { s.drag = null; };
   root.addEventListener('pointerup', up); root.addEventListener('pointercancel', up);
-  root.addEventListener('click', e => { const b = e.target.closest('#rdSound'); if (b) { b.textContent = toggleSound() ? '🔊' : '🔈'; hum(); } });
+  root.addEventListener('click', e => { if (e.target.closest('#rdGear')) { s.gear = (s.gear + 1) % GEARS.length; rec.gear = s.gear; showGear(); hint.classList.add('gone'); return; } const b = e.target.closest('#rdSound'); if (b) { b.textContent = toggleSound() ? '🔊' : '🔈'; hum(); } });
   // sound: a soft breeze and the hum of the tyres, off unless you turn it on
   let ac = null, nodes = null;
   function hum() {
-    if (!soundOn()) { if (nodes) { nodes.v.gain.value = 0; } return; }
+    if (!soundOn()) { if (nodes) { nodes.v.gain.value = 0; nodes.on = false; } return; }
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume();
-      if (!nodes) { const b = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const src = ac.createBufferSource(); src.buffer = b; src.loop = true; const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 380; const v = ac.createGain(); v.gain.value = 0; src.connect(f); f.connect(v); v.connect(ac.destination); src.start(); nodes = { v }; }
+      if (!nodes) { const b = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const src = ac.createBufferSource(); src.buffer = b; src.loop = true; const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 380; const v = ac.createGain(); v.gain.value = 0; src.connect(f); f.connect(v); v.connect(ac.destination); src.start(); nodes = { v, f, on: true }; }
+      nodes.on = true;
       nodes.v.gain.value = 0.05;
     } catch (e) { /* a bonus */ }
   }

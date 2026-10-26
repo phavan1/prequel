@@ -35,7 +35,19 @@ const errors = [];
   const m0 = await p.evaluate(() => document.querySelector('main').__road.pos);
   await p.waitForTimeout(3000);
   const m1 = await p.evaluate(() => document.querySelector('main').__road.pos);
-  ok('the bike rides on by itself', m1 > m0, ((m1 - m0) * 2).toFixed(1) + ' m in 3 s');
+  ok('the bike rides on by itself', m1 > m0, ((m1 - m0) * 0.6).toFixed(1) + ' m in 3 s');
+
+  // 3b. gears: Easy to start, tap for Brisk and Breezy, it eases up to speed, and the gear is remembered
+  ok('starts in Easy', /Easy/.test(await p.locator('#rdGear').innerText()));
+  const sp = async () => { const a = await p.evaluate(() => document.querySelector('main').__road.pos); await p.waitForTimeout(2000); return ((await p.evaluate(() => document.querySelector('main').__road.pos)) - a) * 0.6 / 2 * 3.6; };
+  const easy = await sp();
+  await p.click('#rdGear'); ok('one tap: Brisk', /Brisk/.test(await p.locator('#rdGear').innerText()));
+  await p.click('#rdGear'); ok('two taps: Breezy', /Breezy/.test(await p.locator('#rdGear').innerText()));
+  await p.waitForTimeout(3500); const breezy = await sp();
+  ok('Breezy is about 50 km/h and Easy about 22', easy > 15 && easy < 30 && breezy > 40 && breezy < 62, 'easy ' + easy.toFixed(0) + ', breezy ' + breezy.toFixed(0) + ' km/h');
+  await p.screenshot({ path: OUT + '/rd-breezy.png' });
+  await p.click('#rdGear'); ok('a third tap: back to Easy', /Easy/.test(await p.locator('#rdGear').innerText()));
+  await p.click('#rdGear');
 
   // 4. drag to steer, and it drifts back when you let go
   await p.mouse.move(195, 600); await p.mouse.down(); await p.mouse.move(330, 600, { steps: 8 }); await p.waitForTimeout(700);
@@ -48,20 +60,21 @@ const errors = [];
 
   // 5. jump ahead to the coast, check each place draws without errors
   for (const [km, name] of [[1, 'fields'], [7, 'forest'], [13, 'lake'], [19, 'hills'], [25, 'coast'], [31, 'village']]) {
-    await p.evaluate(k => { document.querySelector('main').__road.pos = k * 500; }, km); await p.waitForTimeout(500);
+    await p.evaluate(k => { document.querySelector('main').__road.pos = k * 1000 / 0.6; }, km); await p.waitForTimeout(500);
     await p.screenshot({ path: OUT + '/rd-' + name + '.png' });
   }
   const names = await p.evaluate(async () => (await import('./js/screens/road.js')).PLACES.map(x => x.name));
   ok('six places along the way', names.length === 6, names.join(', '));
 
   // 6. leaving saves the distance and says how far, kindly
-  await p.evaluate(() => { document.querySelector('main').__road.pos = 12300 / 2 + 400; });
+  await p.evaluate(() => { document.querySelector('main').__road.pos = (12300 + 800) / 0.6; });
   await p.waitForTimeout(300);
   await p.click('.sk-back'); await p.waitForTimeout(400);
   const t = await p.locator('.toast').innerText().catch(() => '');
   ok('leaving: how far this ride and all together', /km this ride · .* km all together/.test(t), t);
   const rec = (await st()).games.road;
   ok('the distance is saved and never resets', rec.m > 13000 && rec.rides === 4, JSON.stringify(rec));
+  ok('the gear is remembered (Brisk)', rec.gear === 1);
 
   // 7. Rest has the Wind down row, and the Rest tab stays lit
   await p.goto(BASE + '#/rest'); await p.waitForTimeout(500);

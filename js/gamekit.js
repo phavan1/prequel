@@ -11,10 +11,10 @@ export function record(key, extra) {
 export const dark = () => document.documentElement.dataset.theme === 'dark';
 
 // a full-screen canvas that stays sharp on retina screens
-export function fullCanvas(cv, onSize) {
+export function fullCanvas(cv, onSize, maxDpr = 2) { // maxDpr: a game that redraws everything every frame can ask for fewer pixels
   const g = cv.getContext('2d'); const box = { W: 0, H: 0 };
   function size() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2); box.W = window.innerWidth; box.H = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr); box.W = window.innerWidth; box.H = window.innerHeight;
     cv.width = box.W * dpr; cv.height = box.H * dpr; cv.style.width = box.W + 'px'; cv.style.height = box.H + 'px';
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
   }

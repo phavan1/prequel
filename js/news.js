@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 69, date: '2026-10-26', items: [
+    'Slow ride has gears: tap the little pill at the bottom left for Easy, Brisk or Breezy (up to about 50 km/h). It eases into each one and remembers your pick.',
+    'The ride is smoother now, and he rocks a little with each push on the pedals.'
+  ] },
   { v: 68, date: '2026-10-26', items: [
     'New game: Slow ride. A calm bike ride down an endless road, through fields, a forest, a lake, hills, the coast and a little village, then round again.',
     'The sky follows the real time of day, so an evening ride gets a sunset and a late one gets stars. Drag to steer, or just let it ride.',
