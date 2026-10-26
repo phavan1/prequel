@@ -266,6 +266,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - B1 is the first technical priority after the docs cleanup (the fix itself still needs approval; see the table above).
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
+- v70: a sleep that starts before midnight stays whole on the day you woke up (Phavan agreed; not split at midnight, like most sleep apps). The past-day chip stays the same yellow everywhere, with dark text (option A).
 - v69: Slow ride **gears** (Phavan picked gears over hold-to-pedal or drag-up; top speed about 50 km/h) and smoothing (he saw it stutter like buffering).
 - v68: **Slow ride** (Phavan, inspired by slowroads.io): option A, a pseudo-3D road, with a bike (his chosen back-view picture). On both the games shelf and Rest ("Wind down"). Distance bottom right, never resets. Places loop: fields → forest → lakeside → hills → coast → village. The sky follows the real clock. No score, no crashing, no way to lose.
 - v67: Your journey became **Your moving journey** (Phavan): moving only, no Sleep. The Me card is a little hillside scene (option A) right after the goals, and Move has a row to it too. Two hill pictures: walking up, and planting the flag the week you pass one.

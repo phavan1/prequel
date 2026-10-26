@@ -153,14 +153,18 @@ function ring(rests, date) {
   const R = 90, Cc = 2 * Math.PI * R;
   const dayStart = parseKey(date).getTime();
   const cols = ['#9FC0FF', '#F4C430', '#B9A6F2', '#8EE0B4'];
+  // one arc from s hours (0 = 12am, at the top) for len hours, clockwise; round ends only where the rest really starts or ends
+  const arc = (s, len, col, cap) => '<circle cx="115" cy="115" r="' + R + '" fill="none" stroke="' + col + '" stroke-width="18" stroke-linecap="' + cap + '" stroke-dasharray="' + (len / 24 * Cc).toFixed(1) + ' ' + Cc.toFixed(1) + '" stroke-dashoffset="' + (-(s / 24) * Cc).toFixed(1) + '" transform="rotate(-90 115 115)"></circle>';
   const arcs = rests.map((r, i) => {
-    const s = ((r.start - dayStart) / 3600000 % 24 + 24) % 24, len = Math.min(24, (r.end - r.start) / 3600000);
-    return '<circle cx="115" cy="115" r="' + R + '" fill="none" stroke="' + cols[i % cols.length] + '" stroke-width="18" stroke-linecap="round" stroke-dasharray="' + (len / 24 * Cc).toFixed(1) + ' ' + Cc.toFixed(1) + '" stroke-dashoffset="' + (-(s / 24) * Cc).toFixed(1) + '" transform="rotate(-90 115 115)"></circle>';
+    const s = ((r.start - dayStart) / 3600000 % 24 + 24) % 24, len = Math.min(23.9, (r.end - r.start) / 3600000), col = cols[i % cols.length];
+    if (s + len <= 24) return arc(s, len, col, 'round');
+    // v70: a night that goes past 12am is drawn in two pieces that meet at the top (the circle's path ends there, so one arc was cut off and showed just a dot)
+    return arc(s, 24 - s, col, 'butt') + arc(0, s + len - 24, col, 'butt') + arc(s, 0.001, col, 'round') + arc((s + len) % 24, 0.001, col, 'round');
   }).join('');
   const total = rests.reduce((n, r) => n + (r.end - r.start) / 60000, 0);
   return '<svg width="230" height="230" viewBox="0 0 230 230" role="img" aria-label="Rest on this day: ' + hm(total) + '">' +
     '<circle cx="115" cy="115" r="' + R + '" fill="none" stroke="#2C3760" stroke-width="18"></circle>' + arcs +
-    '<text x="115" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="#C9D6FF">12am</text><text x="224" y="119" text-anchor="end" font-size="11" font-weight="700" fill="#C9D6FF">6am</text><text x="115" y="226" text-anchor="middle" font-size="11" font-weight="700" fill="#C9D6FF">12pm</text><text x="6" y="119" font-size="11" font-weight="700" fill="#C9D6FF">6pm</text>' +
+    '<text x="115" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="#C9D6FF" stroke="#141A33" stroke-width="3" paint-order="stroke">12am</text><text x="224" y="119" text-anchor="end" font-size="11" font-weight="700" fill="#C9D6FF" stroke="#141A33" stroke-width="3" paint-order="stroke">6am</text><text x="115" y="226" text-anchor="middle" font-size="11" font-weight="700" fill="#C9D6FF" stroke="#141A33" stroke-width="3" paint-order="stroke">12pm</text><text x="6" y="119" font-size="11" font-weight="700" fill="#C9D6FF" stroke="#141A33" stroke-width="3" paint-order="stroke">6pm</text>' +
     '<text x="115" y="110" text-anchor="middle" font-size="32" font-weight="800" fill="#F3EEDF">' + (total ? hm(total) : '–') + '</text>' +
     '<text x="115" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#C9D6FF">' + (rests.length > 1 ? 'rested, in ' + rests.length + ' parts' : rests.length ? 'rested' : 'nothing logged') + '</text></svg>';
 }

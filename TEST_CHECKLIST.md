@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v70) Rest: a night from before midnight fills the ring from its start round to the wake-up time; looking at Yesterday, the yellow "Logging for" chip is easy to read.
 - [ ] (v69) Slow ride: the gear pill (Easy → Brisk → Breezy) eases up to speed and is remembered; the ride looks smooth with no stops every few seconds.
 - [ ] (v68) Slow ride: smooth on the phone, dragging steers, the km carries on after closing the app, an evening ride has the right sky; Rest → Wind down opens it and Back returns to Rest.
 - [ ] (v67) Me: the moving journey scene card after the goals (him on the hill, the next flag); Move's row opens it with Move lit.

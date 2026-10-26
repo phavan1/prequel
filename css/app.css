@@ -74,7 +74,8 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
 .datechip { position: relative; display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; min-height: 36px; padding: 0 12px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; }
 .datechip span { color: var(--ink-soft); font-weight: 700; }
 .datechip b { font-weight: 900; }
-.datechip.past { background: #FFF4D6; border-color: #EDD38A; }
+.datechip.past { background: #FFF4D6; border-color: #EDD38A; color: #2B2B33; } /* v70: always dark text on the yellow chip (on dark pages like Rest the text was light too) */
+.datechip.past span { color: #5A5A66; }
 .datechip input { position: absolute; inset: 0; opacity: 0; width: 100%; min-height: 0; cursor: pointer; }
 
 /* the character */
