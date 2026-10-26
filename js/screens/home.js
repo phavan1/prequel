@@ -162,6 +162,7 @@ const pstar = (cx, cy, r, c) => '<polygon points="' + starPts(cx, cy, r) + '" fi
 const GAME_ART = {
   skate: '<path d="M8 30h38a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6z" fill="#1F55D0"/><circle cx="17" cy="40" r="4" fill="#23262F"/><circle cx="37" cy="40" r="4" fill="#23262F"/><path d="M4 22h10M2 16h8M8 10h8" stroke="#5E584B" stroke-width="2.4" stroke-linecap="round"/>' + pstar(42, 13, 7, '#F4C430'),
   stack: pstar(27, 37, 9, '#9FC1F0') + pstar(29, 24, 9, '#F7A6B8') + pstar(26, 11, 9, '#F4C430'),
+  road: '<path d="M18 44L25 8h4l7 36z" fill="#9A9BA2"/><path d="M27 12v4M27 22v5M27 33v6" stroke="#FFFFFF" stroke-width="1.6"/><path d="M2 44c6-10 10-14 18-16M52 44c-6-10-10-14-18-16" stroke="#8DBF9E" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="44" cy="8" r="4" fill="#F4C430"/>',
   keepup: pstar(27, 12, 10, '#F4C430') + '<path d="M9 34q18-6 36 0q3 3 0 6q-18 5-36 0q-3-3 0-6z" fill="#BFD8FF" stroke="#3D66C9" stroke-width="2"/><path d="M14 22v-3M40 22v-3M27 27v-2" stroke="#5E584B" stroke-width="2" stroke-linecap="round"/>'
 };
 function gamesShelf(st) {
@@ -171,5 +172,6 @@ function gamesShelf(st) {
     card('skate', '#/skate', 'Skate home', best('skate') ? 'Best ' + best('skate') + ' m' : 'Jump the bumps') +
     card('stack', '#/stack', 'Stack the stars', best('stack') ? 'Best ' + best('stack') + ' high' : 'Up to the moon') +
     card('keepup', '#/keepup', 'Keep it up', best('keepup') ? 'Best ' + best('keepup') + (best('keepup') === 1 ? ' bounce' : ' bounces') : 'Don\'t let it drop') +
+    card('road', '#/road?from=home', 'Slow ride', gm.road && gm.road.m >= 100 ? (gm.road.m / 1000).toFixed(1) + ' km ridden' : 'An endless calm road') + // v68
     '</div>';
 }

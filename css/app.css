@@ -436,14 +436,14 @@ button.goal { text-align: left; font: inherit; color: inherit; }
 .game span b { font-size: 19px; font-weight: 900; }
 .game small { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
 /* v56: the soft day's little games shelf */
-.games { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.games { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; } /* v68: four games, two by two */
 .games a { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px 12px; border-radius: 20px; color: var(--ink); background: linear-gradient(160deg, #BFD8FF, #FFF1D6); border: 1px solid var(--line); text-align: center; min-height: 128px; }
 .games a:active { transform: scale(.97); }
 .games svg { width: 54px; height: 46px; }
 .games b { font-size: 14px; font-weight: 900; line-height: 1.15; }
 .games small { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); line-height: 1.2; }
 html[data-theme="dark"] .games a { background: linear-gradient(160deg, #23304F, #3A2E22); }
-.screen-keepup, .screen-stack { touch-action: none; }
+.screen-keepup, .screen-stack, .screen-road { touch-action: none; }
 .sk-hud .gbest { font-size: 13px; opacity: .7; margin-left: auto; }
 .sk-hud .gnow + .gbest { margin-left: 0; }
 .sk-hud .gnow { margin-left: auto; }
@@ -455,9 +455,9 @@ html[data-theme="dark"] .games a { background: linear-gradient(160deg, #23304F, 
 .emoown { min-height: 42px; border-radius: 14px; border: 1px solid var(--line); padding: 0 12px; font: inherit; font-size: 15px; text-align: center; background: #FFFDF6; color: #23262F; }
 html[data-theme="dark"] .emopick button, html[data-theme="dark"] .emoown { background: #2F2822; color: var(--ink); }
 .game .go { padding: 10px 16px; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 900; font-size: 14px; }
-.screen-skate, .screen-keepup, .screen-stack { padding: 0; max-width: none; position: relative; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-body:has(.screen-skate), body:has(.screen-keepup), body:has(.screen-stack) { overflow: hidden; overscroll-behavior: none; }
-.screen-skate canvas, .screen-keepup canvas, .screen-stack canvas { position: fixed; inset: 0; display: block; }
+.screen-skate, .screen-keepup, .screen-stack, .screen-road { padding: 0; max-width: none; position: relative; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+body:has(.screen-skate), body:has(.screen-keepup), body:has(.screen-stack), body:has(.screen-road) { overflow: hidden; overscroll-behavior: none; }
+.screen-skate canvas, .screen-keepup canvas, .screen-stack canvas, .screen-road canvas { position: fixed; inset: 0; display: block; }
 .sk-hud { position: fixed; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 0; display: flex; align-items: center; gap: 14px; font-weight: 900; font-size: 18px; color: #23262F; z-index: 2; }
 .sk-hud #skScore { margin-left: auto; }
 .sk-hud #skBest { font-size: 13px; opacity: .7; }
@@ -1046,3 +1046,13 @@ html[data-theme="dark"] .jpreview .jgo { color: #8FB0FF; }
 html[data-theme="dark"] .jscene { background: linear-gradient(180deg, #24304F 0%, #2A3350 60%, #23352A 100%); color: var(--ink); }
 html[data-theme="dark"] .jscene .jst small { color: #C9CDE0; }
 html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
+
+/* v68: Slow ride */
+.rd-hud { justify-content: space-between; }
+.rd-km { position: fixed; right: 14px; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); z-index: 2; font: 800 14px var(--font-body); color: #FFFFFF; background: rgba(20, 24, 40, 0.35); padding: 4px 10px; border-radius: 999px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.rd-place { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 2; font: 700 30px var(--font-hand); color: #FFFFFF; text-shadow: 0 2px 10px rgba(0, 0, 0, .35); opacity: 0; pointer-events: none; white-space: nowrap; }
+.rd-place.show { animation: rdplace 5s ease forwards; }
+@keyframes rdplace { 0% { opacity: 0; transform: translate(-50%, 8px); } 15% { opacity: 1; transform: translate(-50%, 0); } 70% { opacity: 1; } 100% { opacity: 0; } }
+.rd-hint { position: fixed; left: 50%; bottom: 40%; transform: translateX(-50%); z-index: 2; font: 800 14px var(--font-body); color: #FFFFFF; background: rgba(20, 24, 40, 0.4); padding: 8px 14px; border-radius: 999px; transition: opacity .8s; white-space: nowrap; }
+.rd-hint.gone { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .rd-place.show { animation: none; opacity: 1; } }

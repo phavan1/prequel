@@ -21,7 +21,7 @@ const errors = [];
   await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().heavy[S.today()] = true; S.get().newsSeen = 999; S.save(); });
   await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(600);
   const shelf = await p.locator('.games a').allInnerTexts();
-  ok('the soft day has three games', shelf.length === 3 && /Skate home/.test(shelf[0]) && /Stack the stars/.test(shelf[1]) && /Keep it up/.test(shelf[2]), shelf.join(' | '));
+  ok('the soft day has four games', shelf.length === 4 && /Skate home/.test(shelf[0]) && /Stack the stars/.test(shelf[1]) && /Keep it up/.test(shelf[2]) && /Slow ride/.test(shelf[3]), shelf.join(' | '));
   ok('no zeros before playing', !/\b0\b/.test(shelf.join(' ')));
   await p.locator('.games').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/gm-shelf.png' });
 

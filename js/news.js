@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 68, date: '2026-10-26', items: [
+    'New game: Slow ride. A calm bike ride down an endless road, through fields, a forest, a lake, hills, the coast and a little village, then round again.',
+    'The sky follows the real time of day, so an evening ride gets a sunset and a late one gets stars. Drag to steer, or just let it ride.',
+    'Your distance never resets. Find it on the soft day\'s games, and on Rest as Wind down.'
+  ] },
   { v: 67, date: '2026-10-25', items: [
     'Your journey is now Your moving journey: just your moving (sleep stays in the sleep diary and on Me).',
     'On Me it\'s a little hillside right after your goals, with him walking up to the next flag. The week you pass one, he plants it. You can open it from Move too.'

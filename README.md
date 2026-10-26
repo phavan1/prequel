@@ -48,7 +48,7 @@ It has no streaks, no scores and no zeros. Everything stays on your phone.
 **Mind, wins and more**
 - Notes that come back when you want them, lanterns you can let go (and call back), and letters to your future self.
 - A jar of paper stars for small wins, with a proper celebration when a jar fills.
-- A soft day for the hard ones, with three little games: Skate home, Stack the stars and Keep it up.
+- A soft day for the hard ones, with four little games: Skate home, Stack the stars, Keep it up and Slow ride (an endless calm bike ride whose sky follows the real time of day).
 - A night sky where everything you log becomes a star.
 - Goals that only count up, and an optional, private cycle tracker.
 - Your moving journey: calm stats for your moving, with a year of dots, your weeks, your lifts over time and a little hill to climb.

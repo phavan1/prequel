@@ -178,6 +178,7 @@ function render(root) {
     '<div class="ring">' + ring(rests, date) + '</div>' +
     (rests.length ? '<div class="card">' + rests.map(r => '<div class="entry"><span class="t">' + timeOf(r.start) + '</span><span>to ' + timeOf(r.end) + ' · ' + hm(Math.round((r.end - r.start) / 60000)) + (r.feel ? ' · ' + esc(feel_(r.feel)) : '') + '</span><button type="button" class="x" data-del="' + r.id + '" aria-label="Remove this rest">×</button></div>').join('') + '</div>' : '') +
     '<button type="button" class="btn alt wide" data-manual>+ Add a rest by hand</button>' +
+    '<a class="rowlink winddown" href="#/road?from=rest"><span>Wind down · a slow ride</span><b>›</b></a>' + // v68
     (() => { const p = new Set(st.rests.map(r => r.date)).size; return '<a class="rowlink" href="#/quilt?from=rest"><span>Your quilt' + (p ? ' · ' + p + (p === 1 ? ' patch' : ' patches') : '') + '</span><b>›</b></a>'; })() +
     // night only (9pm to 6am), or while it's running
     (st.awakeSince
