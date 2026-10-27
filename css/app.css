@@ -353,6 +353,8 @@ body:has(.screen-sky) { background: #0B1026; overflow: hidden; }
 .setedit { display: grid; grid-template-columns: 28px 1.5fr 1fr 40px; gap: 6px; align-items: center; }
 .wcell { display: flex; gap: 4px; min-width: 0; }
 .wcell input { flex: 1; min-width: 0; }
+.wcell input { padding: 0 6px; }
+.wcell input::placeholder { font-size: 12px; font-weight: 700; } /* v72: "kg each side" fits whole instead of "kg each sid" */
 .wcell input:disabled { opacity: .55; }
 .wcell.word select { flex: 1; width: auto; font-size: 13px; }
 .wcell select { flex: none; width: 58px; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--room); color: var(--ink); font: inherit; font-size: 12px; font-weight: 800; padding: 0 4px; }

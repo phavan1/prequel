@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 72, date: '2026-10-27', items: [
+    'Fixing a workout: the Bar + box now says "kg each side" in full (it was cut off as "kg each sid").'
+  ] },
   { v: 71, date: '2026-10-27', items: [
     'Pounds: weights can now be in lb or kg. Change it any time in Settings, under Weights in.',
     'Everything follows it: the gym, Bar +, "Last time", body weight, Your moving journey and the Move report.',
