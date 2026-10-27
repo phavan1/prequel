@@ -92,7 +92,7 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   ok('restore into an empty app gives back exactly the exported data', d1.length === 0, d1.slice(0, 6).join('; ') + ' toast: ' + t1);
   await B.p.reload(); await B.p.waitForTimeout(2600); await B.p.mouse.click(5, 5); await B.p.waitForTimeout(400);
   rest = await state(B.p);
-  const d2 = diff(strip(exported), strip(rest)).filter(x => !/^\.(lastSeen|lastHello)/.test(x));
+  const d2 = diff(strip(exported), strip(rest)).filter(x => !/^\.(lastSeen|lastHello|weightUnit|lbAsked)/.test(x));
   ok('restored data is still there after reloading (IndexedDB)', d2.length === 0, d2.slice(0, 6).join('; '));
   await restore(B.p, file); rest = await state(B.p);
   ok('restoring the same file twice does not duplicate anything', rest.moments.length === exported.moments.length && rest.meals.length === exported.meals.length, rest.moments.length + ' moments');
@@ -109,7 +109,7 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   for (const [n, txt] of Object.entries(bad)) {
     const f = path.join(OUT, n); fs.writeFileSync(f, txt);
     const pre = await state(B.p); const toast = await restore(B.p, f); const post = await state(B.p);
-    ok('refuses ' + n + ' and keeps current data', diff(strip(pre), strip(post)).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0, 'toast: ' + toast);
+    ok('refuses ' + n + ' and keeps current data', diff(strip(pre), strip(post)).filter(x => !/^\.(lastSeen|lastHello|weightUnit|lbAsked)/.test(x)).length === 0, 'toast: ' + toast);
   }
   // B1 (fixed in v38): files with a moments list but broken parts are refused as a whole, and nothing changes
   const damaged = {
@@ -123,7 +123,7 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   for (const [n, obj] of Object.entries(damaged)) {
     const f = path.join(OUT, n); fs.writeFileSync(f, JSON.stringify(obj));
     const pre = await state(B.p); const t = await restore(B.p, f); const post = await state(B.p);
-    ok('refuses damaged ' + n + ' as a whole and keeps current data', /damaged in places/.test(t) && diff(strip(pre), strip(post)).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0, t.slice(0, 90));
+    ok('refuses damaged ' + n + ' as a whole and keeps current data', /damaged in places/.test(t) && diff(strip(pre), strip(post)).filter(x => !/^\.(lastSeen|lastHello|weightUnit|lbAsked)/.test(x)).length === 0, t.slice(0, 90));
   }
   // B2: kind words instead of the browser's technical message
   { const f = path.join(OUT, 'bad-not-json.json'); const t = await restore(B.p, f);
@@ -143,7 +143,7 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   await restore(D.p, file);
   await D.p.reload(); await D.p.waitForTimeout(2600); await D.p.mouse.click(5, 5); await D.p.waitForTimeout(400);
   const ls = await state(D.p);
-  const d5 = diff(strip(exported), strip(ls)).filter(x => !/^\.(lastSeen|lastHello)/.test(x));
+  const d5 = diff(strip(exported), strip(ls)).filter(x => !/^\.(lastSeen|lastHello|weightUnit|lbAsked)/.test(x));
   ok('without IndexedDB, restore persists through localStorage', d5.length === 0, d5.slice(0, 4).join('; '));
   await D.ctx.close();
 
@@ -161,7 +161,7 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   ok('an older backup gets the "would be gone" warning', /older than what's here/.test(sheetText));
   ok('"Save what\'s here as a file first" is offered', await E.p.locator('#sheet [data-savefirst]').count() === 1);
   await E.p.click('#sheet [data-close]'); await E.p.waitForTimeout(200);
-  ok('cancelling the restore changes nothing', diff(strip(full), strip(await state(E.p))).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0);
+  ok('cancelling the restore changes nothing', diff(strip(full), strip(await state(E.p))).filter(x => !/^\.(lastSeen|lastHello|weightUnit|lbAsked)/.test(x)).length === 0);
   await E.p.setInputFiles('#importFile', older); await E.p.waitForTimeout(500); await E.p.click('#sheet [data-yes]');
   await E.p.waitForSelector('.toast.show'); // straight after the toast, before any delayed save could happen
   const raw = await E.p.evaluate(() => new Promise(r => { const q = indexedDB.open('prequel'); q.onsuccess = () => { const g = q.result.transaction('kv').objectStore('kv').get('state'); g.onsuccess = () => r(g.result); }; }));
@@ -175,7 +175,7 @@ async function visitAll(p) { for (const r of ROUTES) { await p.goto(BASE + '#/' 
   await E.p.click('[data-undo]'); await E.p.waitForTimeout(300); await E.p.screenshot({ path: OUT + '/restore-undo-sheet.png' });
   await E.p.click('#sheet [data-o="undo"]'); await E.p.waitForTimeout(900);
   const back = await state(E.p);
-  ok('undo puts back exactly what was there before the restore', diff(strip(full), strip(back)).filter(x => !/^\.(lastSeen|lastHello)/.test(x)).length === 0, diff(strip(full), strip(back)).slice(0, 3).join('; '));
+  ok('undo puts back exactly what was there before the restore', diff(strip(full), strip(back)).filter(x => !/^\.(lastSeen|lastHello|weightUnit|lbAsked)/.test(x)).length === 0, diff(strip(full), strip(back)).slice(0, 3).join('; '));
   ok('the undo card goes away after undoing', await E.p.locator('.undocard').count() === 0);
   // the copy expires after 7 days
   await E.p.setInputFiles('#importFile', older); await E.p.waitForTimeout(500); await E.p.click('#sheet [data-yes]'); await E.p.waitForTimeout(900);

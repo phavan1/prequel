@@ -86,7 +86,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p2.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(); delete st.moveSetup; st.activities = []; st.sessions = [{ id: 's1', date: '2026-10-16', ts: 1, workoutId: 'fbA', workoutName: 'Full Body A', light: 'green', exercises: [] }]; st.goals = [{ id: 'g1', kind: 'linked', source: 'sessions', name: 'Gym sessions', target: 100, from: 0, created: 1, finished: null }]; S.save(); });
   await p2.goto(BASE + '#/move'); await p2.waitForTimeout(500); await p2.mouse.click(5, 5); await p2.waitForTimeout(300);
   await p2.screenshot({ path: OUT + '/mh-road.png' });
-  ok('an existing gym-goer starts with Gym picked and is asked about the road to 100', await p2.locator('[data-pick="gym"][aria-pressed="true"]').count() === 1 && /You were on the road to 100 gym sessions/.test(await p2.locator('.roadq').innerText()));
+  ok('an existing gym-goer starts with Gym picked and is asked about the road to 100', await p2.locator('[data-pick="gym"][aria-pressed="true"]').count() === 1 && /You were on the road to 100 gym sessions/.test(await p2.locator('.roadq:not(.wq)').innerText()));
   await p2.click('[data-road="change"]'); await p2.fill('#roadN', '50'); await p2.click('[data-picksave]'); await p2.waitForTimeout(300);
   const s2 = await p2.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
   ok('changing the number keeps the same milestone', s2.goals.length === 1 && s2.goals[0].target === 50 && /1 of 50 sessions/.test(await p2.locator('[data-act="gym"]').innerText()));

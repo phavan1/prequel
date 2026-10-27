@@ -24,7 +24,7 @@ It has no streaks, no scores and no zeros. Everything stays on your phone.
 - A hub for every kind of moving: gym, walks, runs, cycling, swimming, badminton, football, cricket, tennis, kickboxing, MMA, yoga, dance, hiking, home workouts, or anything of your own.
 - Each activity logs what matters for it, like games played, goals, rounds, laps or distance, plus a "highlight of the day". Everything is optional.
 - Log one afterwards, or start a timer that keeps running even when the app is closed.
-- A full gym logger: playbook workouts, a quick session, real exercise order, "Last time" with every set from your last session, weights that can be "Not noted" or "Body weight", and sessions you can copy into any app.
+- A full gym logger: playbook workouts, a quick session, real exercise order, "Last time" with every set from your last session, weights that can be "Not noted" or "Body weight", sessions you can copy into any app, and weights in kg or lb.
 - Milestones you choose for yourself (sessions, hours, km, goals…), instead of fixed targets.
 - A Move report PDF for you, a doctor or a coach: days moved, gym exercises (first, latest and best), other activities and body weight.
 - "How's the body?" (Green, Yellow or Red) shapes the suggestions, and gently suggests Yellow after a rough night.

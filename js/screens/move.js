@@ -6,6 +6,7 @@ import { hubHtml, hubClick, hubTick, milestoneOf, milestoneSheet } from './moveh
 import { editSession } from './days.js';
 import { removeEntry } from '../activities.js';
 import { count as goalCount, unitOf as goalUnit } from '../goals.js';
+import { wu, showA, kgA, showNum, askLb } from '../units.js'; // v71: kg or lb (saved in kg, shown and typed in your unit)
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
 const TYPES = [['wr', 'Weight × reps'], ['bw', 'Body weight × reps'], ['hold', 'Seconds'], ['mins', 'Minutes']];
@@ -88,7 +89,7 @@ function restHint() {
 const L = [['green', 'Green', 'awake, normal', '#2E8B57'], ['yellow', 'Yellow', 'tired, a bit sore', '#E3B000'], ['red', 'Red', 'unwell, faint, pain', '#C2412D']];
 const lightsHtml = () => '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' + restHint() +
   (light === 'red' ? '<div class="note-r">Rest is the plan today, and that is a good plan. If it is chest pain, dizziness, feeling faint or a fever, please get it checked.</div>' : light === 'yellow' ? '<div class="note-y">Go gently today. A lighter version of anything still counts.</div>' : '');
-function renderHub() { root.innerHTML = hubHtml(lightsHtml()) + nav('move'); }
+function renderHub() { root.innerHTML = hubHtml(lightsHtml()) + nav('move'); if (get().moveSetup) setTimeout(() => { if (view === 'hub' && root && root.isConnected) askLb(() => { if (view === 'hub') renderHub(); }); }, 300); } // v71: once, for someone now in lb with weights saved before
 function renderStart() {
   const st = get(), s = suggestion(), ms = milestoneOf('gym');
   const lt = L.find(l => l[0] === light);
@@ -114,7 +115,8 @@ const nameOf = i => act().swap[i] || (EX()[act().items[i][0]] || { n: '?' }).n;
 const top = range => { const m = /(\d+)-(\d+)/.exec(range); return m ? Number(m[2]) : null; };
 const baseSets = it => Number(String(it[1]).split('-')[0]);
 const maxSets = it => Number(String(it[1]).split('-').pop());
-const unitOf = k => get().units[k] || (k === 'legpress' ? 'plate' : 'kg');
+const unitOf = k => get().units[k] || (k === 'legpress' ? 'plate' : 'kg'); // 'kg' here means "a weight" (shown in kg or lb), 'plate' a machine's pin
+const e2show = a => unitOf(item()[0]) === 'plate' || (EX()[item()[0]] || {}).t !== 'wr' ? a : showA(a); // a saved set's weight, the way you'd type it (seconds, minutes and plates stay as they are)
 // "Last time" for one exercise (v57): read from your saved workouts, so fixing an old workout in Days fixes it here too.
 // The newest session on or before this workout's day that has it (a swap matches by what you swapped to).
 function lastTime(i) {
@@ -139,7 +141,7 @@ function prefill() {
   const a = act(); if (!a) return;
   const k = item()[0], L = a.log[a.i] || [];
   const src = L.length ? L[L.length - 1] : { a: '', b: '' };
-  A = src.a || ''; B = src.b || ''; field = 'a'; fresh = true; edit = -1;
+  A = e2show(src.a || ''); B = src.b || ''; field = 'a'; fresh = true; edit = -1;
   if (!L.length) { const g = (lastTime(a.i) || { sets: [] }).sets[0]; if (g && isBP(g.a)) A = 'b+'; } // last time was Bar +: open in Bar +, still empty
   if ((EX()[k] || {}).t === 'bw') { A = 'bw'; field = 'b'; }
 }
@@ -161,8 +163,8 @@ function fmtSet(x, e, k) {
   if (e.t === 'hold') return x.a + ' s';
   if (e.t === 'mins') return x.a + ' min';
   if (SPECIAL[x.a]) return SPECIAL[x.a] + ' × ' + x.b + (e.each ? ' each' : '');
-  if (isBP(x.a)) return 'bar + ' + bpKg(x.a) + 'kg each side × ' + x.b;
-  return (unitOf(k) === 'plate' ? 'P' + x.a : x.a + 'kg') + ' × ' + x.b + (e.each ? ' each' : '');
+  if (isBP(x.a)) return 'bar + ' + showNum(bpKg(x.a)) + wu() + ' each side × ' + x.b;
+  return (unitOf(k) === 'plate' ? 'P' + x.a : showNum(x.a) + wu()) + ' × ' + x.b + (e.each ? ' each' : '');
 }
 function setsHtml() {
   const a = act(), it = item(), L = a.log[a.i] || [], e = EX()[it[0]];
@@ -180,7 +182,7 @@ function renderWk() {
   const one = e.t !== 'wr';
   // an empty box on the first set shows last time's first set, faintly; nothing is saved until you type it or tap Same again (v57)
   const lt = !(a.log[a.i] || []).length && edit < 0 ? lastTime(a.i) : null, g0 = lt && lt.sets[0];
-  const ghost = (v, f) => (v !== '' && !(f === 'a' && v === 'b+')) || !g0 || g0[f] === '' || g0[f] == null ? '' : '<span class="v ghost">last ' + esc(f === 'a' ? (SPECIAL[g0.a] ? SPECIAL[g0.a].toLowerCase() : isBP(g0.a) ? (v === 'b+' ? bpKg(g0.a) : 'bar+' + bpKg(g0.a)) : g0.a) : g0.b) + '</span>';
+  const ghost = (v, f) => (v !== '' && !(f === 'a' && v === 'b+')) || !g0 || g0[f] === '' || g0[f] == null ? '' : '<span class="v ghost">last ' + esc(f === 'a' ? (SPECIAL[g0.a] ? SPECIAL[g0.a].toLowerCase() : isBP(g0.a) ? (v === 'b+' ? showNum(bpKg(g0.a)) : 'bar+' + showNum(bpKg(g0.a))) : unitOf(k) === 'plate' ? g0.a : showNum(g0.a)) : g0.b) + '</span>';
   let fields;
   if (e.t === 'bw') {
     fields = '<div class="fields one"><button type="button" class="field" data-f="b" aria-pressed="true"><span class="l">REPS · BODY WEIGHT' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(B) + '</span>' + ghost(B, 'b') + '</button></div>';
@@ -189,7 +191,7 @@ function renderWk() {
   } else {
     const u = unitOf(k);
     fields = '<div class="fields">' +
-      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : isBP(A) ? 'BAR + · KG EACH SIDE' : 'WEIGHT · KG') + (e.m && !isBP(A) ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">kg</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + (SPECIAL[A] ? ' word' : '') + '">' + (isBP(A) ? esc(bpKg(A)) : esc(SPECIAL[A] || A)) + '</span>' + ghost(A, 'a') + (SPECIAL[A] ? '' : isBP(A) ? '<span class="nudge"><span data-n="-1.25">−1.25</span><span data-n="1.25">+1.25</span></span>' : u === 'kg' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
+      '<button type="button" class="field" data-f="a" aria-pressed="' + (field === 'a') + '"><span class="l">' + (u === 'plate' ? 'PLATE #' : isBP(A) ? 'BAR + · ' + wu().toUpperCase() + ' EACH SIDE' : 'WEIGHT · ' + wu().toUpperCase()) + (e.m && !isBP(A) ? '<span class="unit" data-unit="1"><span class="' + (u === 'kg' ? 'on' : '') + '">' + wu() + '</span><span class="' + (u === 'plate' ? 'on' : '') + '">plate</span></span>' : '') + '</span><span class="v' + (fresh && field === 'a' ? ' fresh' : '') + (SPECIAL[A] ? ' word' : '') + '">' + (isBP(A) ? esc(bpKg(A)) : esc(SPECIAL[A] || A)) + '</span>' + ghost(A, 'a') + (SPECIAL[A] ? '' : isBP(A) ? (wu() === 'lb' ? '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>' : '<span class="nudge"><span data-n="-1.25">−1.25</span><span data-n="1.25">+1.25</span></span>') : u === 'kg' ? (wu() === 'lb' ? '<span class="nudge"><span data-n="-5">−5</span><span data-n="5">+5</span></span>' : '<span class="nudge"><span data-n="-2.5">−2.5</span><span data-n="2.5">+2.5</span></span>') : '<span class="nudge"><span data-n="-1">−1</span><span data-n="1">+1</span></span>') + '</button>' +
       '<button type="button" class="field" data-f="b" aria-pressed="' + (field === 'b') + '"><span class="l">REPS' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh && field === 'b' ? ' fresh' : '') + '">' + esc(B) + '</span>' + ghost(B, 'b') + '</button></div>' +
       // when the weight isn't a number
       '<div class="wsp">' + Object.keys(SPECIAL).map(v => '<button type="button" data-wsp="' + v + '" aria-pressed="' + (A === v) + '">' + SPECIAL[v] + '</button>').join('') +
@@ -239,9 +241,9 @@ function commit() {
   const a = act(), it = item(), e = EX()[it[0]];
   if (e.t === 'bw') A = 'bw';
   const reps = e.t === 'wr' || e.t === 'bw';
-  if (A === 'b+') { field = 'a'; renderWk(); toast('Type the kg on each side of the bar'); return; }
+  if (A === 'b+') { field = 'a'; renderWk(); toast('Type the ' + wu() + ' on each side of the bar'); return; }
   if (!A || (reps && !B)) { toast(e.t === 'wr' ? 'Type the weight and reps first' : e.t === 'bw' ? 'Type the reps first' : 'Type a number first'); return; }
-  const set = { a: A, b: reps ? B : '' };
+  const set = { a: e.t === 'wr' && unitOf(it[0]) !== 'plate' ? kgA(A) : A, b: reps ? B : '' }; // v71: saved in kg
   const L = (a.log[a.i] = a.log[a.i] || []);
   if (edit >= 0) { L[edit] = set; say = 'Fixed. Set ' + (edit + 1) + ' is right now.'; save(); prefill(); renderWk(); return; }
   L.push(set); a.lastAt = Date.now(); justLogged = true;
@@ -326,18 +328,18 @@ function onClick(e) {
   if (t.closest('[data-bp]')) { A = isBP(A) ? '' : 'b+'; field = 'a'; fresh = false; renderWk(); return; }
   if (t.closest('[data-unit]')) { const k = item()[0]; get().units[k] = unitOf(k) === 'kg' ? 'plate' : 'kg'; save(); A = ''; fresh = true; field = 'a'; renderWk(); return; }
   if ((b = t.closest('[data-n]')) && isBP(A)) { const v = Math.max(0, (parseFloat(bpKg(A)) || 0) + Number(b.dataset.n)); A = 'b+' + Math.round(v * 100) / 100; fresh = false; field = 'a'; renderWk(); return; }
-  if ((b = t.closest('[data-n]'))) { const g = A === '' && !(a.log[a.i] || []).length ? ((lastTime(a.i) || { sets: [] }).sets[0] || {}) : {}; const v = Math.max(0, (parseFloat(A) || parseFloat(g.a) || 0) + Number(b.dataset.n)); A = String(Math.round(v * 100) / 100); fresh = false; field = 'a'; renderWk(); return; }
+  if ((b = t.closest('[data-n]'))) { const g = A === '' && !(a.log[a.i] || []).length ? ((lastTime(a.i) || { sets: [] }).sets[0] || {}) : {}; const v = Math.max(0, (parseFloat(A) || parseFloat(e2show(g.a)) || 0) + Number(b.dataset.n)); A = String(Math.round(v * 100) / 100); fresh = false; field = 'a'; renderWk(); return; }
   if ((b = t.closest('[data-f]'))) { field = b.dataset.f; fresh = true; renderWk(); return; }
   if (t.closest('[data-rm]')) { a.log[a.i].splice(edit, 1); say = 'Gone. No harm done.'; save(); prefill(); renderWk(); return; }
   if ((b = t.closest('[data-set]'))) {
     const j = Number(b.dataset.set);
-    if (edit === j) prefill(); else { const x = a.log[a.i][j]; edit = j; A = x.a; B = x.b; field = 'a'; fresh = true; say = 'Fixing set ' + (j + 1) + '. Type the right numbers.'; }
+    if (edit === j) prefill(); else { const x = a.log[a.i][j]; edit = j; A = e2show(x.a); B = x.b; field = 'a'; fresh = true; say = 'Fixing set ' + (j + 1) + '. Type the right numbers.'; }
     renderWk(); return;
   }
   if (t.closest('[data-next]')) {
     // the first set's faint "last …" hint: Next or Log on an empty box takes it, as if you'd typed it (v59, Phavan)
     const ex = EX()[item()[0]], g0 = !(a.log[a.i] || []).length && edit < 0 ? ((lastTime(a.i) || { sets: [] }).sets[0] || null) : null;
-    if (g0) { if (field === 'a' && (A === '' || (A === 'b+' && isBP(g0.a))) && ex.t !== 'bw' && g0.a !== '' && g0.a != null) A = String(g0.a); if ((field === 'b' || ex.t === 'bw') && B === '' && ex.t !== 'hold' && ex.t !== 'mins' && g0.b !== '' && g0.b != null) B = String(g0.b); }
+    if (g0) { if (field === 'a' && (A === '' || (A === 'b+' && isBP(g0.a))) && ex.t !== 'bw' && g0.a !== '' && g0.a != null) A = e2show(String(g0.a)); if ((field === 'b' || ex.t === 'bw') && B === '' && ex.t !== 'hold' && ex.t !== 'mins' && g0.b !== '' && g0.b != null) B = String(g0.b); }
     const one = ex.t !== 'wr'; if (!one && field === 'a') { field = 'b'; fresh = true; renderWk(); } else commit(); return;
   }
   if (t.closest('[data-same]')) {
@@ -345,7 +347,7 @@ function onClick(e) {
     const L = a.log[a.i] || [], last = lastTime(a.i);
     const src = L.length ? L[L.length - 1] : last && last.sets[0]; // first set: the first set from last time
     if (!src) { toast('Type your first set, then this repeats it'); return; }
-    A = src.a; B = src.b; commit(); return;
+    A = e2show(src.a); B = src.b; commit(); return;
   }
 }
 
@@ -404,7 +406,7 @@ function setMeasure(k, t) {
   const past = st.sessions.reduce((n, s) => n + s.exercises.filter(x => x.key === k && !x.swap).reduce((m, x) => m + x.sets.filter(zero).length, 0), 0);
   const total = live + past, name = (EX()[k] || { n: 'this' }).n;
   if (!total) { toast(name + ' is body weight × reps now.'); return; }
-  openSheet('<h2>Fix the old 0 kg sets?</h2><p class="muted">You have ' + total + (total === 1 ? ' set' : ' sets') + ' of ' + esc(name.toLowerCase()) + ' logged as 0 kg. Mark ' + (total === 1 ? 'it' : 'them') + ' as body weight?</p>' +
+  openSheet('<h2>Fix the old 0 ' + wu() + ' sets?</h2><p class="muted">You have ' + total + (total === 1 ? ' set' : ' sets') + ' of ' + esc(name.toLowerCase()) + ' logged as 0 ' + wu() + '. Mark ' + (total === 1 ? 'it' : 'them') + ' as body weight?</p>' +
     '<button type="button" class="btn" data-o="yes">Yes, mark ' + (total === 1 ? 'it' : 'them') + ' as body weight</button><button type="button" class="btn ghost" data-o="no">No, leave ' + (total === 1 ? 'it' : 'them') + '</button>', ev => {
     const o = ev.target.closest('[data-o]'); if (!o) return;
     if (o.dataset.o === 'yes') {
@@ -545,9 +547,9 @@ function setWords(x, e, k) {
   if (t === 'mins') return x.a + ' min';
   if (x.a === 'nn') return 'weight not noted × ' + x.b + (e && e.each ? ' each side' : '');
   if (x.a === 'bar') return 'bar only × ' + x.b + (e && e.each ? ' each side' : '');
-  if (isBP(x.a)) return 'bar + ' + bpKg(x.a) + ' kg each side × ' + x.b;
+  if (isBP(x.a)) return 'bar + ' + showNum(bpKg(x.a)) + ' ' + wu() + ' each side × ' + x.b;
   if (x.a === 'bw' || (e && e.t === 'bw')) return 'body weight × ' + x.b + (e && e.each ? ' each side' : '');
-  const w = unitOf(k) === 'plate' ? 'plate ' + x.a : (Number(x.a) ? x.a + ' kg' : 'body weight');
+  const w = unitOf(k) === 'plate' ? 'plate ' + x.a : (Number(x.a) ? showNum(x.a) + ' ' + wu() : 'body weight');
   return w + ' × ' + x.b + (e && e.each ? ' each side' : '');
 }
 // the copyable text: a title, the date, then each exercise in the order you did it, sets on one line

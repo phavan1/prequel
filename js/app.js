@@ -1,5 +1,6 @@
 import { load, get, save, today, dateKey, hasData } from './store.js';
 import { NEWS, LATEST, openNews } from './news.js';
+import { settleUnits } from './units.js';
 import * as home from './screens/home.js';
 import * as weather from './screens/weather.js';
 import * as move from './screens/move.js';
@@ -101,6 +102,7 @@ function whatsNew() {
 }
 
 load().then(() => {
+  settleUnits(); // v71: kg or lb
   window.addEventListener('hashchange', route);
   applyTheme();
   route();

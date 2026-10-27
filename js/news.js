@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 71, date: '2026-10-27', items: [
+    'Pounds: weights can now be in lb or kg. Change it any time in Settings, under Weights in.',
+    'Everything follows it: the gym, Bar +, "Last time", body weight, Your moving journey and the Move report.',
+    'Prequel guessed the right one for you from your phone\'s settings. If it switched you to lb, it asks once whether your earlier numbers were in pounds.'
+  ] },
   { v: 70, date: '2026-10-27', items: [
     'Rest\'s clock now draws a night that starts before midnight all the way round (it showed just a little dot near 12am).',
     'A whole night still belongs to the morning you woke up.',

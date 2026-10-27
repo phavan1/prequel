@@ -3,6 +3,7 @@ import { get, save, exportJSON, isPersisted, today, reset, backupDue, dateKey, c
 import { esc, nav, backLink, toast, openSheet, closeSheet, downloadFile } from '../ui.js';
 import { dayDate, clock } from '../pdf.js';
 import { NEWS, LATEST, openNews } from '../news.js';
+import { wu, setUnit, askLb } from '../units.js';
 
 export function mount(root) {
   render(root);
@@ -10,6 +11,7 @@ export function mount(root) {
     const t = e.target; let b;
     if (t.closest('[data-export]')) { backup(root); return; }
     if (t.closest('[data-fresh]')) { startFresh(root); return; }
+    if ((b = t.closest('[data-wunit]'))) { if (b.dataset.wunit !== wu()) { setUnit(b.dataset.wunit); render(root); if (!askLb()) toast('Weights are now in ' + (wu() === 'lb' ? 'pounds' : 'kilograms') + '.'); } return; }
     if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
     if (t.closest('[data-words]')) { wordsSheet(root); return; }
@@ -124,6 +126,8 @@ function render(root) {
     '<h1>Settings</h1>' +
     '<div class="lbl">Make it yours</div>' +
     '<button type="button" class="rowlink" data-words style="width:100%"><span>Your name, kind words and tiny wins<small class="rowsub">' + (s.name ? 'He calls you ' + esc(s.name) : 'Tell him what to call you') + '</small></span><b>›</b></button>' +
+    '<div class="lbl">Weights in</div>' + // v71: kg or lb, for lifts and body weight
+    '<div class="seg3 two">' + [['kg', 'kg · kilograms'], ['lb', 'lb · pounds']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
     '<div class="lbl">Look</div>' +
     '<div class="seg3">' + [['light', 'Light'], ['dark', 'Cosy dark'], ['auto', 'Match my phone']].map(o => '<button type="button" data-look="' + o[0] + '" aria-pressed="' + ((s.theme || 'light') === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
     '<div class="lbl">Your data</div>' +

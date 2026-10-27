@@ -570,6 +570,8 @@ html[data-theme="dark"] .screen-home.heavy .room .floor { background: #3A291E; }
 .seg3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .seg3 button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-weight: 800; font-size: 13px; color: var(--ink); }
 .seg3 button[aria-pressed="true"] { border: 2px solid var(--blue); background: var(--blue-soft); }
+.seg3.two { grid-template-columns: repeat(2, 1fr); } /* v71: Weights in kg / lb */
+.seg.wunit { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
 
 /* ---------- days ---------- */
 .tabsrow { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }

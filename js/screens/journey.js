@@ -8,6 +8,7 @@ import { get, today, addDays, parseKey, dateKey } from '../store.js';
 import { esc, nav, backLink, prettyDate } from '../ui.js';
 import { EXERCISES } from '../data.js';
 import { actDef } from '../activities.js';
+import { wu, showNum } from '../units.js';
 
 let filter = 'all', year = null, root = null;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -56,8 +57,8 @@ function card(icon, n, unit, label, i) {
 const setW = z => { const a = String(z.a); return a.startsWith('b+') ? Number(a.slice(2)) || 0 : Number(a) || 0; };
 const topSet = sets => sets.reduce((b, z) => !b || setW(z) > setW(b) || (setW(z) === setW(b) && (Number(z.b) || 0) > (Number(b.b) || 0)) ? z : b, null);
 const unitOf = (st, k) => (st.units || {})[k] || (k === 'legpress' ? 'plate' : 'kg');
-const wLabel = (st, k, z) => { const a = String(z.a); if (a.startsWith('b+')) return 'bar + ' + a.slice(2) + ' kg'; return unitOf(st, k) === 'plate' ? 'plate ' + a : a + ' kg'; };
-const wShort = (st, k, z) => { const a = String(z.a); if (a.startsWith('b+')) return '+' + a.slice(2); return unitOf(st, k) === 'plate' ? 'P' + a : a; };
+const wLabel = (st, k, z) => { const a = String(z.a); if (a.startsWith('b+')) return 'bar + ' + showNum(a.slice(2)) + ' ' + wu(); return unitOf(st, k) === 'plate' ? 'plate ' + a : showNum(a) + ' ' + wu(); }; // v71: kg or lb
+const wShort = (st, k, z) => { const a = String(z.a); if (a.startsWith('b+')) return '+' + showNum(a.slice(2)); return unitOf(st, k) === 'plate' ? 'P' + a : showNum(a); };
 
 export function cardsFor(f, st = get()) {
   const t = today(), list = entries(f, st), dates = Object.keys(byDate(list)).sort(), out = [];
@@ -76,7 +77,7 @@ export function cardsFor(f, st = get()) {
   if (f === 'gym') {
     const sets = st.sessions.reduce((n, s) => n + (s.exercises || []).reduce((a, x) => a + (x.sets || []).length, 0), 0);
     if (sets) out.push(['bell', sets, 'sets', 'all together']);
-    const L = lifts(st)[0]; if (L && L.best && setW(L.best) > 0) out.push(['star', wLabel(st, L.k, L.best).replace(/ kg$/, ''), / kg$/.test(wLabel(st, L.k, L.best)) ? 'kg' : '', 'heaviest ' + L.name.toLowerCase()]);
+    const L = lifts(st)[0]; if (L && L.best && setW(L.best) > 0) { const wl = wLabel(st, L.k, L.best), re = new RegExp(' ' + wu() + '$'); out.push(['star', wl.replace(re, ''), re.test(wl) ? wu() : '', 'heaviest ' + L.name.toLowerCase()]); }
   }
   if (f !== 'all' && f !== 'gym') {
     const d = actDef(f);

@@ -5,6 +5,7 @@ import { loadArt, fontsReady } from './cards.js';
 import { feelLabel, EXERCISES } from './data.js';
 import { actDef, summary } from './activities.js';
 import { NUTRIENTS, totalOf, sumDay, qtyLabel, myFoods } from './nutrition.js';
+import { wu, showNum, withUnit } from './units.js'; // v71: kg or lb
 import { Doc, PW, PH, M, INK, SOFT, LINE, CARD, BLUE, SUN, HAND, BODY, txt, rr, wrap, longDate, dayDate, shortDay, range, clock, dur, shareFile } from './pdf.js';
 
 const days = (from, to) => { const out = []; for (let d = from; d <= to; d = addDays(d, 1)) out.push(d); return out; };
@@ -271,7 +272,7 @@ export async function foodReport(from, to, label) {
   const ws = (st.weights || []).filter(w => w.date >= from && w.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
   if (ws.length) {
     doc.heading('Weight', ws.length > 1 ? 'from ' + longDate(ws[0].date) + ' to ' + longDate(ws[ws.length - 1].date) : longDate(ws[0].date));
-    doc.para(ws.map(w => longDate(w.date) + ': ' + w.kg + ' kg' + (w.where ? ' (' + w.where + ')' : '')).join('   ·   '), '700 22px ' + BODY, INK);
+    doc.para(ws.map(w => longDate(w.date) + ': ' + withUnit(w.kg) + (w.where ? ' (' + w.where + ')' : '')).join('   ·   '), '700 22px ' + BODY, INK);
   }
 
   // gentle ideas
@@ -330,9 +331,9 @@ function setText(z, k, st) {
   if (a === 'nn') return 'weight not noted' + reps;
   if (a === 'bar') return 'bar only' + reps;
   if (a === 'bw' || t === 'bw') return 'body weight' + reps;
-  if (a.startsWith('b+')) return 'bar + ' + a.slice(2) + ' kg each side' + reps;
+  if (a.startsWith('b+')) return 'bar + ' + showNum(a.slice(2)) + ' ' + wu() + ' each side' + reps;
   const unit = (st.units || {})[k] || (k === 'legpress' ? 'plate' : 'kg');
-  return (unit === 'plate' ? 'plate ' + a : a + ' kg') + reps;
+  return (unit === 'plate' ? 'plate ' + a : showNum(a) + ' ' + wu()) + reps;
 }
 // how heavy a set is, to find the top set: kg (or the kg on each side), then reps
 const setWeight = z => { const a = String(z.a); return a.startsWith('b+') ? Number(a.slice(2)) || 0 : Number(a) || 0; };
@@ -376,8 +377,8 @@ export async function moveReport(from, to) {
   // body weight: every weigh-in in these dates, with where (different scales read differently)
   const W = (st.weights || []).filter(w => w.date >= from && w.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
   if (W.length) {
-    doc.heading('Body weight', W.length > 1 ? 'from ' + W[0].kg + ' kg to ' + W[W.length - 1].kg + ' kg' : '', 120 + W.length * 46);
-    doc.table([{ label: 'Day', w: 420 }, { label: 'Weight', w: 260 }, { label: 'Where', w: 368 }], W.map(w => ({ cells: [dayDate(w.date), w.kg + ' kg', w.where || ''] })), { boldFirst: true });
+    doc.heading('Body weight', W.length > 1 ? 'from ' + withUnit(W[0].kg) + ' to ' + withUnit(W[W.length - 1].kg) : '', 120 + W.length * 46);
+    doc.table([{ label: 'Day', w: 420 }, { label: 'Weight', w: 260 }, { label: 'Where', w: 368 }], W.map(w => ({ cells: [dayDate(w.date), withUnit(w.kg), w.where || ''] })), { boldFirst: true });
   }
 
   // the calendar: one square a day, with a letter for each thing done (a key underneath), so it reads without colour

@@ -7,6 +7,7 @@ import { count, unitOf, checkFinished, openEditGoal, ensureGoals } from '../goal
 import { weights } from '../nutrition.js';
 import { weightSheet } from '../weight.js';
 import { openMoveReport } from '../reports.js';
+import { wu, withUnit, setUnit } from '../units.js';
 
 // the milestone an activity has right now (gym's old "road to 100" is a sessions goal, so it counts too)
 export function milestoneOf(id) {
@@ -35,7 +36,7 @@ export function hubHtml(lightsHtml) {
     '<h1>How\'s the body?</h1>' + lightsHtml +
     '<div class="lbl">What did you get up to?</div>' +
     '<div class="acttiles">' + order().map(id => { const d = actDef(id); return '<button type="button" class="acttile" data-act="' + esc(id) + '"><span class="emo" aria-hidden="true">' + d.e + '</span><b>' + esc(d.n) + '</b><small>' + esc(tileSub(id)) + '</small></button>'; }).join('') + '</div>' +
-    (() => { const w = weights().slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts)[0]; return '<div class="grid2"><button type="button" class="rowlink" data-actsetup><span>Your activities</span><b>›</b></button><button type="button" class="rowlink" data-weight><span>Weight</span><b>' + (w ? w.kg + ' kg ›' : '+') + '</b></button></div>'; })() + // body weight, same log as Food (v57)
+    (() => { const w = weights().slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts)[0]; return '<div class="grid2"><button type="button" class="rowlink" data-actsetup><span>Your activities</span><b>›</b></button><button type="button" class="rowlink" data-weight><span>Weight</span><b>' + (w ? withUnit(w.kg) + ' ›' : '+') + '</b></button></div>'; })() + // body weight, same log as Food (v57)
     '<div class="grid2"><a class="rowlink" href="#/journey?from=move"><span>Your moving journey</span><b>›</b></a><button type="button" class="rowlink" data-movereport><span>Move report</span><b>PDF ›</b></button></div>' + // v61, v67
     (recent.length ? '<button type="button" class="lately" data-lately><b>Lately</b> ' + recent.map(r => { const w = prettyDate(r.date); return esc(r.n) + ' ' + esc(/^(Today|Yesterday)$/.test(w) ? w.toLowerCase() : w); }).join(' · ') + ' ›</button>' : '');
 }
@@ -43,7 +44,7 @@ const timerText = () => { const t = get().actTimer; if (!t) return ''; const m =
 export function hubTick(root) { const el = root.querySelector('#acttime'); if (el) el.textContent = timerText(); }
 
 // ---------- choosing your activities: once, then any time from "Your activities" ----------
-let pick = null, own = false, road = 'keep';
+let pick = null, own = false, road = 'keep', wpick = null; // wpick: kg or lb, asked once in the first setup (v71)
 function pickerHtml(first) {
   const st = get();
   if (!pick) pick = new Set(st.moveSetup ? st.moveSetup.picked : (st.sessions.length || st.active ? ['gym'] : []));
@@ -55,6 +56,7 @@ function pickerHtml(first) {
       '<input id="oaUnit" type="text" maxlength="20" placeholder="Something to count? e.g. rounds (optional)" autocomplete="off"><button type="button" class="btn alt" data-oaadd>Add it</button></div>' : '') +
     (ms ? '<div class="roadq"><b>You were on the road to ' + ms.target + ' gym sessions.</b><span>Keep that milestone?</span><div class="chips"><button type="button" class="chip small" data-road="keep" aria-pressed="' + (road === 'keep') + '">Keep it</button><button type="button" class="chip small" data-road="change" aria-pressed="' + (road === 'change') + '">Change the number</button><button type="button" class="chip small" data-road="drop" aria-pressed="' + (road === 'drop') + '">No milestone</button></div>' +
       (road === 'change' ? '<input id="roadN" type="text" inputmode="numeric" placeholder="How many sessions?" value="' + ms.target + '">' : '') + '</div>' : '') +
+    (first ? (() => { wpick = wpick || wu(); return '<div class="roadq wq"><b>Do you lift in kg or lb?</b><span>For your weights and body weight. You can change it in Settings.</span><div class="seg wunit">' + ['kg', 'lb'].map(u => '<button type="button" data-wpick="' + u + '" aria-pressed="' + (wpick === u) + '">' + u + '</button>').join('') + '</div></div>'; })() : '') + // v71
     '<div class="err" id="pickErr"></div><button type="button" class="btn" data-picksave>' + (first ? 'That\'s me' : 'Save') + '</button>' + (first ? '' : '<button type="button" class="btn alt" data-close>Cancel</button>') + '</div>';
 }
 
@@ -160,6 +162,7 @@ export function hubClick(e, root, rerender, openGym, openSession) {
   if ((b = t.closest('[data-pick]'))) { const k = b.dataset.pick; pick.has(k) ? pick.delete(k) : pick.add(k); b.setAttribute('aria-pressed', String(pick.has(k))); return true; }
   if (t.closest('[data-ownact]')) { own = !own; redrawPicker(root); return true; }
   if ((b = t.closest('[data-road]'))) { road = b.dataset.road; redrawPicker(root); return true; }
+  if ((b = t.closest('[data-wpick]'))) { wpick = b.dataset.wpick; b.parentNode.querySelectorAll('[data-wpick]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return true; }
   if (t.closest('[data-oaadd]')) {
     const box = t.closest('.picker'), n = box.querySelector('#oaName').value.trim(); if (!n) { box.querySelector('#oaName').focus(); return true; }
     const id = 'c' + uid(); customDraft[id] = { n, e: box.querySelector('#oaEmo').value.trim() || '✨', unit: box.querySelector('#oaUnit').value.trim().toLowerCase() };
@@ -174,6 +177,7 @@ export function hubClick(e, root, rerender, openGym, openSession) {
       if (road === 'change') { const n = parseInt((box.querySelector('#roadN') || {}).value, 10); if (!(n > 0)) { err.textContent = 'Type how many sessions.'; return true; } ms.target = n; }
     }
     const custom = Object.assign({}, (st.moveSetup || {}).custom || {}, customDraft);
+    if (box.querySelector('[data-wpick]')) setUnit(wpick || wu()); // v71: their pick, kg or lb
     st.moveSetup = { picked: [...pick], custom }; save();
     pick = null; own = false; road = 'keep'; for (const k in customDraft) delete customDraft[k];
     if (document.getElementById('sheet')) closeSheet();
