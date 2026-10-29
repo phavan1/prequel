@@ -62,7 +62,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.click('[data-seg="kind"][data-v="Match"]'); await p.fill('[data-fld="goals"]', '2'); await p.fill('[data-fld="assists"]', '1'); await p.click('[data-alsave]'); await p.waitForTimeout(300);
   ok('the football tile shows the milestone counting up', /2 of 10 goals/.test(await p.locator('[data-act="football"]').innerText()));
   ok('the milestone is on Me too', await (async () => { await p.goto(BASE + '#/me'); await p.waitForTimeout(400); return /Football · goals/.test(await p.locator('main').innerText()); })());
-  ok('Me counts how you\'ve moved, only above zero', /How you've moved/i.test(await p.locator('main').innerText()) && /badminton session/.test(await p.locator('main').innerText()) && !/bouldering/i.test(await p.locator('.movecounts').innerText()));
+  ok('Me no longer repeats moving counts (v75: Your moving journey does that)', !/How you've moved/i.test(await p.locator('main').innerText()) && await p.locator('.movecounts').count() === 0 && await p.locator('a.jscene').count() === 1);
 
   // 5. the gym page: no lights there, its own milestone link
   await p.goto(BASE + '#/move'); await p.waitForTimeout(300); await p.click('[data-light="yellow"]'); await p.click('[data-act="gym"]'); await p.waitForTimeout(300);

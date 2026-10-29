@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 75, date: '2026-10-29', items: [
+    'Me is calmer: the "How you\'ve moved" counts are gone, since Your moving journey already shows all of that (no more seeing the same number three times).',
+    'In Your moving journey, "days this year" only shows when it says something different from "all together".'
+  ] },
   { v: 74, date: '2026-10-29', items: [
     'A soft day now gets a little gold star on that night\'s quilt patch. Hard days you got through, easy to spot.',
     'Tapped "Fancy a slower one?" by mistake? Tap Undo in the note that pops up. Changed your mind later? Tap the starred patch on your quilt and remove the star.',

@@ -27,6 +27,7 @@ const errors = [];
   ok('no "minutes of moving" card', !/where timed/.test(txt));
   const gaps = async () => p.evaluate(() => { const cs = [...document.querySelectorAll('.jcards .jcard')], last = cs[cs.length - 1]; return { n: cs.length, full: cs.length % 2 === 0 || Math.abs(last.getBoundingClientRect().width - document.querySelector('.jcards').getBoundingClientRect().width) < 2 }; });
   let g = await gaps(); ok('Everything: the cards fill the grid', g.full, g.n + ' cards');
+  ok('"days in 2026" only when it differs from "all together" (v75)', await p.evaluate(() => { const c = [...document.querySelectorAll('.jcards .jcard')].map(x => x.innerText.replace(/\s+/g, ' ')); const tot = c.find(x => /all together/.test(x)), yr = c.find(x => /days in \d{4}/.test(x)); return !yr || parseInt(yr) !== parseInt(tot); }));
   await p.screenshot({ path: OUT + '/ht-journey.png' });
   for (const f of ['gym', 'walk']) { await p.click('[data-jf="' + f + '"]'); await p.waitForTimeout(300); g = await gaps(); ok(f + ': the cards fill the grid', g.full, g.n + ' cards'); }
   // the gym's own length: not in the copied text, not in the Fix sheet, still saved
@@ -38,6 +39,10 @@ const errors = [];
   ok('the length is still kept quietly', (await st()).sessions[0].mins === 55);
 
   // 2. the Home tab and the soft page
+  // v75: Me says it once
+  await p.goto(BASE + '#/me'); await p.waitForTimeout(500);
+  ok('Me has no "How you\'ve moved" row; the journey card is there', !/How you've moved/i.test(await p.locator('main').innerText()) && await p.locator('a.jscene').count() === 1);
+  await p.screenshot({ path: OUT + '/ht-me.png', fullPage: true });
   await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(400);
   await p.click('[data-heavy]'); await p.waitForTimeout(300);
   ok('the soft page opens', await p.locator('.games').count() === 1);

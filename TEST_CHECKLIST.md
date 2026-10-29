@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v75) Me: no "How you've moved" row; the page reads goals → journey card → little counts → sky/quilt → share → looking back. Journey: no "days in 2026" card when it matches "all together".
 - [ ] (v74) Fancy a slower one? → the Undo note (Undo takes it back). Back to my regular day keeps the gold star. On the quilt the soft day's patch has a gold star; tap it → Remove the star. Days: today shows its ring with a pale tint after logging; how does it feel?
 - [ ] (v73) On a soft day, tap the Home button: the regular home page, and "Fancy a slower one?" goes back to the soft page. From any tab, Home goes home. Your moving journey: no minutes card, cards even. Copying a session or fixing a workout shows no length.
 - [ ] (v72) Days → fix a workout → pick Bar + on a set: the empty box reads "kg each side" in full.

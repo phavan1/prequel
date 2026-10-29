@@ -71,7 +71,7 @@ export function cardsFor(f, st = get()) {
   // v73: no "minutes of moving" card (Phavan: a gym session's length isn't real when you log after the workout)
   const since = between(dates[0], t);
   out.push(since >= 14 ? ['flag', Math.floor(since / 7), 'weeks', 'since you started'] : ['flag', since + 1, since ? 'days' : 'day', 'since you started']);
-  if (daysThisYear && daysThisYear !== daysThisMonth) out.push(['cal', daysThisYear, 'days', 'in ' + y]);
+  if (daysThisYear && daysThisYear !== daysThisMonth && daysThisYear !== list.length) out.push(['cal', daysThisYear, 'days', 'in ' + y]); // v75: not when it's the same number as all together
   if (f === 'all') { const kinds = new Set(list.map(e => e.kind)).size; if (kinds > 1) out.push(['sprout', kinds, 'kinds', 'of moving']); }
   if (f === 'gym') {
     const sets = st.sessions.reduce((n, s) => n + (s.exercises || []).reduce((a, x) => a + (x.sets || []).length, 0), 0);
