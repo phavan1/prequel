@@ -4,6 +4,12 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 74, date: '2026-10-29', items: [
+    'A soft day now gets a little gold star on that night\'s quilt patch. Hard days you got through, easy to spot.',
+    'Tapped "Fancy a slower one?" by mistake? Tap Undo in the note that pops up. Changed your mind later? Tap the starred patch on your quilt and remove the star.',
+    '"Back to my regular day" is a proper button now, and it keeps the gold star: going back doesn\'t undo a hard day.',
+    'On Days, the day you\'re looking at has a soft tint instead of solid blue, so you can see its ring fill in when you log something.'
+  ] },
   { v: 73, date: '2026-10-29', items: [
     'The Home button always takes you to your regular home page now, even from the soft page. The day is still remembered as a soft day, and "Fancy a slower one?" takes you back.',
     'Your moving journey no longer shows minutes of moving, and workouts no longer show how long they took (many people log after the workout, so it wasn\'t right). The cards always line up evenly too.'

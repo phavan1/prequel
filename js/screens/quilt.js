@@ -1,5 +1,5 @@
 import { get, save, parseKey } from '../store.js';
-import { esc, nav, backLink, him, hm, timeOf, reduceMotion, openSheet, FROM } from '../ui.js';
+import { esc, nav, backLink, him, hm, timeOf, reduceMotion, openSheet, FROM, toast } from '../ui.js';
 import { mulberry32, hashStr } from '../sky-model.js';
 import { feelFamily, feelLabel } from '../data.js';
 
@@ -170,11 +170,7 @@ export function drawQuiltMonth(g, x, y, w, list, o = {}) {
     const t = Math.min(1, age / 700), e = 1 - Math.pow(1 - t, 3); if (age < 2400) busy = true;
     if (t < 1) { g.globalAlpha = e; g.translate(px + pw / 2, py + S / 2); g.scale(0.6 + 0.4 * e, 0.6 + 0.4 * e); g.translate(-(px + pw / 2), -(py + S / 2)); }
     drawPatch(g, d, px, py, S, dpr, { w: pw, scale: Math.max(1, w / 340), seam: age < 2200 ? Math.max(0, Math.min(1, (age - 600) / 1200)) : 1 });
-    if (o.soft && o.soft.has(d.date)) { // a gentle shimmer on soft days
-      busy = busy || !o.still;
-      const tw = o.still ? 0.8 : 0.5 + 0.5 * Math.sin(now / 600 + i);
-      [[0.25, 0.3, 1], [0.72, 0.62, 0.7], [0.4, 0.78, 0.55]].forEach(([a, b, k]) => { const sx = px + pw * a, sy = py + S * b, R = S * 0.07 * k * (0.6 + tw * 0.6); g.fillStyle = 'rgba(255,255,255,' + (0.55 + 0.45 * tw) + ')'; g.beginPath(); for (let q = 0; q < 8; q++) { const rr2 = q % 2 ? R * 0.28 : R, an = q * Math.PI / 4; g.lineTo(sx + Math.cos(an) * rr2, sy + Math.sin(an) * rr2); } g.closePath(); g.fill(); });
-    }
+    if (o.soft && o.soft.has(d.date)) goldStar(g, px + pw - S * 0.2, py + S * 0.2, S * 0.13); // v74: a soft day gets a little gold star stitched in the corner (was faint sparkles)
     g.restore();
   });
   // the needle waits where the next patch will go
@@ -258,22 +254,26 @@ export function mount(root, params = {}) {
     flipped = spot;
     const d = spot.d, mins = Math.round(d.hours * 60);
     const fc = document.createElement('canvas'), dpr = 2; fc.width = spot.w * dpr; fc.height = spot.S * dpr; const fg = fc.getContext('2d'); fg.scale(dpr, dpr); drawPatch(fg, d, 0, 0, spot.S, dpr, { w: spot.w });
-    const lw = Math.min(wrap.clientWidth - 30, 300), lh = 200;
+    const lw = Math.min(wrap.clientWidth - 30, 300), lh = soft.has(d.date) ? 250 : 200; // room for "Remove the star"
     const cx = Math.max(10, Math.min(wrap.clientWidth - lw - 10, spot.x + spot.w / 2 - lw / 2)), cy = Math.max(10, spot.y + spot.S / 2 - lh / 2);
     box.style.setProperty('--fx', (spot.x - cx) + 'px'); box.style.setProperty('--fy', (spot.y - cy) + 'px'); box.style.setProperty('--fs', String(spot.w / lw)); box.style.setProperty('--fsy', String(spot.S / lh));
     box.style.left = cx + 'px'; box.style.top = cy + 'px'; box.style.width = lw + 'px'; box.style.height = lh + 'px';
-    box.innerHTML = '<div class="flipin"><div class="face front"></div><div class="face back"><small>' + esc(dayWords(d.date)) + '</small><b>Rested ' + esc(hm(mins)) + (d.main.length > 1 ? ', in ' + d.main.length + ' parts' : '') + (d.naps.length ? ' + a nap' : '') + '</b><p>' + esc(d.rests.map(r => timeOf(r.start) + ' to ' + timeOf(r.end)).join(', then ')) + '</p><p>Felt ' + esc(feelLabel(d.feel).toLowerCase()) + '.' + (d.words ? ' “' + esc(d.words) + '”' : '') + (soft.has(d.date) ? ' A soft day, and you still rested.' : '') + (d.parts === 2 ? ' Two halves, stitched into one.' : '') + '</p></div></div>';
+    box.innerHTML = '<div class="flipin"><div class="face front"></div><div class="face back"><small>' + esc(dayWords(d.date)) + '</small><b>Rested ' + esc(hm(mins)) + (d.main.length > 1 ? ', in ' + d.main.length + ' parts' : '') + (d.naps.length ? ' + a nap' : '') + '</b><p>' + esc(d.rests.map(r => timeOf(r.start) + ' to ' + timeOf(r.end)).join(', then ')) + '</p><p>Felt ' + esc(feelLabel(d.feel).toLowerCase()) + '.' + (d.words ? ' “' + esc(d.words) + '”' : '') + (soft.has(d.date) ? ' A soft day, and you still rested.' : '') + (d.parts === 2 ? ' Two halves, stitched into one.' : '') + '</p>' + (soft.has(d.date) ? '<button type="button" class="unstar" data-unstar="' + esc(d.date) + '">Not a hard day? Remove the star</button>' : '') + '</div></div>'; // v74
     box.querySelector('.front').style.backgroundImage = 'url(' + fc.toDataURL() + ')';
     box.hidden = false; box.classList.remove('open'); void box.offsetWidth;
     paint(); requestAnimationFrame(() => box.classList.add('open'));
   };
 
   render();
+  root.__quilt = () => layout; // for the automated tests only: where each patch is
   root.addEventListener('click', e => {
     const t = e.target; let b;
     if ((b = t.closest('[data-mstep]'))) { const i = keys.indexOf(view) + Number(b.dataset.mstep); if (keys[i]) { view = keys[i]; flipped = null; render(); } return; }
     if ((b = t.closest('[data-month]'))) { view = b.dataset.month; flipped = null; render(); root.querySelector('.qnav').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); return; }
     if (t.closest('[data-care]')) { careSheet(); return; }
+    if ((b = t.closest('[data-unstar]'))) { // v74: take a soft day back, later on
+      delete st.heavy[b.dataset.unstar]; if (st.softLeft === b.dataset.unstar) delete st.softLeft; soft.delete(b.dataset.unstar); save(); flipTo(null); toast('Star removed. Just a regular day.'); return;
+    }
     if (t.closest('#flip')) { flipTo(null); return; }
     if (t.id === 'quilt' && layout) {
       const r = t.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
@@ -292,6 +292,18 @@ export function mount(root, params = {}) {
   window.addEventListener('resize', () => { if (root.isConnected) paint(); }, { once: true });
 }
 
+// a five-pointed gold star with a dark outline and a running stitch inside, like an embroidered badge (v74)
+export function goldStar(g, cx, cy, R) {
+  const pts = n => { const out = []; for (let q = 0; q < 10; q++) { const r = q % 2 ? R * 0.45 * n : R * n, an = -Math.PI / 2 + q * Math.PI / 5; out.push([cx + Math.cos(an) * r, cy + Math.sin(an) * r]); } return out; };
+  const path = P => { g.beginPath(); P.forEach(([x, y], k) => (k ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
+  g.save(); g.lineJoin = 'round';
+  g.shadowColor = 'rgba(0,0,0,.18)'; g.shadowBlur = R * 0.3; g.shadowOffsetY = R * 0.08;
+  path(pts(1)); g.fillStyle = '#F4C430'; g.fill(); g.shadowColor = 'transparent';
+  g.lineWidth = Math.max(1, R * 0.14); g.strokeStyle = '#6B4A12'; g.stroke();
+  path(pts(0.62)); g.setLineDash([R * 0.16, R * 0.12]); g.lineWidth = Math.max(0.7, R * 0.07); g.strokeStyle = 'rgba(255,248,220,.95)'; g.stroke();
+  g.restore();
+}
+
 function careSheet() {
   openSheet('<div class="carelabel"><h2>Care label</h2><p class="muted">How to read your quilt</p>' +
     '<dl><dt>Each patch</dt><dd>One day you rested.</dd>' +
@@ -299,7 +311,7 @@ function careSheet() {
     '<dt>The pattern</dt><dd>How you woke up. Stars, flowers and dots: refreshed or rested. Stripes, checks and plaid: okay or tired. Waves and zigzags: groggy or restless.</dd>' +
     '<dt>Two halves stitched together</dt><dd>A night that came in two parts. Still a whole night of rest.</dd>' +
     '<dt>A little button</dt><dd>A nap that day.</dd>' +
-    '<dt>A sparkle</dt><dd>A soft day. You rested anyway.</dd>' +
+    '<dt>A gold star</dt><dd>A soft day. A hard day you got through, and you still rested.</dd>' +
     '<dt>The needle</dt><dd>Where the next patch will go.</dd></dl>' +
     '<p class="muted" style="font-size:12px">Machine wash cold. Tumble dry with kindness.</p></div><button type="button" class="btn alt" data-close>Close</button>');
 }

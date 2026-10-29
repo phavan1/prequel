@@ -72,11 +72,14 @@ export function openSheet(html, onClick) {
 export function closeSheet() { const s = document.getElementById('sheet'); if (s) s.remove(); }
 
 let toastTimer = null;
-export function toast(msg) {
+// act (v74): an optional button inside the note, like { label: 'Undo', fn, ms: 6000 }
+export function toast(msg, act) {
   let t = document.getElementById('toast');
   if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  t.textContent = msg; t.classList.toggle('act', !!act);
+  if (act) { const b = document.createElement('button'); b.type = 'button'; b.textContent = act.label; b.onclick = () => { clearTimeout(toastTimer); t.classList.remove('show', 'act'); act.fn(); }; t.appendChild(b); }
+  t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show', 'act'), act ? act.ms || 6000 : 2600);
 }
 
 // ---------- saving and sharing files ----------

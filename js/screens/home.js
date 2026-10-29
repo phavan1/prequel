@@ -75,9 +75,9 @@ function render() {
     '</div>' +
     (soft
       ? gamesShelf(st) +
-        (() => { const m = fromJar(true); return m ? '<a class="fromjar" href="#/wins"><small>From your jar · ' + esc(new Date(m.ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })) + '</small>' + esc(m.text) + '<em>You did this. You can again.</em></a>' : ''; })() +
+        (() => { const m = fromJar(true); return m ? '<a class="fromjar" href="#/wins"><small>From your jar · ' + esc(new Date(m.ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })) + '</small>' + esc(m.text) + '<em>Remember this one? That was all you.</em></a>' : ''; })() +
         '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'A letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
-        '<button type="button" class="btn ghost wide" data-unheavy>Back to a regular day</button>'
+        '<button type="button" class="btn alt wide softback" data-unheavy>Back to my regular day</button>'
       : (st.active ? '<a class="rowlink" href="#/move" style="border-color:var(--blue)"><span>' + esc(st.active.n) + ' is still open</span><b>›</b></a>' : '') +
         '<a class="rowlink" href="#/weather"><span>' + wxText + '</span>' + wxDots + '</a>' +
         '<div class="quick">' +
@@ -102,8 +102,14 @@ function onClick(e) {
     if (el && !st.heavy[d]) el.textContent = pick(st.settings.kindLines.length ? st.settings.kindLines : ['Hey, you.']);
     return;
   }
-  if (t.closest('[data-heavy]')) { st.heavy[d] = true; delete st.softLeft; save(); render(); window.scrollTo(0, 0); return; }
-  if (t.closest('[data-unheavy]')) { delete st.heavy[d]; save(); render(); toast('Glad you took a breather.'); return; }
+  if (t.closest('[data-heavy]')) {
+    const had = !!st.heavy[d]; st.heavy[d] = true; delete st.softLeft; save(); render(); window.scrollTo(0, 0);
+    // v74: tapped by mistake? Undo takes it all back (no soft page, no star). Already marked today: nothing to undo.
+    if (!had) toast('Today is a soft day.', { label: 'Undo', ms: 6000, fn: () => { const s2 = get(); delete s2.heavy[d]; delete s2.softLeft; save(); if (location.hash.replace(/^#\/?/, '').split('?')[0] === 'home' || !location.hash) render(); } });
+    return;
+  }
+  // v74: going back keeps the day as a soft day (a hard thing still happened); only Undo or the quilt removes it
+  if (t.closest('[data-unheavy]')) { st.softLeft = d; save(); render(); window.scrollTo(0, 0); toast('Back to your regular day. Today keeps its gold star.'); return; }
   if (t.closest('[data-goals]')) { e.preventDefault(); openLog(null, () => render()); }
 }
 
