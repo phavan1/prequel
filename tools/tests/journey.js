@@ -44,7 +44,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const chips = await p.locator('[data-jf]').allInnerTexts();
   ok('the filter: everything, gym, each activity (no sleep)', chips.join('|').replace(/[^\w|]/g, '') === 'Everything|Gym|Badminton|Walk', chips.join(' | '));
   const cards = await p.locator('.jcard').allInnerTexts();
-  ok('Habit-style cards: a number, a unit, a short label', cards.length >= 4 && cards.every(c => /\d/.test(c)), cards.join(' / ').replace(/\n/g, ' '));
+  ok('Habit-style cards: a number, a unit, a short label', cards.length >= 4 && cards.every(c => /\d/.test(c) || /your usual days? to move/.test(c)), cards.join(' / ').replace(/\n/g, ' '));
   ok('no zeros, streaks, rates or averages anywhere', !/\b0\b|streak|rate|avg|average|unmet/i.test(await p.locator('main').innerText()));
   ok('no minutes-of-moving card (v73: a gym session\'s length isn\'t real when logged afterwards)', !cards.some(c => /of moving, where timed/.test(c)));
   ok('a quiet week is a rest week, taken kindly', cards.some(c => /rest week/.test(c)) && await p.locator('svg.jweeks .jrest').count() >= 1);

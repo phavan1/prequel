@@ -73,9 +73,18 @@ export function cardsFor(f, st = get()) {
   out.push(since >= 14 ? ['flag', Math.floor(since / 7), 'weeks', 'since you started'] : ['flag', since + 1, since ? 'days' : 'day', 'since you started']);
   if (daysThisYear && daysThisYear !== daysThisMonth && daysThisYear !== list.length) out.push(['cal', daysThisYear, 'days', 'in ' + y]); // v75: not when it's the same number as all together
   if (f === 'all') { const kinds = new Set(list.map(e => e.kind)).size; if (kinds > 1) out.push(['sprout', kinds, 'kinds', 'of moving']); }
+  // v76: your usual day, once there are a few days to go on (one day, or two that tie; a fact, not a score)
+  if (f === 'all' && dates.length >= 4) {
+    const per = [0, 0, 0, 0, 0, 0, 0]; dates.forEach(d => per[parseKey(d).getDay()]++);
+    const top = Math.max(...per), best = per.map((n, i) => n === top ? i : -1).filter(i => i >= 0), DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    if (best.length <= 2) out.push(['sun', best.map(i => DN[i]).join(' & '), '', best.length === 1 ? 'your usual day to move' : 'your usual days to move']);
+  }
   if (f === 'gym') {
     const sets = st.sessions.reduce((n, s) => n + (s.exercises || []).reduce((a, x) => a + (x.sets || []).length, 0), 0);
     if (sets) out.push(['bell', sets, 'sets', 'all together']);
+    // v76: how many different exercises you've done (a swap counts as its own); only ever grows
+    const kinds = new Set(); st.sessions.forEach(s => (s.exercises || []).forEach(x => { if ((x.sets || []).length) kinds.add(x.swap ? 'swap:' + x.swap.toLowerCase() : x.key); }));
+    if (kinds.size >= 2) out.push(['sprout', kinds.size, 'exercises', 'tried so far']);
     const L = lifts(st)[0]; if (L && L.best && setW(L.best) > 0) { const wl = wLabel(st, L.k, L.best), re = new RegExp(' ' + wu() + '$'); out.push(['star', wl.replace(re, ''), re.test(wl) ? wu() : '', 'heaviest ' + L.name.toLowerCase()]); }
   }
   if (f !== 'all' && f !== 'gym') {

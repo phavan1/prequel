@@ -991,7 +991,10 @@ html[data-theme="dark"] .nights rect[fill="#1F55D0"] { fill: #5B86F0; }
 .jfilter::-webkit-scrollbar { display: none; }
 .jfilter .chip { flex: none; }
 .jcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.jcards > .jcard:last-child:nth-child(odd) { grid-column: 1 / -1; } /* v73: an odd card out stretches across, so the grid never has a gap */
+.jcards > .jcard:last-child:nth-child(odd) { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; min-height: 0; padding: 12px 16px; } /* v73, v76: an odd card out becomes a slim strip across the bottom */
+.jcards > .jcard:last-child:nth-child(odd) .jic { margin-bottom: 0; flex: none; }
+.jcards > .jcard:last-child:nth-child(odd) .jn { font-size: 26px; white-space: nowrap; }
+.jcards > .jcard:last-child:nth-child(odd) .jl { flex: 1; }
 .jcard { background: var(--paper); border: 1px solid var(--line); border-radius: 22px; padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 4px; min-height: 132px; }
 .jic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #1F55D0; margin-bottom: 6px; }
 .jic svg { width: 22px; height: 22px; }

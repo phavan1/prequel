@@ -30,6 +30,21 @@ const errors = [];
   ok('"days in 2026" only when it differs from "all together" (v75)', await p.evaluate(() => { const c = [...document.querySelectorAll('.jcards .jcard')].map(x => x.innerText.replace(/\s+/g, ' ')); const tot = c.find(x => /all together/.test(x)), yr = c.find(x => /days in \d{4}/.test(x)); return !yr || parseInt(yr) !== parseInt(tot); }));
   await p.screenshot({ path: OUT + '/ht-journey.png' });
   for (const f of ['gym', 'walk']) { await p.click('[data-jf="' + f + '"]'); await p.waitForTimeout(300); g = await gaps(); ok(f + ': the cards fill the grid', g.full, g.n + ' cards'); }
+  // v76: an odd card out is a slim strip; Everything can say your usual day; Gym counts the exercises you've tried
+  await p.click('[data-jf="all"]'); await p.waitForTimeout(300);
+  const slim = await p.evaluate(() => { const cs = [...document.querySelectorAll('.jcards .jcard')]; if (cs.length % 2 === 0) return true; const r = cs[cs.length - 1].getBoundingClientRect(); return r.height < 100 && getComputedStyle(cs[cs.length - 1]).flexDirection === 'row'; });
+  ok('an odd last card is a slim strip, not a big empty box', slim);
+  const extra = await p.evaluate(async () => {
+    const S = await import('./js/store.js'), J = await import('./js/screens/journey.js'), st = JSON.parse(JSON.stringify(S.get()));
+    // made up: six Tuesdays at the gym, two other days, three exercises
+    st.sessions = []; st.activities = [];
+    const tue = new Date(2026, 9, 27); for (let i = 0; i < 6; i++) { const d = new Date(tue); d.setDate(d.getDate() - 7 * i); st.sessions.push({ id: 't' + i, date: S.dateKey(d), ts: i, exercises: [{ key: i % 2 ? 'lat' : 'chest', sets: [{ a: '20', b: '8' }] }, { key: 'curl', swap: i === 0 ? 'Hammer curl' : null, sets: [{ a: '8', b: '10' }] }] }); }
+    st.sessions.push({ id: 'x1', date: '2026-10-23', ts: 9, exercises: [{ key: 'row', sets: [{ a: '30', b: '8' }] }] });
+    const all = J.cardsFor('all', st).map(c => c.slice(1).join(' ')), gym = J.cardsFor('gym', st).map(c => c.slice(1).join(' '));
+    return { all, gym };
+  });
+  ok('Everything: "Tue, your usual day to move"', extra.all.some(c => /^Tue\s+your usual day to move/.test(c)), extra.all.join(' | '));
+  ok('Gym: "5 exercises tried so far" (a swap counts as its own)', extra.gym.some(c => /^5 exercises tried so far/.test(c)), extra.gym.join(' | '));
   // the gym's own length: not in the copied text, not in the Fix sheet, still saved
   const text = await p.evaluate(async () => { const m = await import('./js/screens/move.js'), S = await import('./js/store.js'); return m.sessionText(S.get().sessions[0], 1); });
   ok('the copied session text has no length', !/55 min/.test(text), text.split('\n')[1]);
