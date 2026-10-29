@@ -101,6 +101,17 @@ function whatsNew() {
   openNews(fresh);
 }
 
+// v73: the Home tab always takes you to the regular home page, from anywhere (Phavan). On a soft day it leaves
+// the soft page too: the day is still remembered as a soft day (st.heavy, for the quilt and the jar), you just
+// aren't on that page any more (st.softLeft = today). The soft page's own links ("‹ Home" in a game) still go back to it.
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('.tabbar a[href="#/home"]'); if (!a) return;
+  const st = get(), d = today();
+  if (st.heavy && st.heavy[d] && st.softLeft !== d) { st.softLeft = d; save(); }
+  const h = location.hash.replace(/^#\/?/, '');
+  if (h === '' || h === 'home') { e.preventDefault(); route(); window.scrollTo(0, 0); } // already on Home: show it fresh, from the top
+}, true);
+
 load().then(() => {
   settleUnits(); // v71: kg or lb
   window.addEventListener('hashchange', route);

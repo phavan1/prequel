@@ -353,7 +353,7 @@ export async function moveReport(from, to) {
   const byDay = {}; all.forEach(d => { byDay[d] = { gym: [], acts: [] }; });
   sessions.forEach(x => byDay[x.date].gym.push(x)); acts.forEach(x => byDay[x.date].acts.push(x));
   const activeDays = all.filter(d => byDay[d].gym.length || byDay[d].acts.length);
-  const mins = acts.reduce((n, a) => n + (Number(a.mins) || 0), 0) + sessions.reduce((n, x) => n + (Number(x.mins) || 0), 0); // v66: gym sessions have a length now
+  const mins = acts.reduce((n, a) => n + (Number(a.mins) || 0), 0); // v73: only the minutes you typed; a gym session's own length is kept but not shown (many log after the workout, so it isn't real)
 
   // at a glance
   doc.heading('At a glance', 'the ' + nDays + ' days from ' + longDate(from) + ' to ' + longDate(to));
@@ -397,7 +397,7 @@ export async function moveReport(from, to) {
         txt(g, String(parseKey(d).getDate()), x + cw - 14, y + 30, '900 22px ' + BODY, INK, 'right');
         const cs = it.gym.map(() => code.gym).concat(it.acts.map(a => code[a.type]));
         txt(g, cs.join(' '), x + 14, y + ch * 0.62, '900 34px ' + BODY, BLUE, 'left', cw - 24);
-        const m = it.acts.reduce((n, a) => n + (Number(a.mins) || 0), 0) + it.gym.reduce((n, x) => n + (Number(x.mins) || 0), 0); if (m) txt(g, dur(m), x + 14, y + ch - 16, '700 17px ' + BODY, SOFT);
+        const m = it.acts.reduce((n, a) => n + (Number(a.mins) || 0), 0); if (m) txt(g, dur(m), x + 14, y + ch - 16, '700 17px ' + BODY, SOFT);
       });
       doc.y += ch + gap;
     }
@@ -411,7 +411,7 @@ export async function moveReport(from, to) {
   if (weeks.length > 1) {
     doc.heading('Week by week', 'each row is 7 days', 140 + weeks.length * 46);
     doc.table([{ label: 'Dates', w: 330 }, { label: 'Days I moved', w: 190 }, { label: 'Gym', w: 150 }, { label: 'Other', w: 150 }, { label: 'Time noted', w: 228 }], weeks.map(ds => {
-      const act = ds.filter(d => byDay[d].gym.length || byDay[d].acts.length).length, gy = ds.reduce((n, d) => n + byDay[d].gym.length, 0), ot = ds.reduce((n, d) => n + byDay[d].acts.length, 0), mm = ds.reduce((n, d) => n + byDay[d].acts.concat(byDay[d].gym).reduce((a, x) => a + (Number(x.mins) || 0), 0), 0);
+      const act = ds.filter(d => byDay[d].gym.length || byDay[d].acts.length).length, gy = ds.reduce((n, d) => n + byDay[d].gym.length, 0), ot = ds.reduce((n, d) => n + byDay[d].acts.length, 0), mm = ds.reduce((n, d) => n + byDay[d].acts.reduce((a, x) => a + (Number(x.mins) || 0), 0), 0);
       return { cells: [range(ds[0], ds[ds.length - 1]).replace(/, \d{4}$/, ''), act ? act + ' of ' + ds.length : 'a rest week', gy ? String(gy) : '–', ot ? String(ot) : '–', mm ? dur(mm) : '–'] };
     }), { boldFirst: true });
   }
@@ -445,7 +445,7 @@ export async function moveReport(from, to) {
 
   // every session, in order (no highlights or notes)
   doc.heading('Every session', plural(sessions.length + acts.length, 'entry', 'entries'));
-  const list = sessions.map(x => ({ d: x.date, t: Number(x.ts) || 0, what: 'Gym · ' + x.workoutName, det: [x.mins ? x.mins + ' min' : '', plural((x.exercises || []).length, 'exercise', 'exercises'), x.light ? 'felt ' + x.light : ''].filter(Boolean).join(' · ') }))
+  const list = sessions.map(x => ({ d: x.date, t: Number(x.ts) || 0, what: 'Gym · ' + x.workoutName, det: [plural((x.exercises || []).length, 'exercise', 'exercises'), x.light ? 'felt ' + x.light : ''].filter(Boolean).join(' · ') }))
     .concat(acts.map(a => ({ d: a.date, t: a.ts, what: actDef(a.type).n, det: summary(a) }))).sort((a, b) => a.d.localeCompare(b.d) || a.t - b.t);
   let lastD = null;
   doc.table([{ label: 'Day', w: 330 }, { label: 'What', w: 330 }, { label: 'Details', w: 388 }], list.map(r => { const c = [r.d !== lastD ? dayDate(r.d) : '', r.what, r.det]; lastD = r.d; return { cells: c }; }), { boldFirst: true, fs: 19 });

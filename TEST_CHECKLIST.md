@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v73) On a soft day, tap the Home button: the regular home page, and "Fancy a slower one?" goes back to the soft page. From any tab, Home goes home. Your moving journey: no minutes card, cards even. Copying a session or fixing a workout shows no length.
 - [ ] (v72) Days → fix a workout → pick Bar + on a set: the empty box reads "kg each side" in full.
 - [ ] (v71) Settings → Weights in: switch to lb; the gym says WEIGHT · LB, Last time and body weight show lb; switch back to kg and the numbers are as before. Ask the US friend: after updating, did it open in lb and ask about earlier numbers?
 - [ ] (v70) Rest: a night from before midnight fills the ring from its start round to the wake-up time; looking at Yesterday, the yellow "Logging for" chip is easy to read.

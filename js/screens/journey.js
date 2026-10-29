@@ -68,8 +68,7 @@ export function cardsFor(f, st = get()) {
   const word = f === 'gym' ? ['session', 'sessions'] : ['time', 'times'];
   if (daysThisMonth) out.push(['cal', daysThisMonth, daysThisMonth === 1 ? 'day' : 'days', (f === 'all' ? 'moved' : 'active') + ' in ' + month]);
   out.push(['stack', list.length, list.length === 1 ? word[0] : word[1], 'all together']);
-  const mins = list.reduce((n, e) => n + e.mins, 0);
-  if (mins >= 60) out.push(['clock', fmtNum(mins / 60), 'hours', 'of moving, where timed']); else if (mins) out.push(['clock', Math.round(mins), 'min', 'of moving, where timed']);
+  // v73: no "minutes of moving" card (Phavan: a gym session's length isn't real when you log after the workout)
   const since = between(dates[0], t);
   out.push(since >= 14 ? ['flag', Math.floor(since / 7), 'weeks', 'since you started'] : ['flag', since + 1, since ? 'days' : 'day', 'since you started']);
   if (daysThisYear && daysThisYear !== daysThisMonth) out.push(['cal', daysThisYear, 'days', 'in ' + y]);

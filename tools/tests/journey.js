@@ -46,7 +46,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   const cards = await p.locator('.jcard').allInnerTexts();
   ok('Habit-style cards: a number, a unit, a short label', cards.length >= 4 && cards.every(c => /\d/.test(c)), cards.join(' / ').replace(/\n/g, ' '));
   ok('no zeros, streaks, rates or averages anywhere', !/\b0\b|streak|rate|avg|average|unmet/i.test(await p.locator('main').innerText()));
-  ok('hours of moving, from timed workouts and activities', cards.some(c => /hours\s*of moving/.test(c)));
+  ok('no minutes-of-moving card (v73: a gym session\'s length isn\'t real when logged afterwards)', !cards.some(c => /of moving, where timed/.test(c)));
   ok('a quiet week is a rest week, taken kindly', cards.some(c => /rest week/.test(c)) && await p.locator('svg.jweeks .jrest').count() >= 1);
   ok('this week: seven days, today marked', await p.locator('.jwd').count() === 7 && await p.locator('.jwd.today').count() === 1);
   ok('the year of dots fills in', await p.locator('svg.jyear .jdot.on').count() >= 12);
@@ -104,9 +104,9 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('the workout\'s length: start to last set + 3 min, not the forgotten hour', s.mins === 48, String(s.mins));
   await p.click('#sheet [data-close]').catch(() => {});
   await p.evaluate(async id => { const D = await import('./js/screens/days.js'); D.editSession(document.querySelector('main'), id, () => {}); }, s.id); await p.waitForTimeout(300);
-  ok('Fix this workout shows how long', await p.locator('#sessMins').inputValue() === '48');
-  await p.fill('#sessMins', '52'); await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
-  ok('…and it can be changed', (await st()).sessions.slice(-1)[0].mins === 52);
+  ok('Fix this workout no longer shows how long (v73)', !(await p.locator('#sessMins').count()));
+  await p.click('#sheet [data-o="save"]'); await p.waitForTimeout(300);
+  ok('…and saving keeps the length quietly', (await st()).sessions.slice(-1)[0].mins === 48);
   // a workout logged for an earlier day gets no made-up length
   ok('the old jumping picture is gone from the app', !(await p.evaluate(async () => { const r = await fetch('sw.js'); return (await r.text()).includes("'cheer'"); })));
 

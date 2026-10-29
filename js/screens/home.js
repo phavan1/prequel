@@ -46,7 +46,7 @@ function render() {
   const st = get(), d = today(), hour = new Date().getHours();
   const wx = st.weather.filter(w => w.date === d).sort((a, b) => a.ts - b.ts);
   const lastWx = wx[wx.length - 1];
-  const soft = !!st.heavy[d];
+  const soft = !!st.heavy[d] && st.softLeft !== d; // v73: the Home tab leaves the soft page (the day stays a soft day)
   const due = st.mind.filter(n => !n.letGo && n.remindOn && n.remindOn <= d);
   root.classList.toggle('heavy', soft);
   document.body.classList.toggle('heavy-day', soft);
@@ -102,7 +102,7 @@ function onClick(e) {
     if (el && !st.heavy[d]) el.textContent = pick(st.settings.kindLines.length ? st.settings.kindLines : ['Hey, you.']);
     return;
   }
-  if (t.closest('[data-heavy]')) { st.heavy[d] = true; save(); render(); window.scrollTo(0, 0); return; }
+  if (t.closest('[data-heavy]')) { st.heavy[d] = true; delete st.softLeft; save(); render(); window.scrollTo(0, 0); return; }
   if (t.closest('[data-unheavy]')) { delete st.heavy[d]; save(); render(); toast('Glad you took a breather.'); return; }
   if (t.closest('[data-goals]')) { e.preventDefault(); openLog(null, () => render()); }
 }
