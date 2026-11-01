@@ -1077,3 +1077,30 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .rd-dots i { display: block; width: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.35); }
 .rd-dots i:nth-child(1) { height: 7px; } .rd-dots i:nth-child(2) { height: 11px; } .rd-dots i:nth-child(3) { height: 15px; }
 .rd-dots i.on { background: #FFFFFF; }
+
+/* v77: Your wall, a month poster to print */
+.wmonth { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wmonth b { font: 700 30px var(--font-hand); }
+.wmonth button { width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; font-size: 26px; font-weight: 900; color: var(--ink); }
+.wmonth button:disabled { opacity: .25; }
+.wcal { gap: 6px; }
+.wdow, .wrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.wdow span { text-align: center; font-size: 11px; font-weight: 900; color: var(--ink-soft); }
+.wd { min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; padding: 6px 0 4px; font-weight: 800; font-size: 14px; color: var(--ink); }
+.wd.blank { border: 0; background: transparent; }
+.wd.has { border-color: var(--blue); border-width: 2px; }
+.wd.today span { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.wd i { display: flex; gap: 2px; }
+.wd em { width: 8px; height: 8px; border-radius: 50%; border: 1px solid rgba(35,38,47,.35); }
+.wtip { font-size: 12px; margin: 2px 0 0; text-align: center; }
+.wlist, .wsheet { display: flex; flex-direction: column; gap: 8px; }
+.wli { display: flex; align-items: center; gap: 10px; }
+.wdate { min-width: 64px; font-weight: 900; font-size: 13px; }
+.wits { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
+.wsheet .wli .wpill { flex: 1; }
+.wpill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; font-size: 13px; font-weight: 800; color: #23262F; }
+.wics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.wics button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; border-radius: 12px; border: 2px solid transparent; color: #23262F; }
+.wics button small { font-size: 10px; font-weight: 800; }
+.wics button[aria-pressed="true"] { border-color: #23262F; }
+.wprev { width: 100%; border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 6px 16px rgba(0,0,0,.12); }

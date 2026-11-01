@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v77) Me → Your wall: add a few plans and wishes, make the poster, print it on A4 landscape (fit to page); does it look right on the wall?
 - [ ] (v76) Your moving journey: Everything shows your usual day; Gym shows exercises tried; any odd last card is a slim strip.
 - [ ] (v75) Me: no "How you've moved" row; the page reads goals → journey card → little counts → sky/quilt → share → looking back. Journey: no "days in 2026" card when it matches "all together".
 - [ ] (v74) Fancy a slower one? → the Undo note (Undo takes it back). Back to my regular day keeps the gold star. On the quilt the soft day's patch has a gold star; tap it → Remove the star. Days: today shows its ring with a pale tint after logging; how does it feel?

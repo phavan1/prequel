@@ -117,7 +117,7 @@ export class Doc {
 
 // ---------- the PDF itself ----------
 function jpegBytes(c) { const b64 = c.toDataURL('image/jpeg', 0.9).split(',')[1], s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
-export function makePDF(pages) {
+export function makePDF(pages, landscape) { // landscape (v77): an A4 page on its side, for the wall poster
   const enc = new TextEncoder(), parts = [], offs = []; let len = 0;
   const put = x => { const u = typeof x === 'string' ? enc.encode(x) : x; parts.push(u); len += u.length; };
   const obj = (id, body, stream) => {
@@ -125,7 +125,7 @@ export function makePDF(pages) {
     if (stream) { put('\nstream\n'); put(stream); put('\nendstream'); }
     put('\nendobj\n');
   };
-  const W = 595.28, H = 841.89, n = pages.length;
+  const W = landscape ? 841.89 : 595.28, H = landscape ? 595.28 : 841.89, n = pages.length;
   put('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
   const kids = pages.map((_, i) => (3 + i * 3) + ' 0 R').join(' ');
   obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
