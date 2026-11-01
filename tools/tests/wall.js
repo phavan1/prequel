@@ -9,14 +9,19 @@ const errors = [];
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
-  await p.clock.install({ time: new Date('2026-11-22T10:00:00') }); // late in November: it offers December
+  await p.clock.install({ time: new Date('2026-11-26T10:00:00') }); // from the 25th: it offers December
   await p.goto(BASE + '#/home'); await p.waitForTimeout(1500);
   const st = () => p.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
   await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().newsSeen = 999; S.save(); document.querySelectorAll('.hello').forEach(e => e.remove()); });
 
+  // v79: the Home nudge from the 25th
+  await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(500);
+  ok('from the 25th, Home says next month\'s poster is ready to make', /December's poster is ready to make/.test(await p.locator('a.wallnudge').innerText().catch(() => '')));
   await p.goto(BASE + '#/me'); await p.waitForTimeout(500);
-  ok('Me has a "Your wall" row', await p.locator('a[href="#/wall?from=me"]').count() === 1);
-  await p.click('a[href="#/wall?from=me"]'); await p.waitForTimeout(500);
+  const wc = await p.locator('a.wallcard').innerText().catch(() => '');
+  ok('Me shows Your wall as a mini poster (month and sticker)', /YOUR WALL/.test(wc) && /DECEMBER/.test(wc) && /ready to print/.test(wc), wc.replace(/\n/g, ' '));
+  await p.locator('a.wallcard').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/wall-me.png' });
+  await p.click('a.wallcard'); await p.waitForTimeout(500);
   ok('late in the month it offers next month', /December 2026/.test(await p.locator('.wmonth').innerText()));
   ok('Me stays lit', await p.locator('.tabbar a[aria-current="page"][href="#/me"]').count() === 1);
   // add a few plans
@@ -27,7 +32,7 @@ const errors = [];
   };
   await add('03', 'APDS Interview, 2pm', 'book', true); await add('03', 'Gym with Sam', 'move'); await add('09', 'Dentist 10am', 'care', true);
   await add('14', "Mum's birthday", 'cake', true); await add('19', 'Flight to Chennai', 'trip'); await add('24', 'Christmas Eve dinner with everyone at home', 'star'); await add('31', 'New Year party', 'music');
-  await add('16', 'AI Project 3 due', 'book', true); await add('16', 'Coffee with Priya after class', 'friends');
+  await add('16', 'AI Project 3 due', 'book', true); await add('16', 'Coffee with Priya after class', 'friends'); await add('11', 'Gig night', 'music');
   let s = await st();
   ok('plans are saved by day', s.wall.plans['2026-12-03'].length === 2 && s.wall.plans['2026-12-14'][0].ic === 'cake');
   ok('a long one is kept to 40 letters', s.wall.plans['2026-12-24'][0].t.length <= 40, s.wall.plans['2026-12-24'][0].t);
@@ -58,6 +63,10 @@ const errors = [];
   const pdf = await p.evaluate(async () => { const f = document.querySelector('main').__poster; const t = new TextDecoder('latin1').decode(new Uint8Array(await f.arrayBuffer())); return { name: f.name, size: f.size, box: (t.match(/MediaBox \[([^\]]+)\]/) || [])[1], pages: (t.match(/\/Type \/Page /g) || []).length }; });
   ok('a one-page A4 landscape PDF', pdf.pages === 1 && /^0 0 841\.89 595\.28$/.test(pdf.box) && /December 2026 poster\.pdf/.test(pdf.name), JSON.stringify(pdf));
   await p.screenshot({ path: OUT + '/wall-ready.png' });
+  await p.click('#sheet [data-close]').catch(() => {});
+  ok('making the poster is remembered', !!(await st()).wall.made['2026-12']);
+  await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(400);
+  ok('…and the Home nudge rests', await p.locator('a.wallnudge').count() === 0);
   const png = await p.evaluate(async () => { const W = await import('./js/screens/wall.js'), C = await import('./js/cards.js'); await C.fontsReady(); await document.fonts.load('400 100px Bangers'); return W.drawPoster('2026-12').toDataURL('image/png'); });
   fs.writeFileSync(OUT + '/wall-poster.png', Buffer.from(png.split(',')[1], 'base64'));
   // a month with nothing planned still makes a calm poster

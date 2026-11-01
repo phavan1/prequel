@@ -23,18 +23,35 @@ export const ICONS = {
   friends: { n: 'Friends', p: 'M6 8a3 3 0 1 0 6 0 3 3 0 1 0-6 0zM14.5 9a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0zM3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.6c3.2 0 6 2.1 6 5.4', c: '#FFDCC2' },
   care: { n: 'Doctor', p: 'M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0zM12 8v8M8 12h8', c: '#E3D9FA' },
   move: { n: 'Move', p: 'M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12', c: '#CDEFD9' },
-  trip: { n: 'Trip', p: 'M3 11l18-7-7 18-3-8zM11 14L21 4', c: '#FFDCC2' },
+  trip: { n: 'Trip', p: 'M3 7.5h18v13H3zM8.5 7.5v-3h7v3M7.5 7.5v13M16.5 7.5v13', c: '#FFDCC2' }, // v79: a suitcase
   music: { n: 'Fun', p: 'M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z', c: '#E3D9FA' },
-  star: { n: 'Big day', p: 'M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z', c: '#FFE89A' }
+  star: { n: 'Big day', p: 'M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z', c: '#FFE89A' } // v79: a sparkle, so it never looks like the red "important" star
+};
+// v79: the same icons as big filled stamps behind a day's number on the poster: f = the filled shape, d = a few detail lines
+const STAMP = {
+  book: { f: 'M5 2.5h12.5a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H5z', d: 'M8 2.5v19M11 7h5.5M11 10h5.5' },
+  cake: { f: 'M3.5 12.5h17v9h-17zM11 6.5h2v6h-2zM12 1.8c1.6 1.7 1.6 3.2 0 4.2-1.6-1-1.6-2.5 0-4.2z', d: 'M3.5 16c2 1.6 3.7-1.6 5.7 0s3.7-1.6 5.7 0 3.7-1.6 5.6 0' },
+  heart: { f: 'M12 21s-8.5-5.2-8.5-11.6A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8.5 2.8C20.5 15.8 12 21 12 21z', d: '' },
+  friends: { f: 'M8.5 3.5a3.3 3.3 0 1 1 0 6.6 3.3 3.3 0 1 1 0-6.6zM2.5 20.5c0-3.9 2.7-6.6 6-6.6s6 2.7 6 6.6zM16.5 5.5a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 1 1 0-5.6zM15.8 20.5c0-2.6-.8-4.6-2-5.8.9-.6 1.8-.9 2.7-.9 2.9 0 5 2.6 5 6.7z', d: '' },
+  care: { f: 'M9 2.5h6v6.5h6.5v6H15v6.5H9V15H2.5V9H9z', d: '' },
+  move: { f: 'M1.5 9h3v6h-3zM4.5 6.5h3.5v11H4.5zM16 6.5h3.5v11H16zM19.5 9h3v6h-3zM8 10.8h8v2.4H8z', d: '' },
+  trip: { f: 'M2.5 7.5h19v13.5h-19zM8.5 7.5V4h7v3.5h-2V5.8h-3v1.7z', d: 'M7 7.5V21M17 7.5V21' }, // a suitcase: chunky enough to sit behind a number
+  music: { f: 'M5.5 14.5a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 1 1 0-6.4zM17.3 12.5a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 1 1 0-6.4zM7.3 5.8L20.6 2.6v3.4L7.3 9.2zM7.3 5.8h1.9v12.4H7.3zM18.7 3.1h1.9v12.8h-1.9z', d: '' },
+  star: { f: 'M12 1.5l2.6 7.6 7.9 2.9-7.9 2.9L12 22.5l-2.6-7.6-7.9-2.9 7.9-2.9z', d: '' }
 };
 const svgIcon = (k, s = 18) => ICONS[k] && ICONS[k].p ? '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICONS[k].p + '"/></svg>' : '';
 
 let ym = null, root = null;
-const W = () => { const st = get(); st.wall = st.wall || {}; st.wall.plans = st.wall.plans || {}; st.wall.phrase = st.wall.phrase || {}; return st.wall; };
+const W = () => { const st = get(); st.wall = st.wall || {}; st.wall.plans = st.wall.plans || {}; st.wall.phrase = st.wall.phrase || {}; st.wall.made = st.wall.made || {}; return st.wall; };
 const ymOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 const stepMonth = (k, n) => { const [y, m] = k.split('-').map(Number); return ymOf(new Date(y, m - 1 + n, 1)); };
 const monthName = k => { const [y, m] = k.split('-').map(Number); return MONTHS[m - 1] + ' ' + y; };
 const MON = k => MONTHS[Number(k.slice(5)) - 1].toUpperCase();
+// the month to plan: this month, or next month from the 25th (when the Home nudge starts too)
+export const defaultYm = () => { const t = new Date(); return t.getDate() >= 25 ? stepMonth(ymOf(t), 1) : ymOf(t); };
+export const monthWord = k => MONTHS[Number(k.slice(5)) - 1];
+// the Home nudge (v79): from the 25th, until next month's poster has been made
+export function nudge() { const t = new Date(); if (t.getDate() < 25) return null; const k = stepMonth(ymOf(t), 1); return W().made[k] ? null : k; }
 // the red sticker: cool, not soft (Phavan). Prequel picks one; shuffle for another, or write your own.
 export const PHRASES = M => ['MAIN CHARACTER MONTH', M + ', UNFILTERED', 'MY ' + M + ' ERA', 'SIDE QUEST SEASON', 'NEW CHAPTER UNLOCKED', 'PLOT TWIST PENDING', 'LOADING: GOOD THINGS', 'CERTIFIED ' + M, 'SOFT LAUNCH: ME', 'NO NOTES. JUST ' + M + '.', M + ' ON REPEAT', 'BIG ' + M + ' ENERGY', M + ', IN TECHNICOLOUR', 'THE ' + M + ' EDIT'];
 const pick0 = k => { let h = 0; for (const ch of k) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
@@ -53,7 +70,7 @@ const pill = (p, s = 14) => '<span class="wpill' + (p.imp ? ' imp' : '') + '" st
 export function mount(r) {
   root = r;
   // the month to plan: this month, or next month once this one is nearly over
-  if (!ym) { const t = new Date(); ym = t.getDate() >= 20 ? stepMonth(ymOf(t), 1) : ymOf(t); }
+  if (!ym) ym = defaultYm();
   render();
   root.addEventListener('click', onClick);
 }
@@ -132,6 +149,14 @@ function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w
 // a comic box: a hard black shadow, a fill, a thick outline
 function box(g, x, y, w, h, fill, o = {}) { const sh = o.shadow == null ? 10 : o.shadow, r = o.r || 6; if (sh) { g.fillStyle = INK; rr(g, x + sh, y + sh, w, h, r); g.fill(); } g.fillStyle = fill; rr(g, x, y, w, h, r); g.fill(); g.lineWidth = o.lw || 5; g.strokeStyle = INK; g.stroke(); }
 function star(g, cx, cy, R, fill) { g.beginPath(); for (let q = 0; q < 10; q++) { const r = q % 2 ? R * 0.48 : R, an = -Math.PI / 2 + q * Math.PI / 5; g.lineTo(cx + Math.cos(an) * r, cy + Math.sin(an) * r); } g.closePath(); g.fillStyle = fill; g.fill(); g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = INK; g.stroke(); }
+// a big icon stamp: the filled shape in the icon's colour, a thick outline, then its detail lines
+function stamp(g, k, cx, cy, size) {
+  const S = STAMP[k]; if (!S) return; const sc = size / 24;
+  g.save(); g.translate(cx - size / 2, cy - size / 2); g.scale(sc, sc); g.lineJoin = 'round'; g.lineCap = 'round';
+  const f = new Path2D(S.f); g.fillStyle = ICONS[k].c; g.fill(f); g.lineWidth = 5 / sc; g.strokeStyle = INK; g.stroke(f);
+  if (S.d) { g.lineWidth = 3.5 / sc; g.stroke(new Path2D(S.d)); }
+  g.restore();
+}
 // words that wrap onto lines; shrinks a little before it would ever cut a word
 function lines(g, s, size, maxW, maxL) {
   for (let fs = size; fs >= size * 0.7; fs -= 1) {
@@ -186,27 +211,25 @@ export function drawPoster(k) {
     const x = px + pad + i * (cw + gap), y = gy + r * (ch + gap);
     if (!key) return;
     box(g, x, y, cw, ch, CELL, { shadow: 0, lw: 3.5, r: 4 });
-    const list = sorted(plans[key] || []), imp = list.some(p => p.imp), n = String(Number(key.slice(8))), nx = x + 40, ny = y + 38;
-    if (imp) { star(g, nx, ny, 34, RED); g.textAlign = 'center'; outlined(g, n, nx, ny + 13, '400 36px ' + BANG, '#FFFFFF', INK, 6); }
-    else if (!list.length) { g.lineWidth = 5; g.strokeStyle = YEL; g.beginPath(); g.arc(nx, ny, 26, 0, 7); g.stroke(); g.textAlign = 'center'; g.font = '400 38px ' + BANG; g.fillStyle = INK; g.fillText(n, nx, ny + 14); }
-    else { g.textAlign = 'center'; g.font = '400 42px ' + BANG; g.fillStyle = INK; g.fillText(n, nx, ny + 15); }
-    g.textAlign = 'left';
-    // the plans, as little outlined stickers; long ones wrap (never cut). When a day is busy, the stickers get a little
-    // smaller so they all fit; a bit of blank space stays at the bottom for a pen.
-    const sw2 = cw - 24, layout = fs => list.map(p => { const icn = ICONS[p.ic || 'none'] ? p.ic || 'none' : 'none', hasIc = !!ICONS[icn].p, tw = sw2 - (hasIc ? 58 : 26), L = lines(g, p.t, fs, tw, 2), lh = L.fs * 1.16; return { p, icn, hasIc, L, lh, h: Math.max(fs + 18, L.out.length * lh + 12) }; });
-    const top0 = y + 72, room = y + ch - 12 - top0, sum = ls => ls.reduce((n, o) => n + o.h, 0) + 7 * Math.max(0, ls.length - 1);
-    let lay = null; for (const fs of [24, 22, 20, 18]) { lay = layout(fs); if (sum(lay) <= room) break; }
-    let py = top0, shown = 0;
-    for (const o of lay) {
-      if (py + o.h > top0 + room) break;
-      const tx = x + 12 + (o.hasIc ? 44 : 14);
-      g.fillStyle = INK; rr(g, x + 12 + 4, py + 4, sw2, o.h, 8); g.fill();
-      g.fillStyle = o.p.imp ? '#FFE0DA' : ICONS[o.icn].c; rr(g, x + 12, py, sw2, o.h, 8); g.fill(); g.lineWidth = 2.5; g.strokeStyle = INK; g.stroke();
-      if (o.hasIc) drawIcon(g, o.icn, x + 23, py + o.h / 2 - 11, 22);
-      g.font = '800 ' + o.L.fs + 'px ' + BODY; g.fillStyle = INK; o.L.out.forEach((l, j) => g.fillText(l, tx, py + 6 + o.lh * (j + 0.82)));
-      py += o.h + 7; shown++;
+    const list = sorted(plans[key] || []), imp = list.some(p => p.imp), n = String(Number(key.slice(8))), first = list[0];
+    // the words first (bold, centred, wrapping; smaller on busy days), then the number takes all the room that's left
+    const tw = cw - 20; let words = null, wh = 0;
+    for (const fs of [26, 24, 22, 20, 19, 18]) {
+      words = list.map(p => lines(g, p.t, fs, tw, 2)); wh = words.reduce((h, L) => h + L.out.length * L.fs * 1.12, 0) + Math.max(0, words.length - 1) * 4;
+      if (wh <= ch * 0.42) break;
     }
-    if (shown < list.length) { g.font = '800 20px ' + BODY; g.fillStyle = '#5E584B'; g.textAlign = 'right'; g.fillText('+ ' + (list.length - shown) + ' more', x + cw - 14, y + 30); g.textAlign = 'left'; }
+    let shown = list.length; while (shown > 1 && wh > ch * 0.48) { shown--; words = words.slice(0, shown); wh = words.reduce((h, L) => h + L.out.length * L.fs * 1.12, 0) + Math.max(0, words.length - 1) * 4; }
+    const zone = ch - (list.length ? wh + 12 : 0) - 8, cx = x + cw / 2, cy = y + 6 + zone / 2, R = Math.min(zone * 0.47, cw * 0.36);
+    const nfs = Math.round(Math.min(zone * (list.length ? 0.6 : 0.62), cw * 0.42));
+    if (imp) { star(g, cx, cy + R * 0.06, R * 1.12, RED); g.textAlign = 'center'; outlined(g, n, cx, cy + nfs * 0.36, '400 ' + Math.round(nfs * 0.82) + 'px ' + BANG, '#FFFFFF', INK, 7); }
+    else if (first && STAMP[first.ic]) { stamp(g, first.ic, cx, cy, R * 2.05); g.textAlign = 'center'; outlined(g, n, cx, cy + nfs * 0.36, '400 ' + Math.round(nfs * 0.86) + 'px ' + BANG, '#FFFFFF', INK, 7); }
+    else if (!list.length) { g.lineWidth = Math.max(6, R * 0.12); g.strokeStyle = YEL; g.beginPath(); g.arc(cx, cy, R * 0.92, 0, 7); g.stroke(); g.textAlign = 'center'; g.font = '400 ' + Math.round(nfs * 0.86) + 'px ' + BANG; g.fillStyle = INK; g.fillText(n, cx, cy + nfs * 0.31); }
+    else { g.textAlign = 'center'; g.font = '400 ' + nfs + 'px ' + BANG; g.fillStyle = INK; g.fillText(n, cx, cy + nfs * 0.36); }
+    // the words underneath
+    let wy = y + 6 + zone + 6; g.fillStyle = INK; g.textAlign = 'center';
+    words.forEach(L => { g.font = '800 ' + L.fs + 'px ' + BODY; L.out.forEach(l => { wy += L.fs * 1.12; g.fillText(l, cx, wy - L.fs * 0.22); }); wy += 4; });
+    g.textAlign = 'left';
+    if (shown < list.length) { g.font = '800 20px ' + BODY; g.fillStyle = '#5E584B'; g.textAlign = 'right'; g.fillText('+ ' + (list.length - shown) + ' more', x + cw - 12, y + 28); g.textAlign = 'left'; }
   }));
   // the legend: shapes and words, so it never depends on colour
   const ly = PH - M + 22;
@@ -220,6 +243,7 @@ async function makePoster() {
   openSheet('<h2>Making your poster…</h2><p class="muted">Just a moment.</p>');
   try {
     await fontsReady(); if (document.fonts) await document.fonts.load('400 100px Bangers').catch(() => null);
+    W().made[k] = Date.now(); save(); // the Home nudge can rest now
     const c = drawPoster(k), file = new File([makePDF([c], true)], MONTHS[Number(k.slice(5)) - 1] + ' ' + k.slice(0, 4) + ' poster.pdf', { type: 'application/pdf' });
     const img = c.toDataURL('image/jpeg', 0.7);
     openSheet('<h2>Your ' + esc(MONTHS[Number(k.slice(5)) - 1]) + ' poster</h2><img class="wprev" src="' + img + '" alt="Your month poster">' +

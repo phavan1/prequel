@@ -1118,3 +1118,13 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .wimp { flex: none; min-width: 44px; min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--paper); color: #B8AC93; font-weight: 900; font-size: 15px; padding: 0 10px; }
 .wimp[aria-pressed="true"] { color: #FFFFFF; background: #E5452F; border-color: #1E1E24; }
 .wimp.big { font-size: 14px; }
+/* v79: Your wall on Me, as a mini poster; and its nudge on Home */
+.wallcard { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 16px 18px 14px; margin: 4px 6px 10px 0; border-radius: 6px; background: #FDF3D6; border: 3px solid #1E1E24; box-shadow: 6px 6px 0 #1E1E24; color: #1E1E24; text-decoration: none; }
+.wallcard::before { content: ''; position: absolute; left: -46px; top: -56px; width: 130px; height: 130px; border-radius: 50%; background: #F4C430; }
+.wallcard::after { content: ''; position: absolute; right: -40px; top: -30px; width: 110px; height: 110px; border-radius: 50%; background: #1F55D0; }
+.wallcard > span { position: relative; z-index: 1; }
+.wc-tag { font: 400 15px 'Bangers', Impact, sans-serif; letter-spacing: .06em; background: #FFFFFF; border: 2px solid #1E1E24; padding: 1px 8px; transform: rotate(-2deg); }
+.wc-mon { font: 400 46px/1 'Bangers', Impact, sans-serif; letter-spacing: .02em; color: #1E1E24; -webkit-text-stroke: 1.5px #1E1E24; text-shadow: 3px 3px 0 #FFFFFF; }
+.wc-stk { align-self: flex-end; font: 400 17px 'Bangers', Impact, sans-serif; letter-spacing: .04em; background: #E5452F; color: #FFFFFF; border: 2.5px solid #1E1E24; box-shadow: 3px 3px 0 #1E1E24; padding: 3px 10px 1px; transform: rotate(-3deg); margin-top: -4px; }
+.wc-sub { font-weight: 800; font-size: 14px; }
+.wallnudge { border: 2.5px solid #1E1E24; box-shadow: 4px 4px 0 #1E1E24; background: #FFF3C8; }

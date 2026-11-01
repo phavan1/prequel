@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 79, date: '2026-11-02', items: [
+    'Your wall posters now have big bold numbers that fill each day: a red star for important days, a big icon (a cake, a book, a suitcase…) for the rest, and a yellow ring on free days. Plans are written underneath.',
+    'Your wall is easier to find on Me (it looks like a little poster now), and from the 25th Home lets you know next month\'s poster is ready to make.'
+  ] },
   { v: 78, date: '2026-11-02', items: [
     'Your wall got a makeover: a bold comic-style poster with a big headline, black outlines and yellow, blue and red.',
     'Mark anything as ★ Important and it gets a red star on the poster. Free days get a yellow ring: room to breathe.',

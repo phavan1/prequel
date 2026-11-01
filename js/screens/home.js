@@ -4,6 +4,7 @@ import { patches, PAT } from './quilt.js';
 import { ensureGoals, checkFinished, openLog } from '../goals.js';
 import { AREAS, weatherByName } from '../data.js';
 import { fromJar } from './wins.js';
+import { nudge, monthWord } from './wall.js';
 import { esc, him, nav, pop, pick, setLogDate, toast } from '../ui.js';
 
 const ICONS = {
@@ -80,6 +81,7 @@ function render() {
         '<button type="button" class="btn alt wide softback" data-unheavy>Back to my regular day</button>'
       : (st.active ? '<a class="rowlink" href="#/move" style="border-color:var(--blue)"><span>' + esc(st.active.n) + ' is still open</span><b>›</b></a>' : '') +
         '<a class="rowlink" href="#/weather"><span>' + wxText + '</span>' + wxDots + '</a>' +
+        (() => { const k = nudge(); return k ? '<a class="rowlink wallnudge" href="#/wall?from=home"><span>' + esc(monthWord(k)) + '\'s poster is ready to make</span><b>›</b></a>' : ''; })() + // v79: from the 25th, until it's made
         '<div class="quick">' +
           '<a href="#/food">' + svg(ICONS.food) + 'Food</a>' +
           '<a href="#/rest">' + svg(ICONS.rest) + 'Rest</a>' +
