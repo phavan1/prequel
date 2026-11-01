@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v78) Your wall: mark a plan ★ Important; shuffle the sticker and write your own; make the poster and print it (A4 landscape, fit to page): stars, rings, long plans wrapped, nothing cut off.
 - [ ] (v77) Me → Your wall: add a few plans and wishes, make the poster, print it on A4 landscape (fit to page); does it look right on the wall?
 - [ ] (v76) Your moving journey: Everything shows your usual day; Gym shows exercises tried; any odd last card is a slim strip.
 - [ ] (v75) Me: no "How you've moved" row; the page reads goals → journey card → little counts → sky/quilt → share → looking back. Journey: no "days in 2026" card when it matches "all together".

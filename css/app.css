@@ -3,6 +3,7 @@
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/nunito-latin-700-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 800; font-display: swap; src: url('../fonts/nunito-latin-800-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 900; font-display: swap; src: url('../fonts/nunito-latin-900-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bangers'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/bangers-latin-400-normal.woff2') format('woff2'); } /* v78: the comic headline on Your wall posters (SIL Open Font License, fonts/bangers-OFL.txt) */
 @font-face { font-family: 'Gaegu'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('../fonts/gaegu-latin-700-normal.woff2') format('woff2'); }
 /* Prequel: warm cream room, hoodie blue, sunny yellow. One calm look everywhere; the rest screen goes to night. */
 :root {
@@ -1089,6 +1090,9 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .wd { min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; padding: 6px 0 4px; font-weight: 800; font-size: 14px; color: var(--ink); }
 .wd.blank { border: 0; background: transparent; }
 .wd.has { border-color: var(--blue); border-width: 2px; }
+.wd.imp { border-color: #E5452F; border-width: 2px; }
+.wstar { color: #E5452F; font-size: 14px; line-height: 1; }
+.wd .wstar { font-size: 15px; }
 .wd.today span { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .wd i { display: flex; gap: 2px; }
 .wd em { width: 8px; height: 8px; border-radius: 50%; border: 1px solid rgba(35,38,47,.35); }
@@ -1104,3 +1108,13 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .wics button small { font-size: 10px; font-weight: 800; }
 .wics button[aria-pressed="true"] { border-color: #23262F; }
 .wprev { width: 100%; border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+/* v78: the funky planner's bits in the app */
+.wpill.imp { box-shadow: inset 0 0 0 2px #E5452F; }
+.wpill .wstar { margin-right: -2px; }
+.wstk { padding: 14px 4px 10px; display: flex; justify-content: center; }
+.wsticker { display: inline-block; background: #E5452F; color: #FFFFFF; font: 400 28px 'Bangers', Impact, sans-serif; letter-spacing: .03em; border: 3px solid #1E1E24; box-shadow: 5px 5px 0 #1E1E24; transform: rotate(-3deg); padding: 6px 16px 4px; text-align: center; }
+.waddrow { display: flex; gap: 8px; align-items: stretch; }
+.waddrow input { flex: 1; min-width: 0; }
+.wimp { flex: none; min-width: 44px; min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--paper); color: #B8AC93; font-weight: 900; font-size: 15px; padding: 0 10px; }
+.wimp[aria-pressed="true"] { color: #FFFFFF; background: #E5452F; border-color: #1E1E24; }
+.wimp.big { font-size: 14px; }
