@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v81) Your wall → Look back: pick October, check the summary, make the recap, print it A4 portrait. In the first week of a month, Home says the recap is ready (gone once you've looked).
 - [ ] (v80) Rest: tap a logged rest, change the wake-up time, Save: the ring and the list update. Restore a backup: Your wall's plans and phrase are there.
 - [ ] (v79) Me: the Your wall card is easy to spot. From the 25th, Home shows the poster nudge (gone once you make it). Poster: big numbers, stars, icons and rings read well from across the room when printed.
 - [ ] (v78) Your wall: mark a plan ★ Important; shuffle the sticker and write your own; make the poster and print it (A4 landscape, fit to page): stars, rings, long plans wrapped, nothing cut off.

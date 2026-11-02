@@ -1132,3 +1132,9 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .restentry { gap: 6px; }
 .restfix { flex: 1; display: flex; align-items: center; gap: 10px; min-height: 44px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; padding: 0; cursor: pointer; }
 .restfix i { margin-left: auto; font-style: normal; opacity: .55; font-size: 15px; }
+.wmodes { grid-template-columns: repeat(2, minmax(0, 1fr)); } /* v81: Plan a month / Look back */
+.wsticker.blue { background: #1F55D0; }
+.wtiles { display: flex; flex-wrap: wrap; gap: 8px; }
+.wtiles span { display: flex; flex-direction: column; min-width: 84px; padding: 8px 10px; border: 2.5px solid #1E1E24; border-radius: 6px; box-shadow: 3px 3px 0 #1E1E24; background: #FFF3C8; color: #1E1E24; font-size: 12px; font-weight: 800; }
+.wtiles span b { font: 400 28px/1 'Bangers', Impact, sans-serif; }
+.wallnudge.recap { background: #E4ECFF; }

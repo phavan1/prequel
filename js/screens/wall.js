@@ -10,6 +10,7 @@ import { get, save, uid, today, dateKey, parseKey } from '../store.js';
 import { esc, nav, backLink, him, openSheet, closeSheet, toast, IOS, canShareFile, saveToDevice, SAVED_NOTE } from '../ui.js';
 import { makePDF, shareFile } from '../pdf.js';
 import { fontsReady } from '../cards.js';
+import { recapData, drawRecap } from '../recap.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -41,7 +42,7 @@ const STAMP = {
 };
 const svgIcon = (k, s = 18) => ICONS[k] && ICONS[k].p ? '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICONS[k].p + '"/></svg>' : '';
 
-let ym = null, root = null;
+let ym = null, root = null, mode = 'plan', bym = null; // mode (v81): 'plan' (the planner) or 'back' (Look what you did, for bym)
 const W = () => { const st = get(); st.wall = st.wall || {}; st.wall.plans = st.wall.plans || {}; st.wall.phrase = st.wall.phrase || {}; st.wall.made = st.wall.made || {}; return st.wall; };
 const ymOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 const stepMonth = (k, n) => { const [y, m] = k.split('-').map(Number); return ymOf(new Date(y, m - 1 + n, 1)); };
@@ -51,6 +52,8 @@ const MON = k => MONTHS[Number(k.slice(5)) - 1].toUpperCase();
 export const defaultYm = () => { const t = new Date(); return t.getDate() >= 25 ? stepMonth(ymOf(t), 1) : ymOf(t); };
 export const monthWord = k => MONTHS[Number(k.slice(5)) - 1];
 // the Home nudge (v79): from the 25th, until next month's poster has been made
+// the recap nudge (v81): in the first week of a month, last month's recap is ready (if anything happened in it), until you've looked
+export function recapNudge() { const t = new Date(); if (t.getDate() > 7) return null; const k = stepMonth(ymOf(t), -1); const w = W(); return (w.seen || {})[k] ? null : recapData(k).any ? k : null; }
 export function nudge() { const t = new Date(); if (t.getDate() < 25) return null; const k = stepMonth(ymOf(t), 1); return W().made[k] ? null : k; }
 // the red sticker: cool, not soft (Phavan). Prequel picks one; shuffle for another, or write your own.
 export const PHRASES = M => ['MAIN CHARACTER MONTH', M + ', UNFILTERED', 'MY ' + M + ' ERA', 'SIDE QUEST SEASON', 'NEW CHAPTER UNLOCKED', 'PLOT TWIST PENDING', 'LOADING: GOOD THINGS', 'CERTIFIED ' + M, 'SOFT LAUNCH: ME', 'NO NOTES. JUST ' + M + '.', M + ' ON REPEAT', 'BIG ' + M + ' ENERGY', M + ', IN TECHNICOLOUR', 'THE ' + M + ' EDIT'];
@@ -67,20 +70,44 @@ function weeks(k) {
 const sorted = list => list.slice().sort((a, b) => (b.imp ? 1 : 0) - (a.imp ? 1 : 0)); // important first
 const pill = (p, s = 14) => '<span class="wpill' + (p.imp ? ' imp' : '') + '" style="background:' + ICONS[p.ic || 'none'].c + '">' + (p.imp ? '<b class="wstar" aria-label="important">★</b>' : '') + svgIcon(p.ic, s) + esc(p.t) + '</span>';
 
-export function mount(r) {
+export function mount(r, params = {}) {
   root = r;
+  if (params.back) { mode = 'back'; bym = params.back.length === 7 ? params.back : null; } // ?back=YYYY-MM from the Home nudge
   // the month to plan: this month, or next month once this one is nearly over
   if (!ym) ym = defaultYm();
   render();
   root.addEventListener('click', onClick);
 }
 
-function render() {
+const modeHtml = () => '<div class="seg wmodes" role="group" aria-label="Which poster"><button type="button" data-mode="plan" aria-pressed="' + (mode === 'plan') + '">Plan a month</button><button type="button" data-mode="back" aria-pressed="' + (mode === 'back') + '">Look back</button></div>';
+const hero = () => '<div class="top">' + backLink() + '</div>' +
+  '<div class="hero">' + him('stickynote', 'breathe', 'Your character holding a sticky note') + '<div class="txt"><h1>Your wall</h1><p class="say">' + (mode === 'back' ? 'A month you lived, as a poster. Look what you did.' : 'Your month as a poster to print and stick up. Nothing on it has to happen.') + '</p></div></div>';
+function render() { if (mode === 'back') renderBack(); else renderPlan(); }
+
+// ---------- Look what you did (v81) ----------
+function renderBack() {
+  const now = ymOf(new Date()); if (!bym) bym = stepMonth(now, -1);
+  const w = W(); w.seen = w.seen || {}; if (!w.seen[bym]) { w.seen[bym] = Date.now(); save(); } // the Home nudge rests once you've looked
+  const d = recapData(bym), name = MONTHS[Number(bym.slice(5)) - 1];
+  root.innerHTML = hero() + modeHtml() +
+    '<div class="wmonth"><button type="button" data-bym="-1" aria-label="Month before"' + (bym <= stepMonth(now, -24) ? ' disabled' : '') + '>‹</button><b>' + esc(monthName(bym)) + '</b><button type="button" data-bym="1" aria-label="Next month"' + (bym >= now ? ' disabled' : '') + '>›</button></div>' +
+    (d.any
+      ? '<div class="card wback"><b>On the poster</b>' +
+          (d.tiles.length ? '<div class="wtiles">' + d.tiles.map(t => '<span><b>' + t[0] + '</b>' + esc(t[1]) + '</span>').join('') + '</div>' : '') +
+          '<p class="muted" style="margin:0;font-size:13px">' + [d.weather.length ? d.weather.length + (d.weather.length === 1 ? ' day' : ' days') + ' of weather' : '', d.cons.length ? d.cons.map(c => c.name).join(' and ') : d.newStars ? d.newStars + ' new stars' : '', d.quilt.length ? d.quilt.length + ' quilt ' + (d.quilt.length === 1 ? 'patch' : 'patches') : ''].filter(Boolean).map(esc).join(' · ') + '</p>' +
+          (d.win ? '<p style="margin:0;font-size:14px"><b>A tiny win:</b> ' + esc(d.win.text) + '</p>' : '') +
+          '<p class="muted" style="margin:0;font-size:13px">Three empty photo frames, for real photos of your month.</p></div>' +
+        '<div class="card wphrase"><b>The sticker</b><p class="muted" style="font-size:13px;margin:0">The same phrase as ' + esc(name) + '\'s planner.</p><div class="wstk"><span class="wsticker blue">' + esc(phraseOf(bym)) + '</span></div><div class="grid2"><button type="button" class="btn alt" data-shuffle>Shuffle</button><button type="button" class="btn alt" data-ownphrase>Write my own</button></div></div>' +
+        '<button type="button" class="btn wide" data-recap>Make my ' + esc(name) + ' recap</button>' +
+        '<p class="muted" style="font-size:12px;text-align:center;margin:0">A4 portrait, in colour. Print it and stick it up.</p>'
+      : '<div class="card"><p style="margin:0">Nothing written down for ' + esc(name) + ' yet. Once you log a little, its recap is here.</p></div>') +
+    nav('me');
+}
+
+function renderPlan() {
   const w = W(), now = ymOf(new Date()), plans = w.plans;
   const inMonth = Object.keys(plans).filter(k => k.startsWith(ym) && plans[k].length).sort();
-  root.innerHTML =
-    '<div class="top">' + backLink() + '</div>' +
-    '<div class="hero">' + him('stickynote', 'breathe', 'Your character holding a sticky note') + '<div class="txt"><h1>Your wall</h1><p class="say">Your month as a poster to print and stick up. Nothing on it has to happen.</p></div></div>' +
+  root.innerHTML = hero() + modeHtml() +
     '<div class="wmonth"><button type="button" data-ym="-1" aria-label="Month before"' + (ym <= now ? ' disabled' : '') + '>‹</button><b>' + esc(monthName(ym)) + '</b><button type="button" data-ym="1" aria-label="Next month"' + (ym >= stepMonth(now, 12) ? ' disabled' : '') + '>›</button></div>' +
     '<div class="card wcal"><div class="wdow">' + DOW.map(d => '<span>' + d + '</span>').join('') + '</div>' +
       weeks(ym).map(wk => '<div class="wrow">' + wk.map(k => { const L = plans[k] || [], imp = L.some(p => p.imp); return k ? '<button type="button" class="wd' + (L.length ? ' has' : '') + (imp ? ' imp' : '') + (k === today() ? ' today' : '') + '" data-wday="' + k + '" aria-label="' + esc(parseKey(k).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })) + (L.length ? ', ' + L.length + ' planned' : '') + (imp ? ', important' : '') + '"><span>' + Number(k.slice(8)) + '</span>' + (imp ? '<b class="wstar" aria-hidden="true">★</b>' : L.length ? '<i>' + L.map(p => '<em style="background:' + ICONS[p.ic || 'none'].c + '"></em>').join('') + '</i>' : '') + '</button>' : '<span class="wd blank"></span>'; }).join('') + '</div>').join('') +
@@ -94,24 +121,29 @@ function render() {
     nav('me');
 }
 
+const cur = () => mode === 'back' ? bym : ym; // the month the sticker belongs to
 function onClick(e) {
   const t = e.target; let b;
   if ((b = t.closest('[data-ym]')) && !b.disabled) { ym = stepMonth(ym, Number(b.dataset.ym)); render(); return; }
   if ((b = t.closest('[data-wday]'))) { daySheet(b.dataset.wday); return; }
   if (t.closest('[data-poster]')) { makePoster(); return; }
+  if ((b = t.closest('[data-mode]'))) { mode = b.dataset.mode; render(); window.scrollTo(0, 0); return; }
+  if ((b = t.closest('[data-bym]')) && !b.disabled) { bym = stepMonth(bym, Number(b.dataset.bym)); render(); return; }
+  if (t.closest('[data-recap]')) { makeRecap(); return; }
   if (t.closest('[data-shuffle]')) { // the next one from the list (your own phrase is set aside)
-    const L = PHRASES(MON(ym)), i = L.indexOf(phraseOf(ym)); W().phrase[ym] = L[(i < 0 ? pick0(ym) : i + 1) % L.length]; save(); render(); return;
+    const k = cur(), L = PHRASES(MON(k)), i = L.indexOf(phraseOf(k)); W().phrase[k] = L[(i < 0 ? pick0(k) : i + 1) % L.length]; save(); render(); return;
   }
   if (t.closest('[data-ownphrase]')) { phraseSheet(); return; }
 }
 
 function phraseSheet() {
+  const k = cur();
   const sh = openSheet('<h2>Your own phrase</h2><p class="muted" style="margin:0">Something cool for the sticker. Up to 24 letters.</p>' +
-    '<input id="wPh" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" value="' + esc(W().phrase[ym] || '') + '" placeholder="e.g. ' + esc(PHRASES(MON(ym))[2]) + '">' +
+    '<input id="wPh" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" value="' + esc(W().phrase[k] || '') + '" placeholder="e.g. ' + esc(PHRASES(MON(k))[2]) + '">' +
     '<button type="button" class="btn" data-phok>Use it</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
     if (!ev.target.closest('[data-phok]')) return;
     const v = sh.querySelector('#wPh').value.trim().toUpperCase().slice(0, 24);
-    if (v) W().phrase[ym] = v; else delete W().phrase[ym];
+    if (v) W().phrase[k] = v; else delete W().phrase[k];
     save(); closeSheet(); render();
   });
 }
@@ -238,6 +270,27 @@ export function drawPoster(k) {
   return c;
 }
 
+async function makeRecap() {
+  const k = bym, name = MONTHS[Number(k.slice(5)) - 1];
+  openSheet('<h2>Making your recap…</h2><p class="muted">Just a moment.</p>');
+  try {
+    await fontsReady(); if (document.fonts) await document.fonts.load('400 100px Bangers').catch(() => null);
+    const c = drawRecap(k, phraseOf(k)), file = new File([makePDF([c])], name + ' ' + k.slice(0, 4) + ' recap.pdf', { type: 'application/pdf' });
+    readySheet('Your ' + name + ' recap', c, file, 'A4 portrait. In the print options, pick portrait and "fit to page".');
+  } catch (err) { closeSheet(); toast('Something went wrong making the recap.'); console.error(err); }
+}
+function readySheet(title, c, file, tip) {
+  openSheet('<h2>' + esc(title) + '</h2><img class="wprev" src="' + c.toDataURL('image/jpeg', 0.7) + '" alt="' + esc(title) + '">' +
+    '<p class="muted" style="margin:0;font-size:13px">' + esc(tip) + '</p>' +
+    (IOS ? '<button type="button" class="btn" data-sharepdf>Share, save or print the PDF</button>'
+      : '<button type="button" class="btn" data-savepdf>Save to this phone</button>' + (canShareFile(file) ? '<button type="button" class="btn alt" data-sharepdf>Share it</button>' : '')) +
+    '<button type="button" class="btn ' + (IOS ? 'alt' : 'ghost') + '" data-close>Done</button>', async ev => {
+    if (ev.target.closest('[data-savepdf]')) { saveToDevice(file); toast(SAVED_NOTE); return; }
+    if (!ev.target.closest('[data-sharepdf]')) return;
+    const r = await shareFile(file); if (r === 'saved') toast(SAVED_NOTE);
+  });
+  root.__poster = file; // for the automated tests only
+}
 async function makePoster() {
   const k = ym;
   openSheet('<h2>Making your poster…</h2><p class="muted">Just a moment.</p>');
