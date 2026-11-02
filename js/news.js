@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 85, date: '2026-11-02', items: [
+    'My month (in Share your story) can now show earlier months too, not just this one. Pick a month from the buttons above the card.'
+  ] },
   { v: 84, date: '2026-11-02', items: [
     'Look what you did now shows your month at a glance: a little calendar with the days you moved, your soft days and your nights of rest.',
     'Want your own photos on it instead? Add up to three on Look back, with a few words if you like. They\'re only used for the poster and never saved.',

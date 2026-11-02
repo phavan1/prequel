@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v85) Me → Share your story → My month: buttons for this month and earlier months with anything logged; October draws October in all three looks; Share or save sends that month.
 - [ ] (v84) Look back with no photos: the recap shows "Your month at a glance" (blue circles, gold stars, moons, legend in words). Add a photo from the iPhone: it shows with an empty caption; a highlight chip fills it; an empty caption prints the photo's date. Leave the page and come back: the photos are gone.
 - [ ] (v84) Both posters: "PDF to print" opens the share sheet with the PDF; "Save as picture" opens it with a PNG (Save Image puts it in Photos).
 - [ ] (v83) Look back: a month with a song on repeat shows the soundtrack at the bottom; without one, a best bit (heaviest lift, longest rest or most active week).

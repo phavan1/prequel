@@ -199,8 +199,15 @@ function monthStats(y, mo) {
   const qp = patches().filter(p => inM(p.date)).slice(-8);
   return { tiles, wx, qp };
 }
-export function drawMonth(g, look, imgs) {
-  const now = new Date(), y = now.getFullYear(), mo = now.getMonth(), S = monthStats(y, mo);
+// v85: the months the card can show, newest first: this month, plus any month with something logged in it
+export function monthCardMonths() {
+  const st = get(), t = new Date(), cur = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0'), set = new Set([cur]);
+  [st.sessions, st.activities, st.meals, st.foods, st.rests, st.moments, st.weather].forEach(L => (L || []).forEach(x => { if (x && typeof x.date === 'string' && x.date.length >= 7) set.add(x.date.slice(0, 7)); }));
+  return [...set].filter(k => k <= cur).sort().reverse();
+}
+export function drawMonth(g, look, imgs, ym) {
+  const t0 = new Date(), [yy0, mm0] = (ym || (t0.getFullYear() + '-' + String(t0.getMonth() + 1).padStart(2, '0'))).split('-').map(Number);
+  const now = new Date(yy0, mm0 - 1, 1), y = now.getFullYear(), mo = now.getMonth(), S = monthStats(y, mo); // v85: any month, not only this one
   g.fillStyle = look.bg; g.fillRect(0, 0, W, H);
   halftone(g, look.id === 'journal' ? 'rgba(31,85,208,.05)' : 'rgba(255,255,255,.05)', 34, 4, 0, 0, W, H);
   text(g, 'MY MONTH, IN PIECES', 80, 170, '900 34px ' + BODY, look.soft);
