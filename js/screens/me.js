@@ -5,6 +5,7 @@ import { ensureGoals, count, unitOf, checkFinished, openNewGoal, openEditGoal, o
 import { ribbon, nightsChart, noticing } from '../charts.js';
 import { previewCard } from './journey.js';
 import { defaultYm, monthWord, phraseOf } from './wall.js';
+import { recapData } from '../recap.js';
 import { dateKey } from '../store.js';
 
 
@@ -43,7 +44,15 @@ function render(root) {
     (finished.length ? '<div class="lbl">The finished shelf</div><div class="trophies">' + finished.map(g => '<button type="button" class="trophy" data-goal="' + g.id + '"><span class="star">★</span><span>' + esc(g.name) + '<small>' + g.target + ' ' + esc(unitOf(g)) + ' · ' + esc(prettyDate(dateKey(new Date(g.finished)))) + '</small></span></button>').join('') + '</div>' : '') +
     previewCard() + // v67: Your moving journey, a scene card right after your goals (v66 had it under Looking back)
     // v79: Your wall as a mini poster, in the poster's own comic style, so it stands out on Me
-    (() => { const k = defaultYm(); return '<a class="wallcard" href="#/wall?from=me"><span class="wc-tag">YOUR WALL</span><span class="wc-mon">' + esc(monthWord(k).toUpperCase()) + '</span><span class="wc-stk">' + esc(phraseOf(k)) + '</span><span class="wc-sub">Your month as a poster, ready to print ›</span></a>'; })() +
+    // v91: two posters on your wall: the month to plan in front, last month's recap peeking out behind (only when
+    // last month has something in it), and a button for each
+    (() => {
+      const k = defaultYm(), t = new Date(), pk = dateKey(new Date(t.getFullYear(), t.getMonth() - 1, 1)).slice(0, 7), back = recapData(pk).any;
+      return '<div class="wallstack' + (back ? ' two' : '') + '">' +
+        (back ? '<a class="wallback" href="#/wall?from=me&back=' + pk + '" aria-label="Look back at ' + esc(monthWord(pk)) + '"><span class="wb-lab">LOOK WHAT YOU DID</span><span class="wb-mon">' + esc(monthWord(pk).toUpperCase()) + '</span></a>' : '') +
+        '<div class="wallcard"><a class="wc-hit" href="#/wall?from=me&plan=1" aria-label="Your wall: plan ' + esc(monthWord(k)) + '"></a><span class="wc-tag">YOUR WALL</span><span class="wc-mon">' + esc(monthWord(k).toUpperCase()) + '</span><span class="wc-stk">' + esc(phraseOf(k)) + '</span>' +
+          '<span class="wc-links"><a href="#/wall?from=me&plan=1" data-wplan>Plan ' + esc(monthWord(k)) + ' ›</a>' + (back ? '<a href="#/wall?from=me&back=' + pk + '" data-wlook>Look back at ' + esc(monthWord(pk)) + ' ›</a>' : '') + '</span></div></div>';
+    })() +
     // v75: "How you've moved" is gone: Your moving journey (above) does that job, so 18 gym sessions isn't said three times
     // the little counts that live nowhere else, only above zero
     (() => { const c = [[wins, 'tiny wins'], [lanterns, 'lanterns let go'], [st.letters.length, st.letters.length === 1 ? 'letter' : 'letters']].filter(x => x[0] > 0); return c.length ? '<div class="grid' + (c.length === 1 ? '1' : c.length) + '">' + c.map(x => '<div class="count"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('') + '</div>' : ''; })() +

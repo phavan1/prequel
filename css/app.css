@@ -1127,6 +1127,19 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .wc-mon { font: 400 46px/1 'Bangers', Impact, sans-serif; letter-spacing: .02em; color: #1E1E24; -webkit-text-stroke: 1.5px #1E1E24; text-shadow: 3px 3px 0 #FFFFFF; }
 .wc-stk { align-self: flex-end; font: 400 17px 'Bangers', Impact, sans-serif; letter-spacing: .04em; background: #E5452F; color: #FFFFFF; border: 2.5px solid #1E1E24; box-shadow: 3px 3px 0 #1E1E24; padding: 3px 10px 1px; transform: rotate(-3deg); margin-top: -4px; }
 .wc-sub { font-weight: 800; font-size: 14px; }
+/* v91: two posters on your wall (Me): last month's recap peeks out behind the planner */
+.wallstack { position: relative; margin: 4px 0 10px; }
+.wallstack.two { padding-top: 40px; }
+.wallstack .wallcard { z-index: 2; margin: 0 6px 0 0; }
+.wc-hit { position: absolute; inset: 0; z-index: 1; }
+.wallcard > .wc-links { z-index: 2; }
+.wallstack .wallcard > span:not(.wc-links) { pointer-events: none; } /* taps go through to the card's link */
+.wallback { position: absolute; top: 6px; left: 14px; right: 0; height: 84px; box-sizing: border-box; transform: rotate(-1.8deg); transform-origin: right top; background: #FFFFFF; border: 3px solid #1E1E24; border-radius: 6px; box-shadow: 5px 5px 0 #1E1E24; overflow: hidden; text-decoration: none; color: #1E1E24; display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; gap: 10px; padding: 5px 12px; }
+.wallback::after { content: ''; position: absolute; right: -26px; top: -34px; width: 80px; height: 80px; border-radius: 50%; background: #F4C430; }
+.wb-lab { position: relative; z-index: 1; font: 400 14px 'Bangers', Impact, sans-serif; letter-spacing: .05em; background: #E5452F; color: #FFFFFF; border: 2px solid #1E1E24; padding: 1px 7px; transform: rotate(-2deg); }
+.wb-mon { position: relative; z-index: 1; font: 400 20px/1 'Bangers', Impact, sans-serif; letter-spacing: .03em; }
+.wc-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.wc-links a { font: 800 13px 'Nunito', sans-serif; color: #1E1E24; text-decoration: none; background: #FFFFFF; border: 2px solid #1E1E24; border-radius: 999px; box-shadow: 2px 2px 0 #1E1E24; padding: 5px 11px; }
 .wallnudge { border: 2.5px solid #1E1E24; box-shadow: 4px 4px 0 #1E1E24; background: #FFF3C8; }
 /* v80: a logged rest can be fixed: tap it */
 .restentry { gap: 6px; }

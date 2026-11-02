@@ -73,7 +73,8 @@ const pill = (p, s = 14) => '<span class="wpill' + (p.imp ? ' imp' : '') + '" st
 
 export function mount(r, params = {}) {
   root = r;
-  if (params.back) { mode = 'back'; bym = params.back.length === 7 ? params.back : null; } // ?back=YYYY-MM from the Home nudge
+  if (params.back) { mode = 'back'; bym = params.back.length === 7 ? params.back : null; } // ?back=YYYY-MM from the Home nudge or Me
+  else if (params.plan) mode = 'plan'; // v91: ?plan=1 from Me's "Plan <month>"
   // the month to plan: this month, or next month once this one is nearly over
   if (!ym) ym = defaultYm();
   photos = [];

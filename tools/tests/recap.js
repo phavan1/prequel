@@ -122,6 +122,16 @@ const errors = [];
   ok('your own activity is named too', many.own === 'times: rock climbing', many.own);
   const empty = await p.evaluate(async () => { const R = await import('./js/recap.js'); return R.drawRecap('2026-08', '').toDataURL('image/png').length; });
   ok('an almost empty month still draws kindly', empty > 50000);
+  // v91: Me's wall card: last month's recap peeks out behind the planner, with a button for each
+  await p.goto(BASE + '#/me'); await p.waitForTimeout(600);
+  ok('Me: October\'s recap peeks out behind November', /OCTOBER/.test(await p.locator('.wallback').innerText().catch(() => '')) && /Plan November/.test(await p.locator('.wallcard').innerText()) && /Look back at October/.test(await p.locator('.wallcard').innerText()));
+  await p.locator('.wallstack').scrollIntoViewIfNeeded(); await p.locator('.wallstack').screenshot({ path: OUT + '/rc-mecard.png' });
+  await p.click('[data-wlook]'); await p.waitForTimeout(500);
+  ok('Look back at October opens October', (await p.locator('[data-mode="back"]').getAttribute('aria-pressed')) === 'true' && /October 2026/.test(await p.locator('.wmonth').innerText()));
+  await p.goto(BASE + '#/me'); await p.waitForTimeout(400); await p.click('.wallback', { position: { x: 60, y: 16 } }); await p.waitForTimeout(400);
+  ok('tapping the poster behind opens Look back too', (await p.locator('[data-mode="back"]').getAttribute('aria-pressed')) === 'true');
+  await p.goto(BASE + '#/me'); await p.waitForTimeout(400); await p.click('.wc-mon', { force: true }); await p.waitForTimeout(400);
+  ok('tapping the front poster opens the planner (even after Look back)', (await p.locator('[data-mode="plan"]').getAttribute('aria-pressed')) === 'true');
   // Plan a month still works from the same page
   await p.goto(BASE + '#/wall?from=me'); await p.waitForTimeout(400); await p.click('[data-mode="plan"]'); await p.waitForTimeout(200);
   ok('Plan a month is one tap away', await p.locator('[data-poster]').count() === 1);

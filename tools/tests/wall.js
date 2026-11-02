@@ -18,10 +18,10 @@ const errors = [];
   await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(500);
   ok('no reminder on Home to make a planner (v82: it felt like pressure)', await p.locator('a.wallnudge').count() === 0 && !/poster is ready to make/.test(await p.locator('main').innerText()));
   await p.goto(BASE + '#/me'); await p.waitForTimeout(500);
-  const wc = await p.locator('a.wallcard').innerText().catch(() => '');
-  ok('Me shows Your wall as a mini poster (month and sticker)', /YOUR WALL/.test(wc) && /DECEMBER/.test(wc) && /ready to print/.test(wc), wc.replace(/\n/g, ' '));
-  await p.locator('a.wallcard').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/wall-me.png' });
-  await p.click('a.wallcard'); await p.waitForTimeout(500);
+  const wc = await p.locator('.wallcard').innerText().catch(() => '');
+  ok('Me shows Your wall as a mini poster (month and sticker)', /YOUR WALL/.test(wc) && /DECEMBER/.test(wc) && /Plan December/.test(wc) && await p.locator('.wallback').count() === 0, wc.replace(/\n/g, ' '));
+  await p.locator('.wallcard').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/wall-me.png' });
+  await p.click('[data-wplan]'); await p.waitForTimeout(500);
   ok('late in the month it offers next month', /December 2026/.test(await p.locator('.wmonth').innerText()));
   ok('Me stays lit', await p.locator('.tabbar a[aria-current="page"][href="#/me"]').count() === 1);
   // add a few plans
