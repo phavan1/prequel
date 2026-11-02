@@ -1,13 +1,19 @@
 // "Look what you did" (v81): a month's recap as an A4 portrait poster, the second print on Your wall. From page 14
 // of Phavan's wireframes, in the same comic style as the planner, filled with the real month: the weather you
 // carried, big numbers (only the ones above zero), the constellations that joined up, the month's quilt, three
-// empty polaroid frames to stick real photos into (captions from your highlights and tiny wins), one tiny win,
-// and that month's red phrase sticker. No character (Phavan). First version, to be iterated.
+// empty polaroid frames to stick real photos into (captions from your highlights and tiny wins), and that
+// month's phrase sticker. At the bottom (v83): the month's soundtrack from On repeat, or else one of "your month's
+// best bits" (a proud fact, not a feeling), or else nothing (the photos get taller). Tiny wins and letters stay in
+// the app (Phavan: they're personal; a wall is public). No character. First version, to be iterated.
 import { get, parseKey, dateKey } from './store.js';
 import { weatherByName } from './data.js';
 import { updateSky, starPos, mulberry32, hashStr } from './sky-model.js';
 import { patches, drawQuiltMonth } from './screens/quilt.js';
 import { SOURCES } from './goals.js';
+import { soundtrackOf } from './music.js';
+import { drawTape } from './cards.js';
+import { EXERCISES } from './data.js';
+import { showNum, wu, isPlate } from './units.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const W = 1654, H = 2339, M = 80, INK = '#1E1E24', CREAM = '#FDF3D6', YEL = '#F4C430', BLU = '#1F55D0', RED = '#E5452F', NAVY = '#161D3A';
@@ -44,10 +50,29 @@ export function recapData(ym) {
   const caps = [];
   (st.activities || []).filter(a => inMonth(a.date, ym) && a.hl && a.hl.trim()).sort((a, b) => a.date.localeCompare(b.date)).forEach(a => caps.push(a.hl.trim()));
   wins.slice().sort((a, b) => (b.bright ? 1 : 0) - (a.bright ? 1 : 0) || a.date.localeCompare(b.date)).forEach(m => { if (!caps.includes(m.text)) caps.push(m.text); });
-  // the one tiny win at the bottom: a hard-day one if there is one, otherwise the latest
-  const hard = wins.filter(m => m.bright || (st.heavy || {})[m.date]), pool = hard.length ? hard : wins;
-  const win = pool.length ? pool.slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts)[0] : null;
-  return { weather, tally, tiles, cons, newStars, quilt, caps: caps.filter(c => !win || c !== win.text).slice(0, 3), win, soft: new Set(Object.keys(st.heavy || {})), any: weather.length + tiles.length + quilt.length + newStars > 0 };
+  // the bottom: the soundtrack, or else one best bit
+  let snd = null; try { snd = soundtrackOf(ym); } catch (e) { snd = null; }
+  return { weather, tally, tiles, cons, newStars, quilt, caps: caps.slice(0, 3), snd, best: snd ? null : bestBit(st, ym, quilt), soft: new Set(Object.keys(st.heavy || {})), any: weather.length + tiles.length + quilt.length + newStars > 0 };
+}
+
+// "your month's best bits": one proud fact from the numbers, the first there is of: your heaviest lift, your
+// longest rest, your most active week
+const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+const hm = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' m' : ''); };
+function bestBit(st, ym, quilt) {
+  let top = null;
+  (st.sessions || []).filter(s => inMonth(s.date, ym)).forEach(s => (s.exercises || []).forEach(x => {
+    const e = EXERCISES[x.key] || (st.customExercises || {})[x.key] || {}; if ((e.t && e.t !== 'wr') || isPlate(x.key)) return;
+    (x.sets || []).forEach(z => { const v = parseFloat(z.a); if (/^\d*\.?\d+$/.test(String(z.a)) && v > 0 && (!top || v > top.v)) top = { v, a: String(z.a), name: x.swap || x.name || e.n || 'lift' }; });
+  }));
+  if (top) return ['Heaviest lift', showNum(top.a) + ' ' + wu() + ', ' + top.name.toLowerCase()];
+  const rest = quilt.slice().sort((a, b) => b.hours - a.hours)[0];
+  if (rest && rest.hours >= 1) return ['Longest rest', hm(rest.hours) + ', on the ' + ordinal(Number(rest.date.slice(8)))];
+  const days = [...new Set((st.sessions || []).map(s => s.date).concat((st.activities || []).map(a => a.date)).filter(d => inMonth(d, ym)))];
+  const weeks = {}; days.forEach(d => { const t = parseKey(d), mon = new Date(t); mon.setDate(t.getDate() - (t.getDay() + 6) % 7); const k = dateKey(mon); weeks[k] = (weeks[k] || 0) + 1; });
+  const wk = Object.keys(weeks).sort((a, b) => weeks[b] - weeks[a] || a.localeCompare(b))[0];
+  if (wk && weeks[wk] >= 2) { const a = parseKey(wk), b = new Date(a); b.setDate(a.getDate() + 6); const S = d => d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0, 3); return ['Most active week', S(a) + ' to ' + S(b) + ', ' + weeks[wk] + ' days moving']; }
+  return null;
 }
 
 // ---------- drawing helpers (the planner's comic kit) ----------
@@ -64,7 +89,7 @@ function wrapLines(g, s, font, maxW, maxL) {
 function fitFont(g, s, family, start, min, maxW, weight = '400') { let fs = start; g.font = weight + ' ' + fs + 'px ' + family; while (g.measureText(s).width > maxW && fs > min) { fs -= 2; g.font = weight + ' ' + fs + 'px ' + family; } return fs; }
 function panelTitle(g, s, x, y, col) { g.textAlign = 'left'; g.font = '400 50px ' + BANG; g.fillStyle = col || INK; g.fillText(s, x, y); }
 
-export function drawRecap(ym, phrase) {
+export function drawRecap(ym, phrase, covers) {
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
   const d = recapData(ym), [yy, mm] = ym.split('-').map(Number);
   g.fillStyle = CREAM; g.fillRect(0, 0, W, H);
@@ -139,8 +164,9 @@ export function drawRecap(ym, phrase) {
     drawQuiltMonth(g, qx + (pw - qw) / 2, y + 86 + Math.max(0, (avail - qh) / 2), qw, d.quilt, { current: false, now: 1e15, dpr: 2, still: true, soft: d.soft });
   } else { g.font = '700 40px ' + HAND; g.fillStyle = INK; g.textAlign = 'center'; g.fillText('Your quilt starts with', qx + pw / 2, y + 300); g.fillText('your first night of rest.', qx + pw / 2, y + 350); g.textAlign = 'left'; }
 
-  // three polaroids to stick real photos into
-  y = 1700; const fw = (W - 2 * M - 80) / 3, fh = 400, TILT = [-0.03, 0.02, -0.015];
+  // three polaroids to stick real photos into (taller when there's nothing for the bottom box)
+  const bottom = d.snd || d.best, fh = bottom ? 400 : 470;
+  y = 1700; const fw = (W - 2 * M - 80) / 3, TILT = [-0.03, 0.02, -0.015];
   for (let i = 0; i < 3; i++) {
     const x = M + i * (fw + 40);
     g.save(); g.translate(x + fw / 2, y + fh / 2); g.rotate(TILT[i]); g.translate(-(x + fw / 2), -(y + fh / 2));
@@ -153,15 +179,30 @@ export function drawRecap(ym, phrase) {
     g.textAlign = 'left'; g.restore();
   }
 
-  // a tiny win, and the month's red sticker
-  y = 2150; const bw3 = W - 2 * M - 560;
-  box(g, M, y, bw3, 150, '#FFFFFF');
-  g.font = '400 40px ' + BANG; g.fillStyle = INK; g.fillText(d.win && (d.win.bright || d.soft.has(d.win.date)) ? 'A TINY WIN, ON A HARD DAY' : 'A TINY WIN', M + 28, y + 52);
-  const wt = d.win ? d.win.text : 'You showed up this month. That counts.';
-  g.font = '700 40px ' + HAND; g.fillStyle = INK; g.fillText(wrapLines(g, wt, '700 40px ' + HAND, bw3 - 56, 1)[0], M + 28, y + 112);
-  const ph2 = phrase || ''; if (ph2) {
-    g.save(); const sfs = fitFont(g, ph2, BANG, 52, 30, 440); const sw = g.measureText(ph2).width + 56, sh = sfs + 44;
-    g.translate(W - M - 250, y + 80); g.rotate(-0.05); box(g, -sw / 2, -sh / 2, sw, sh, BLU, { shadow: 10, lw: 6, r: 3 });
+  // the bottom: the soundtrack, or one best bit, with the month's sticker beside it; or just the sticker, bigger
+  const ph2 = phrase || '';
+  if (bottom) {
+    y = 2150; const bw3 = W - 2 * M - 560;
+    box(g, M, y, bw3, 150, '#FFFFFF');
+    if (d.snd) {
+      const tw2 = 180; drawTape(g, M + 24, y + 13, tw2, d.snd, covers && covers[d.snd.id]);
+      const tx = M + 24 + tw2 + 28, mw = bw3 - (tx - M) - 24;
+      g.font = '400 36px ' + BANG; g.fillStyle = RED; g.fillText('THE SOUNDTRACK', tx, y + 46);
+      g.font = '700 42px ' + HAND; g.fillStyle = INK; g.fillText(wrapLines(g, d.snd.title, '700 42px ' + HAND, mw, 1)[0], tx, y + 94);
+      if (d.snd.artist) { g.font = '800 26px ' + BODY; g.fillStyle = '#5E584B'; g.fillText(wrapLines(g, d.snd.artist, '800 26px ' + BODY, mw, 1)[0], tx, y + 128); }
+    } else {
+      g.font = '400 40px ' + BANG; g.fillStyle = INK; g.fillText('YOUR MONTH\u2019S BEST BIT', M + 28, y + 52);
+      g.font = '800 30px ' + BODY; g.fillStyle = BLU; const lab = d.best[0] + ': '; g.fillText(lab, M + 28, y + 110);
+      const lw2 = g.measureText(lab).width; g.font = '700 42px ' + HAND; g.fillStyle = INK; g.fillText(wrapLines(g, d.best[1], '700 42px ' + HAND, bw3 - 56 - lw2, 1)[0], M + 28 + lw2, y + 110);
+    }
+    if (ph2) {
+      g.save(); const sfs = fitFont(g, ph2, BANG, 52, 30, 440); const sw = g.measureText(ph2).width + 56, sh = sfs + 44;
+      g.translate(W - M - 250, y + 80); g.rotate(-0.05); box(g, -sw / 2, -sh / 2, sw, sh, BLU, { shadow: 10, lw: 6, r: 3 });
+      g.textAlign = 'center'; g.fillStyle = '#FFFFFF'; g.fillText(ph2, 0, sfs * 0.36); g.restore(); g.textAlign = 'left';
+    }
+  } else if (ph2) {
+    g.save(); const sfs = fitFont(g, ph2, BANG, 70, 40, 900); const sw = g.measureText(ph2).width + 80, sh = sfs + 54;
+    g.translate(W / 2, 2262); g.rotate(-0.03); box(g, -sw / 2, -sh / 2, sw, sh, BLU, { shadow: 12, lw: 6, r: 3 });
     g.textAlign = 'center'; g.fillStyle = '#FFFFFF'; g.fillText(ph2, 0, sfs * 0.36); g.restore(); g.textAlign = 'left';
   }
   return c;

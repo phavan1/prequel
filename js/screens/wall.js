@@ -9,7 +9,7 @@
 import { get, save, uid, today, dateKey, parseKey } from '../store.js';
 import { esc, nav, backLink, him, openSheet, closeSheet, toast, IOS, canShareFile, saveToDevice, SAVED_NOTE } from '../ui.js';
 import { makePDF, shareFile } from '../pdf.js';
-import { fontsReady } from '../cards.js';
+import { fontsReady, loadCovers } from '../cards.js';
 import { recapData, drawRecap } from '../recap.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -96,7 +96,7 @@ function renderBack() {
       ? '<div class="card wback"><b>On the poster</b>' +
           (d.tiles.length ? '<div class="wtiles">' + d.tiles.map(t => '<span><b>' + t[0] + '</b>' + esc(t[1]) + '</span>').join('') + '</div>' : '') +
           '<p class="muted" style="margin:0;font-size:13px">' + [d.weather.length ? d.weather.length + (d.weather.length === 1 ? ' day' : ' days') + ' of weather' : '', d.cons.length ? d.cons.map(c => c.name).join(' and ') : d.newStars ? d.newStars + ' new stars' : '', d.quilt.length ? d.quilt.length + ' quilt ' + (d.quilt.length === 1 ? 'patch' : 'patches') : ''].filter(Boolean).map(esc).join(' · ') + '</p>' +
-          (d.win ? '<p style="margin:0;font-size:14px"><b>A tiny win:</b> ' + esc(d.win.text) + '</p>' : '') +
+          (d.snd ? '<p style="margin:0;font-size:14px"><b>The soundtrack:</b> ' + esc(d.snd.title) + (d.snd.artist ? ' · ' + esc(d.snd.artist) : '') + '</p>' : d.best ? '<p style="margin:0;font-size:14px"><b>' + esc(d.best[0]) + ':</b> ' + esc(d.best[1]) + '</p>' : '') +
           '<p class="muted" style="margin:0;font-size:13px">Three empty photo frames, for real photos of your month.</p></div>' +
         '<div class="card wphrase"><b>The sticker</b><p class="muted" style="font-size:13px;margin:0">The same phrase as ' + esc(name) + '\'s planner.</p><div class="wstk"><span class="wsticker blue">' + esc(phraseOf(bym)) + '</span></div><div class="grid2"><button type="button" class="btn alt" data-shuffle>Shuffle</button><button type="button" class="btn alt" data-ownphrase>Write my own</button></div></div>' +
         '<button type="button" class="btn wide" data-recap>Make my ' + esc(name) + ' recap</button>' +
@@ -276,7 +276,8 @@ async function makeRecap() {
   openSheet('<h2>Making your recap…</h2><p class="muted">Just a moment.</p>');
   try {
     await fontsReady(); if (document.fonts) await document.fonts.load('400 100px Bangers').catch(() => null);
-    const c = drawRecap(k, phraseOf(k)), file = new File([makePDF([c])], name + ' ' + k.slice(0, 4) + ' recap.pdf', { type: 'application/pdf' });
+    const covers = await Promise.race([loadCovers().catch(() => ({})), new Promise(r => setTimeout(() => r({}), 4000))]); // the soundtrack's cover, if it loads in time
+    const c = drawRecap(k, phraseOf(k), covers), file = new File([makePDF([c])], name + ' ' + k.slice(0, 4) + ' recap.pdf', { type: 'application/pdf' });
     readySheet('Your ' + name + ' recap', c, file, 'A4 portrait. In the print options, pick portrait and "fit to page".');
   } catch (err) { closeSheet(); toast('Something went wrong making the recap.'); console.error(err); }
 }
