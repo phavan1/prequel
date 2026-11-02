@@ -8,7 +8,8 @@ const tsOfDay = rests => { const m = {}; rests.forEach(r => { if (!m[r.date] || 
 // a meal counts as home-cooked when the food it came from is marked home-cooked
 const homeMeals = st => { const home = new Set((st.myFoods || []).filter(f => f.kind === 'home').map(f => f.id)); return (st.meals || []).filter(m => home.has(m.foodId) || m.kind === 'home').map(m => m.ts); };
 export const SOURCES = {
-  sessions: { label: 'Gym sessions', unit: 'sessions', items: st => st.sessions.map(s => s.ts) },
+  // v87: rep days (each day at the gym counts once, on its first workout); the key stays 'sessions' so saved goals keep working
+  sessions: { label: 'Rep days', unit: 'rep days', items: st => { const first = {}; st.sessions.forEach(s => { if (!(s.date in first) || s.ts < first[s.date]) first[s.date] = s.ts; }); return Object.values(first); } },
   cooked: { label: 'Home-cooked meals', unit: 'meals', items: st => st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.ts).concat(homeMeals(st)) },
   newfood: { label: 'New foods tried', unit: 'new foods', items: st => st.foods.filter(f => f.tags.includes('Tried something new')).map(f => f.ts).concat((st.myFoods || []).map(f => f.created || 0)) },
   breakfast: { label: 'Breakfasts', unit: 'breakfasts', items: st => st.foods.filter(f => f.tags.includes('Breakfast')).map(f => f.ts).concat((st.meals || []).filter(m => new Date(m.ts).getHours() < 11).map(m => m.ts)) },
@@ -36,6 +37,9 @@ export function ensureGoals() {
     if (st.moments.length) SUGGEST.forEach(([k, n]) => st.goals.push({ id: uid(), kind: 'linked', source: k, name: SOURCES[k].label, target: n, from: 0, created: Date.now(), finished: null }));
     st.goalsSeeded = true; save();
   }
+  // v87: gym sessions are rep days now; goals still wearing the old made-up name get the new one (your own names are kept)
+  let ren = false; st.goals.forEach(g => { if (g.source === 'sessions' && (g.name === 'Gym sessions' || g.name === 'Gym · sessions')) { g.name = g.name === 'Gym sessions' ? 'Rep days' : 'Gym · rep days'; ren = true; } });
+  if (ren) save();
   return st.goals;
 }
 // units for your own goals. Counting units add 1 per log; amount units ask "how many?" each time

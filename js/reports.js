@@ -358,7 +358,8 @@ export async function moveReport(from, to) {
   // at a glance
   doc.heading('At a glance', 'the ' + nDays + ' days from ' + longDate(from) + ' to ' + longDate(to));
   const tiles = [[activeDays.length + ' of ' + nDays, 'days I moved']];
-  if (sessions.length) tiles.push([sessions.length, sessions.length === 1 ? 'gym session' : 'gym sessions']);
+  const repDays = new Set(sessions.map(s => s.date)).size; // v87
+  if (repDays) tiles.push([repDays, repDays === 1 ? 'rep day' : 'rep days']);
   if (acts.length) tiles.push([acts.length, acts.length === 1 ? 'other activity' : 'other activities']);
   if (mins) tiles.push([dur(mins), 'active time, where I noted it']);
   doc.tiles(tiles, { big: 46 });
@@ -430,7 +431,7 @@ export async function moveReport(from, to) {
     doc.table([{ label: 'Exercise', w: 300 }, { label: 'Times', w: 100 }, { label: 'First', w: 216 }, { label: 'Latest', w: 216 }, { label: 'Best', w: 216 }],
       rows.map(r => ({ cells: [r.name, String(r.n), setText(r.first, r.k, st), r.n > 1 ? setText(r.last, r.k, st) : 'same day', setText(r.best, r.k, st)] })), { boldFirst: true, fs: 19 });
     doc.para('“First” and “latest” are the heaviest set on the first and the latest day I did that exercise in these dates.', '600 19px ' + BODY, SOFT);
-  } else if (sessions.length) doc.para('Gym sessions in these dates were logged without sets.', '600 22px ' + BODY, SOFT);
+  } else if (sessions.length) doc.para('Rep days in these dates were logged without sets.', '600 22px ' + BODY, SOFT);
 
   // other activities: totals per kind
   const kinds = [...new Set(acts.map(a => a.type))];
@@ -514,7 +515,7 @@ export function openFoodReport() {
 export function openMoveReport() {
   const t = today(), st = get(), from = addDays(t, -13);
   const dates = st.sessions.map(x => x.date).concat((st.activities || []).map(a => a.date));
-  if (!dates.length) { notYet('proudstar', 'Your first Move report is on its way', 'Log a gym session or any activity, and your report will be ready to make.'); return; }
+  if (!dates.length) { notYet('proudstar', 'Your first Move report is on its way', 'Log a workout or any activity, and your report will be ready to make.'); return; }
   const opts = [['Last 2 weeks', from, t], ['Last 4 weeks', addDays(t, -27), t]]; // v62: 4 weeks too
   markEmpty(opts, dates);
   rangeSheet('Move report', 'How you\'ve moved, as a PDF for you, your doctor or a coach. Highlights and notes stay private.', opts, [], (a, b) => build(() => moveReport(a, b), 'Move report'));

@@ -76,7 +76,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   fs.writeFileSync(OUT + '/moverep4.pdf', Buffer.from(await p.evaluate(() => window.__pdf4)));
   ok('4 weeks: 28 days and four week rows', /6 of 28/.test(said4) && (said4.match(/ of 7 \|| a rest week/g) || []).length === 4, said4.slice(0, 120));
   fs.writeFileSync(OUT + '/moverep.pdf', Buffer.from(await p.evaluate(() => window.__pdf)));
-  ok('at a glance: days moved and sessions', /6 of 14/.test(said) && /gym sessions/.test(said), said.slice(0, 160));
+  ok('at a glance: days moved and sessions', /6 of 14/.test(said) && /rep days?/.test(said), said.slice(0, 160));
   ok('body check-ins and how activities felt', /How my body felt before the gym: Green/.test(said) && /How the other activities felt/.test(said));
   ok('body weight is in it', /72\.4 kg/.test(said) && /71\.8 kg/.test(said));
   ok('the gym: first, latest and best per exercise', /10 kg × 12/.test(said) && /12\.5 kg × 10/.test(said) && /bar \+ 2\.5 kg each side × 10/.test(said) && /Flat dumbbell press/.test(said));

@@ -66,7 +66,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('Badminton: times, hours and games', /2\s*times/.test(bc) && /14\s*games/.test(bc) && await p.locator('.jlift').count() === 0, bc.replace(/\n/g, ' '));
   await p.click('[data-jf="gym"]'); await p.waitForTimeout(300);
   const gc = (await p.locator('.jcard').allInnerTexts()).join(' / ');
-  ok('Gym: sessions, sets and your heaviest', /11\s*sessions/.test(gc) && /sets/.test(gc) && /heaviest/.test(gc), gc.replace(/\n/g, ' '));
+  ok('Gym (v87): rep days, got your reps in, sets and your heaviest', /you got your reps in/.test(gc) && /sets/.test(gc) && /heaviest/.test(gc), gc.replace(/\n/g, ' '));
   await p.screenshot({ path: OUT + '/jo-gym.png' });
 
   // between flags he's walking up

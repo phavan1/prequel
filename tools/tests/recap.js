@@ -40,7 +40,7 @@ const errors = [];
   await p.click('a.wallnudge.recap'); await p.waitForTimeout(600);
   ok('it opens Look back on October', /October 2026/.test(await p.locator('.wmonth').innerText()) && (await p.locator('[data-mode="back"]').getAttribute('aria-pressed')) === 'true');
   const page = await p.locator('main').innerText();
-  ok('the page shows what will be on it (numbers above zero only)', /gym sessions/.test(page) && /tiny wins/.test(page) && /nights of rest/.test(page) && !/\b0\b/.test(await p.locator('.wtiles').innerText()), (await p.locator('.wtiles').innerText()).replace(/\n/g, ' '));
+  ok('the page shows what will be on it (numbers above zero only)', /16\s*rep days/.test(page) && /tiny wins/.test(page) && /nights of rest/.test(page) && !/\b0\b/.test(await p.locator('.wtiles').innerText()), (await p.locator('.wtiles').innerText()).replace(/\n/g, ' '));
   ok('the sticker is the month\'s planner phrase, in blue', (await p.locator('.wsticker').innerText()) === 'MY OCTOBER ERA');
   await p.screenshot({ path: OUT + '/rc-page.png', fullPage: true });
   await p.click('[data-recap]'); await p.waitForTimeout(3000);

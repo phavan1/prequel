@@ -39,7 +39,8 @@ export const logsOf = type => (get().activities || []).filter(a => a.type === ty
 
 // what a milestone can count, per activity: times, total time, days, and each number the sport logs
 export function measures(id) {
-  if (id === 'gym') return [['sessions', 'Sessions', 'sessions'], ['sets', 'Sets done', 'sets'], ['days', 'Days at the gym', 'days']];
+  // v87: 'sessions' counts rep days now, so 'days' (the same thing) is only kept for milestones made before
+  if (id === 'gym') return [['sessions', 'Rep days', 'rep days'], ['sets', 'Sets done', 'sets'], ['days', 'Days at the gym', 'days']];
   const d = actDef(id);
   return [['times', 'Times', d.unit === 'times' ? 'times' : d.unit], ['hours', 'Total time', 'hours'], ['days', 'Days active', 'days']]
     .concat(d.f.filter(x => x.num).map(x => [x.k, x.l, x.u]));

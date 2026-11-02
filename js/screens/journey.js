@@ -65,9 +65,10 @@ export function cardsFor(f, st = get()) {
   if (!list.length) return out;
   const ym = t.slice(0, 7), y = t.slice(0, 4), month = LONG[Number(t.slice(5, 7)) - 1];
   const daysThisMonth = dates.filter(d => d.startsWith(ym)).length, daysThisYear = dates.filter(d => d.startsWith(y)).length;
-  const word = f === 'gym' ? ['session', 'sessions'] : ['time', 'times'];
-  if (daysThisMonth) out.push(['cal', daysThisMonth, daysThisMonth === 1 ? 'day' : 'days', (f === 'all' ? 'moved' : 'active') + ' in ' + month]);
-  out.push(['stack', list.length, list.length === 1 ? word[0] : word[1], 'all together']);
+  if (daysThisMonth) out.push(['cal', daysThisMonth, f === 'gym' ? (daysThisMonth === 1 ? 'rep day' : 'rep days') : daysThisMonth === 1 ? 'day' : 'days', f === 'gym' ? 'in ' + month : (f === 'all' ? 'moved' : 'active') + ' in ' + month]);
+  // v87: the gym counts rep days (two workouts in a day are one), said as a sentence
+  if (f === 'gym') out.push(['stack', dates.length, dates.length === 1 ? 'time' : 'times', 'you got your reps in']);
+  else out.push(['stack', list.length, list.length === 1 ? 'time' : 'times', 'all together']);
   // v73: no "minutes of moving" card (Phavan: a gym session's length isn't real when you log after the workout)
   const since = between(dates[0], t);
   out.push(since >= 14 ? ['flag', Math.floor(since / 7), 'weeks', 'since you started'] : ['flag', since + 1, since ? 'days' : 'day', 'since you started']);

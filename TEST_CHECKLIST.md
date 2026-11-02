@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v87) "Rep days" on the recap, the Milestone share card, the Move report, a gym milestone, the Gym tile on Move ("Rep day N next" / "Reps in today") and the journey's Gym view; two workouts on one day count as one.
 - [ ] (v86) Home's hoop shows only this month's patches, starting in the middle; on the 1st it's plain cloth.
 - [ ] (v85) Me → Share your story → My month: buttons for this month and earlier months with anything logged; October draws October in all three looks; Share or save sends that month.
 - [ ] (v84) Look back with no photos: the recap shows "Your month at a glance" (blue circles, gold stars, moons, legend in words). Add a photo from the iPhone: it shows with an empty caption; a highlight chip fills it; an empty caption prints the photo's date. Leave the page and come back: the photos are gone.

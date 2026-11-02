@@ -1,6 +1,6 @@
 // The Move hub (v48): "How's the body?" for everything, then one same-size tile per activity you do.
 // Gym opens the gym page (move.js). Every other activity logs in one sheet, now or with a timer.
-import { get, save, uid } from '../store.js';
+import { get, save, uid, today } from '../store.js';
 import { esc, him, prettyDate, dateChip, logDate, openSheet, closeSheet, toast } from '../ui.js';
 import { CATALOG, FEELS_MOVE, MINS, actDef, picked, logsOf, measures, logActivity, updateActivity, removeEntry, summary } from '../activities.js';
 import { count, unitOf, checkFinished, openEditGoal, ensureGoals } from '../goals.js';
@@ -17,7 +17,7 @@ export function milestoneOf(id) {
 const tileSub = id => {
   const st = get(), m = milestoneOf(id);
   if (m) return count(m) + ' of ' + m.target + ' ' + unitOf(m);
-  if (id === 'gym') return st.active ? 'A workout is open' : st.sessions.length ? 'Session ' + (st.sessions.length + 1) + ' next' : 'Tap to start';
+  if (id === 'gym') { const rd = new Set(st.sessions.map(s => s.date)), had = rd.has(today()); return st.active ? 'A workout is open' : rd.size ? (had ? 'Reps in today' : 'Rep day ' + (rd.size + 1) + ' next') : 'Tap to start'; } // v87
   const n = logsOf(id).length, d = actDef(id);
   return n ? n + ' ' + (d.unit === 'times' ? (n === 1 ? 'time' : 'times') : n === 1 ? d.unit.slice(0, -1) : d.unit) + ' so far' : 'Tap to log';
 };
@@ -54,8 +54,8 @@ function pickerHtml(first) {
       '<button type="button" class="chip" data-ownact aria-pressed="' + own + '">+ Your own</button></div>' +
     (own ? '<div class="ownact"><div class="grid2"><input id="oaName" type="text" maxlength="30" placeholder="What is it?" autocomplete="off"><input id="oaEmo" type="text" maxlength="4" placeholder="An emoji, if you like" autocomplete="off"></div>' +
       '<input id="oaUnit" type="text" maxlength="20" placeholder="Something to count? e.g. rounds (optional)" autocomplete="off"><button type="button" class="btn alt" data-oaadd>Add it</button></div>' : '') +
-    (ms ? '<div class="roadq"><b>You were on the road to ' + ms.target + ' gym sessions.</b><span>Keep that milestone?</span><div class="chips"><button type="button" class="chip small" data-road="keep" aria-pressed="' + (road === 'keep') + '">Keep it</button><button type="button" class="chip small" data-road="change" aria-pressed="' + (road === 'change') + '">Change the number</button><button type="button" class="chip small" data-road="drop" aria-pressed="' + (road === 'drop') + '">No milestone</button></div>' +
-      (road === 'change' ? '<input id="roadN" type="text" inputmode="numeric" placeholder="How many sessions?" value="' + ms.target + '">' : '') + '</div>' : '') +
+    (ms ? '<div class="roadq"><b>You were on the road to ' + ms.target + ' rep days.</b><span>Keep that milestone?</span><div class="chips"><button type="button" class="chip small" data-road="keep" aria-pressed="' + (road === 'keep') + '">Keep it</button><button type="button" class="chip small" data-road="change" aria-pressed="' + (road === 'change') + '">Change the number</button><button type="button" class="chip small" data-road="drop" aria-pressed="' + (road === 'drop') + '">No milestone</button></div>' +
+      (road === 'change' ? '<input id="roadN" type="text" inputmode="numeric" placeholder="How many rep days?" value="' + ms.target + '">' : '') + '</div>' : '') +
     (first ? (() => { wpick = wpick || wu(); return '<div class="roadq wq"><b>Do you lift in kg or lb?</b><span>For your weights and body weight. You can change it in Settings.</span><div class="seg wunit">' + ['kg', 'lb'].map(u => '<button type="button" data-wpick="' + u + '" aria-pressed="' + (wpick === u) + '">' + u + '</button>').join('') + '</div></div>'; })() : '') + // v71
     '<div class="err" id="pickErr"></div><button type="button" class="btn" data-picksave>' + (first ? 'That\'s me' : 'Save') + '</button>' + (first ? '' : '<button type="button" class="btn alt" data-close>Cancel</button>') + '</div>';
 }
@@ -112,7 +112,7 @@ export function entrySheet(id, done) {
 // ---------- a milestone for one activity ----------
 export function milestoneSheet(id, done) {
   const m = milestoneOf(id); if (m) { openEditGoal(m.id, done); return; }
-  const d = actDef(id), list = measures(id); let pickM = list[0][0];
+  const d = actDef(id), list = measures(id).filter(x => !(id === 'gym' && x[0] === 'days')); let pickM = list[0][0]; // v87: rep days already counts days
   const draw = msg => '<h2>A milestone for ' + esc(d.n.toLowerCase()) + '</h2><p class="muted">Something to count up to. It never resets, and there\'s no deadline.</p>' +
     '<div class="lbl">Count</div><div class="chips">' + list.map(x => '<button type="button" class="chip small" data-meas="' + x[0] + '" aria-pressed="' + (pickM === x[0]) + '">' + esc(x[1]) + '</button>').join('') + '</div>' +
     '<label class="field-label" for="msN">HOW MANY ' + esc((list.find(x => x[0] === pickM) || list[0])[2].toUpperCase()) + '?</label><input id="msN" type="text" inputmode="decimal" placeholder="e.g. 20">' +
@@ -174,7 +174,7 @@ export function hubClick(e, root, rerender, openGym, openSession) {
     const ms = milestoneOf('gym');
     if (ms && box.querySelector('[data-road]')) {
       if (road === 'drop') st.goals = st.goals.filter(g => g !== ms);
-      if (road === 'change') { const n = parseInt((box.querySelector('#roadN') || {}).value, 10); if (!(n > 0)) { err.textContent = 'Type how many sessions.'; return true; } ms.target = n; }
+      if (road === 'change') { const n = parseInt((box.querySelector('#roadN') || {}).value, 10); if (!(n > 0)) { err.textContent = 'Type how many rep days.'; return true; } ms.target = n; }
     }
     const custom = Object.assign({}, (st.moveSetup || {}).custom || {}, customDraft);
     if (box.querySelector('[data-wpick]')) setUnit(wpick || wu()); // v71: their pick, kg or lb

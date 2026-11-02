@@ -31,7 +31,7 @@ export function recapData(ym) {
   // the numbers, only above zero
   const wins = moments.filter(m => m.area === 'win' && inMonth(m.date, ym));
   const tiles = [
-    [(st.sessions || []).filter(s => inMonth(s.date, ym)).length, 'gym sessions', 'gym session'],
+    [new Set((st.sessions || []).filter(s => inMonth(s.date, ym)).map(s => s.date)).size, 'rep days', 'rep day'], // v87: days at the gym (two workouts in a day are one rep day)
     [(st.activities || []).filter(a => inMonth(a.date, ym)).length, 'times you moved', 'time you moved'],
     [SOURCES.cooked.items(st).filter(ts => tsIn(ts, ym)).length, 'home-cooked meals', 'home-cooked meal'],
     [wins.length, 'tiny wins', 'tiny win'],

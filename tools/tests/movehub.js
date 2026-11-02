@@ -70,7 +70,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('the gym page keeps the day\'s light but not the picker', await p.locator('main [data-light]').count() === 0 && /Yellow day/.test(await p.locator('.todaylight').innerText()) && /YELLOW DAY/.test(await p.locator('.sug').innerText()));
   ok('no road to 100 anywhere', !/road to 100|toward your 100/i.test(await p.locator('main').innerText()));
   await p.click('[data-gymmile]'); await p.waitForTimeout(200); await p.click('[data-meas="sessions"]'); await p.fill('#msN', '30'); await p.click('[data-mssave]'); await p.waitForTimeout(200);
-  ok('a gym milestone shows on the gym page', /0 of 30 sessions|of 30 sessions/.test(await p.locator('.gymhead').innerText()));
+  ok('a gym milestone shows on the gym page', /of 30 rep days/.test(await p.locator('.gymhead').innerText()));
   await p.click('[data-hub]'); await p.waitForTimeout(200);
   ok('back to the hub from the gym', await p.locator('.acttiles').count() === 1);
 
@@ -86,10 +86,10 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p2.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(); delete st.moveSetup; st.activities = []; st.sessions = [{ id: 's1', date: '2026-10-16', ts: 1, workoutId: 'fbA', workoutName: 'Full Body A', light: 'green', exercises: [] }]; st.goals = [{ id: 'g1', kind: 'linked', source: 'sessions', name: 'Gym sessions', target: 100, from: 0, created: 1, finished: null }]; S.save(); });
   await p2.goto(BASE + '#/move'); await p2.waitForTimeout(500); await p2.mouse.click(5, 5); await p2.waitForTimeout(300);
   await p2.screenshot({ path: OUT + '/mh-road.png' });
-  ok('an existing gym-goer starts with Gym picked and is asked about the road to 100', await p2.locator('[data-pick="gym"][aria-pressed="true"]').count() === 1 && /You were on the road to 100 gym sessions/.test(await p2.locator('.roadq:not(.wq)').innerText()));
+  ok('an existing gym-goer starts with Gym picked and is asked about the road to 100', await p2.locator('[data-pick="gym"][aria-pressed="true"]').count() === 1 && /You were on the road to 100 rep days/.test(await p2.locator('.roadq:not(.wq)').innerText()));
   await p2.click('[data-road="change"]'); await p2.fill('#roadN', '50'); await p2.click('[data-picksave]'); await p2.waitForTimeout(300);
   const s2 = await p2.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
-  ok('changing the number keeps the same milestone', s2.goals.length === 1 && s2.goals[0].target === 50 && /1 of 50 sessions/.test(await p2.locator('[data-act="gym"]').innerText()));
+  ok('changing the number keeps the same milestone', s2.goals.length === 1 && s2.goals[0].target === 50 && /1 of 50 rep days/.test(await p2.locator('[data-act="gym"]').innerText()));
 
   // 7b. v49: Lately shows the most recent first, even when older sessions keep their time as text; kickboxing and MMA
   const lately = await p2.evaluate(async () => { const S = await import('./js/store.js'), st = S.get();

@@ -139,7 +139,8 @@ export function milestones() {
   const st = get(); ensureGoals(); const out = [];
   (st.goals || []).filter(g => g.finished).forEach(g => out.push({ id: 'g' + g.id, n: g.target, unit: unitOf(g), title: g.name, kicker: 'GOAL REACHED', line: 'counted up, one at a time' }));
   (st.goals || []).filter(g => !g.finished && count(g) > 0).forEach(g => out.push({ id: 'p' + g.id, n: count(g), unit: unitOf(g), title: g.name, kicker: 'SO FAR', line: 'on the way to ' + g.target }));
-  if (st.sessions.length) out.push({ id: 's', n: st.sessions.length, unit: st.sessions.length === 1 ? 'session' : 'sessions', title: 'Gym sessions', kicker: 'SHOWED UP', line: 'slow is still moving' });
+  const repDays = new Set(st.sessions.map(s => s.date)).size; // v87: rep days, not gym sessions
+  if (repDays) out.push({ id: 's', n: repDays, unit: repDays === 1 ? 'rep day' : 'rep days', title: 'Rep days', kicker: 'SHOWED UP', line: 'got my reps in, one day at a time' });
   const wins = st.moments.filter(m => m.area === 'win').length; if (wins) out.push({ id: 'w', n: wins, unit: 'tiny wins', title: 'Tiny wins', kicker: 'SMALL THINGS', line: 'on hard days, these are the big ones' });
   if (st.moments.length) out.push({ id: 'm', n: st.moments.length, unit: 'stars', title: 'Stars in my sky', kicker: 'MY SKY', line: 'every one a day I showed up' });
   const rd = new Set(st.rests.map(r => r.date)).size; if (rd) out.push({ id: 'r', n: rd, unit: 'days of rest', title: 'Rest', kicker: 'RESTED', line: 'rest is part of the plan' });
