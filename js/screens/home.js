@@ -123,18 +123,23 @@ function drawQuilt(cv) {
   cv.width = w * dpr; cv.height = h * dpr;
   const g = cv.getContext('2d'); g.scale(dpr, dpr);
   const cols = 4, rows = 4, cw = w / cols, ch = h / rows;
-  const P = patches().slice(-cols * rows).reverse();
+  // v86: only this month's patches, on plain cloth: a clean slate on the 1st (the Quilt page starts a fresh quilt each
+  // month too). They're sewn from the middle outwards (the hoop's round edge hides the corners), no outlines where
+  // nothing is sewn yet.
+  const ym = today().slice(0, 7), P = patches().filter(p => p.date.startsWith(ym)).slice(-cols * rows);
+  cv.dataset.patches = P.length; // for the automated tests only
   g.fillStyle = '#F3E6C4'; g.fillRect(0, 0, w, h);
-  P.forEach((p, i) => {
-    const x = (i % cols) * cw, y = Math.floor(i / cols) * ch, f = p.fabrics[0];
+  g.strokeStyle = 'rgba(255,253,246,.85)'; g.setLineDash([2, 2]); g.lineWidth = 1;
+  const ORDER = [5, 6, 10, 9, 1, 2, 7, 11, 14, 13, 8, 4, 0, 3, 15, 12]; // the middle four, then around them, clockwise
+  P.forEach((p, n) => {
+    const i = ORDER[n], x = (i % cols) * cw, y = Math.floor(i / cols) * ch, f = p.fabrics[0];
     const s = Math.ceil(Math.max(cw, ch)) + 1, tile = document.createElement('canvas');
     tile.width = s * 2; tile.height = s * 2; const tg = tile.getContext('2d'); tg.scale(2, 2);
     PAT[f.pat](tg, s, f.a, f.b, mulberry32(f.seed));
     g.save(); g.beginPath(); g.rect(x, y, cw, ch); g.clip(); g.drawImage(tile, x, y, s, s); g.restore();
+    g.strokeRect(x + 0.5, y + 0.5, cw - 1, ch - 1); // its own little seam
   });
-  g.strokeStyle = 'rgba(255,253,246,.85)'; g.setLineDash([2, 2]); g.lineWidth = 1;
-  for (let i = 1; i < cols; i++) { g.beginPath(); g.moveTo(i * cw, 0); g.lineTo(i * cw, h); g.stroke(); }
-  for (let j = 1; j < rows; j++) { g.beginPath(); g.moveTo(0, j * ch); g.lineTo(w, j * ch); g.stroke(); }
+  g.setLineDash([]);
 }
 
 // a little window onto the sky: one star per moment, always in the same place
