@@ -23,6 +23,7 @@ export function mount(root) {
     if (t.closest('[data-putdown]')) { putDown(); return; }
     if (t.closest('[data-docnote]')) { doctorNotes(root); return; }
     if ((b = t.closest('[data-del]'))) { removeById('rests', b.dataset.del); render(root); return; }
+    if ((b = t.closest('[data-editrest]'))) { const r = st.rests.find(x => x.id === b.dataset.editrest); if (r) openManual(root, null, r); return; } // v80: fix a rest
     if (t.closest('[data-diary]')) { openSleepDiary(); }
   });
 }
@@ -64,17 +65,18 @@ function askFeel(root, start, end) {
   });
 }
 
-function openManual(root, endTs) {
-  const end = endTs ? new Date(endTs) : null;
-  const wake = end ? dateKey(end) : logDate();
-  const pad = n => String(n).padStart(2, '0');
-  const endVal = end ? pad(end.getHours()) + ':' + pad(end.getMinutes()) : '07:00';
-  let feel = 'okay';
-  openSheet('<h2>Add a rest</h2><p class="muted">For a forgotten night, a nap, or the second half of a split night.</p>' +
+// add a rest by hand, or (v80) fix one you've logged: `ed` is the rest to change, everything starts filled in
+function openManual(root, endTs, ed) {
+  const end = ed ? new Date(ed.end) : endTs ? new Date(endTs) : null;
+  const wake = ed ? ed.date : end ? dateKey(end) : logDate();
+  const pad = n => String(n).padStart(2, '0'), hhmm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const endVal = end ? hhmm(end) : '07:00', fromVal = ed ? hhmm(new Date(ed.start)) : '00:00';
+  let feel = ed ? ed.feel || '' : 'okay';
+  openSheet('<h2>' + (ed ? 'Fix this rest' : 'Add a rest') + '</h2><p class="muted">' + (ed ? 'Change the times, the day or how you woke up.' : 'For a forgotten night, a nap, or the second half of a split night.') + '</p>' +
     '<label class="field-label" for="rDate">DAY YOU WOKE UP</label><input id="rDate" type="date" max="' + today() + '" value="' + wake + '">' +
-    '<div class="grid2"><div><label class="field-label" for="rFrom">FELL ASLEEP</label><input id="rFrom" type="time" value="00:00"></div><div><label class="field-label" for="rTo">WOKE UP</label><input id="rTo" type="time" value="' + endVal + '"></div></div>' +
+    '<div class="grid2"><div><label class="field-label" for="rFrom">FELL ASLEEP</label><input id="rFrom" type="time" value="' + fromVal + '"></div><div><label class="field-label" for="rTo">WOKE UP</label><input id="rTo" type="time" value="' + endVal + '"></div></div>' +
     '<div class="lbl">How did you wake up</div>' + feelsHtml(feel) +
-    '<button type="button" class="btn" data-add>Add it</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
+    '<button type="button" class="btn" data-add>' + (ed ? 'Save changes' : 'Add it') + '</button><button type="button" class="btn alt" data-close>Cancel</button>', ev => {
     const t = ev.target; let b;
     if (t.closest('[data-ownwords]')) { openWords(); return; }
     if ((b = t.closest('[data-f]'))) { feel = b.dataset.f; document.querySelectorAll('#feelSeg [data-f]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return; }
@@ -86,6 +88,13 @@ function openManual(root, endTs) {
     let startD = new Date(y, m - 1, dd, ...from.split(':').map(Number));
     if (startD >= endD) startD = new Date(startD.getTime() - 86400000); // fell asleep the evening before
     if (d > today() || endD.getTime() > Date.now()) { toast('That wake-up hasn\'t happened yet.'); return; }
+    if (ed) { // v80: change it in place, and its star in the sky follows
+      const st = get(), w = wordsOf();
+      ed.start = startD.getTime(); ed.end = endD.getTime(); ed.date = dateKey(endD); ed.feel = feel; if (w) ed.words = w;
+      const mins = Math.round((ed.end - ed.start) / 60000);
+      st.moments.forEach(m => { if (m.ref === ed.id) { m.text = 'Rested ' + hm(mins) + (feel ? ', felt ' + feel_(feel) : ''); m.date = ed.date; } });
+      save(); closeSheet(); render(root); toast('Fixed: ' + timeOf(ed.start) + ' to ' + timeOf(ed.end) + '.'); return;
+    }
     addRest(startD.getTime(), endD.getTime(), feel, wordsOf()); closeSheet(); render(root);
   });
 }
@@ -180,7 +189,7 @@ function render(root) {
       ? '<div class="card"><p><b>Asleep since ' + timeOf(st.pendingSleep) + '</b></p><div class="sleepbtns"><button type="button" class="btn b2" data-wake>Woke up</button><button type="button" class="btn alt" data-cancelsleep>Cancel</button></div></div>'
       : '<div class="sleepbtns"><button type="button" class="btn b1" data-sleep>Going to sleep</button><button type="button" class="btn b2" data-wake>Woke up</button></div>') +
     '<div class="ring">' + ring(rests, date) + '</div>' +
-    (rests.length ? '<div class="card">' + rests.map(r => '<div class="entry"><span class="t">' + timeOf(r.start) + '</span><span>to ' + timeOf(r.end) + ' · ' + hm(Math.round((r.end - r.start) / 60000)) + (r.feel ? ' · ' + esc(feel_(r.feel)) : '') + '</span><button type="button" class="x" data-del="' + r.id + '" aria-label="Remove this rest">×</button></div>').join('') + '</div>' : '') +
+    (rests.length ? '<div class="card">' + rests.map(r => '<div class="entry restentry"><button type="button" class="restfix" data-editrest="' + r.id + '" aria-label="Fix this rest, ' + timeOf(r.start) + ' to ' + timeOf(r.end) + '"><span class="t">' + timeOf(r.start) + '</span><span>to ' + timeOf(r.end) + ' · ' + hm(Math.round((r.end - r.start) / 60000)) + (r.feel ? ' · ' + esc(feel_(r.feel)) : '') + '</span><i aria-hidden="true">✎</i></button><button type="button" class="x" data-del="' + r.id + '" aria-label="Remove this rest">×</button></div>').join('') + '</div>' : '') +
     '<button type="button" class="btn alt wide" data-manual>+ Add a rest by hand</button>' +
     '<a class="rowlink winddown" href="#/road?from=rest"><span>Wind down · a slow ride</span><b>›</b></a>' + // v68
     (() => { const p = new Set(st.rests.map(r => r.date)).size; return '<a class="rowlink" href="#/quilt?from=rest"><span>Your quilt' + (p ? ' · ' + p + (p === 1 ? ' patch' : ' patches') : '') + '</span><b>›</b></a>'; })() +

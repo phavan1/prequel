@@ -1128,3 +1128,7 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .wc-stk { align-self: flex-end; font: 400 17px 'Bangers', Impact, sans-serif; letter-spacing: .04em; background: #E5452F; color: #FFFFFF; border: 2.5px solid #1E1E24; box-shadow: 3px 3px 0 #1E1E24; padding: 3px 10px 1px; transform: rotate(-3deg); margin-top: -4px; }
 .wc-sub { font-weight: 800; font-size: 14px; }
 .wallnudge { border: 2.5px solid #1E1E24; box-shadow: 4px 4px 0 #1E1E24; background: #FFF3C8; }
+/* v80: a logged rest can be fixed: tap it */
+.restentry { gap: 6px; }
+.restfix { flex: 1; display: flex; align-items: center; gap: 10px; min-height: 44px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; padding: 0; cursor: pointer; }
+.restfix i { margin-left: auto; font-style: normal; opacity: .55; font-size: 15px; }

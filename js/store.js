@@ -142,7 +142,7 @@ export function exportJSON() { return JSON.stringify(Object.assign({ exported: n
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const RECORDS = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'cycleDays', 'activities', 'tapes', 'mind', 'letters', 'foods', 'comfort', 'customWorkouts', 'myFoods', 'meals', 'weights', 'goals', 'goalLogs'];
 const DATED = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'cycleDays', 'activities', 'tapes', 'foods', 'meals', 'weights', 'goalLogs'];
-const MAPS = ['heavy', 'lifts', 'units', 'customExercises', 'workoutAdds', 'subsAdded', 'settings', 'sky', 'games'];
+const MAPS = ['heavy', 'lifts', 'units', 'customExercises', 'workoutAdds', 'subsAdded', 'settings', 'sky', 'games', 'wall']; // v80: Your wall too
 export const BACKUP_PROBLEMS = {
   unreadable: 'That file couldn\'t be read, so Prequel can\'t use it. Nothing was changed.',
   notours: 'That doesn\'t look like a Prequel backup. Nothing was changed.',
@@ -161,6 +161,7 @@ export function checkBackup(text) {
   if ('pendingSleep' in d && d.pendingSleep !== null && typeof d.pendingSleep !== 'number') return bad('pendingSleep');
   if (Array.isArray(d.sessions) && !d.sessions.every(s => !('exercises' in s) || (Array.isArray(s.exercises) && s.exercises.every(x => isObj(x) && (!('sets' in x) || Array.isArray(x.sets)))))) return bad('sessions');
   if (isObj(d.settings) && ['tinyWins', 'kindLines', 'dayTabs'].some(k => k in d.settings && !Array.isArray(d.settings[k]))) return bad('settings');
+  if (isObj(d.wall) && (('plans' in d.wall && !(isObj(d.wall.plans) && Object.values(d.wall.plans).every(l => Array.isArray(l) && l.every(isObj)))) || ['phrase', 'made'].some(k => k in d.wall && !isObj(d.wall[k])))) return bad('wall');
   return { data: d };
 }
 // does this hold anything you logged? (a brand-new app doesn't, so there's nothing to keep a copy of)
