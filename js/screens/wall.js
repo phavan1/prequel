@@ -150,7 +150,7 @@ function renderBack() {
     '<div class="wmonth"><button type="button" data-bym="-1" aria-label="Month before"' + (bym <= stepMonth(now, -24) ? ' disabled' : '') + '>‹</button><b>' + esc(monthName(bym)) + '</b><button type="button" data-bym="1" aria-label="Next month"' + (bym >= now ? ' disabled' : '') + '>›</button></div>' +
     (d.any
       ? '<div class="card wback"><b>On the poster</b>' +
-          (d.tiles.length ? '<div class="wtiles">' + d.tiles.map(t => '<span><b>' + t[0] + '</b>' + esc(t[1]) + '</span>').join('') + '</div>' : '') +
+          (d.tiles.length ? '<div class="wtiles">' + d.tiles.map(t => '<span><b>' + t[0] + '</b>' + esc(t[1]) + (t[2] ? '<small>' + esc(t[2]) + '</small>' : '') + '</span>').join('') + '</div>' : '') +
           '<p class="muted" style="margin:0;font-size:13px">' + [d.weather.length ? d.weather.length + (d.weather.length === 1 ? ' day' : ' days') + ' of weather' : '', d.cons.length ? d.cons.map(c => c.name).join(' and ') : d.newStars ? d.newStars + ' new stars' : '', d.quilt.length ? d.quilt.length + ' quilt ' + (d.quilt.length === 1 ? 'patch' : 'patches') : ''].filter(Boolean).map(esc).join(' · ') + '</p>' +
           (d.snd ? '<p style="margin:0;font-size:14px"><b>The soundtrack:</b> ' + esc(d.snd.title) + (d.snd.artist ? ' · ' + esc(d.snd.artist) : '') + '</p>' : d.best ? '<p style="margin:0;font-size:14px"><b>' + esc(d.best[0]) + ':</b> ' + esc(d.best[1]) + '</p>' : '') +
           '<p class="muted" style="margin:0;font-size:13px">' + (photos.length ? 'Your ' + (photos.length === 1 ? 'photo' : photos.length + ' photos') + ' as polaroids.' : 'Your month at a glance: the days you moved, soft days and nights of rest. Or add your own photos below.') + '</p></div>' +

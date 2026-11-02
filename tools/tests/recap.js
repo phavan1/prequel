@@ -91,6 +91,22 @@ const errors = [];
   ok('no song that month: one best bit instead (the heaviest lift)', !r.snd && r.best && r.best[0] === 'Heaviest lift' && /^20 kg, chest press$/.test(r.best[1]), JSON.stringify(r.best));
   r = await draw('2026-09', 'SIDE QUEST SEASON'); fs.writeFileSync(OUT + '/recap-none.png', Buffer.from(r.url.split(',')[1], 'base64'));
   ok('nothing for either: the box goes, the sticker sits in the middle', !r.snd && !r.best);
+  // v88: the moving tile names your top activity, with the rest on a small line
+  ok('October: one badminton game, plus one walk', JSON.stringify(await p.evaluate(async () => (await import('./js/recap.js')).recapData('2026-10').tiles[1])) === '[1,"badminton game","+ 1 walk"]');
+  const many = await p.evaluate(async () => { const S = await import('./js/store.js'), R = await import('./js/recap.js'), C = await import('./js/cards.js'), st = S.get(); await C.fontsReady(); await document.fonts.load('400 100px Bangers');
+    st.moveSetup = Object.assign({ picked: [] }, st.moveSetup || {}); st.moveSetup.custom = Object.assign({}, st.moveSetup.custom, { climb: { n: 'Rock climbing', e: '🧗' } });
+    const add = (m, d, type) => st.activities.push({ id: 'x' + m + d + type, date: '2026-' + m + '-' + String(d).padStart(2, '0'), ts: 9, type, mins: 30, f: {} });
+    for (let d = 1; d <= 24; d += 2) add('07', d, 'badminton'); for (let d = 2; d <= 8; d += 2) add('07', d, 'walk');
+    for (let d = 1; d <= 6; d++) add('06', d * 4, 'kickboxing'); add('06', 3, 'yoga'); add('06', 9, 'yoga'); add('06', 11, 'climb'); add('06', 25, 'swim');
+    for (let d = 1; d <= 30; d += 3) { const k = '2026-07-' + String(d).padStart(2, '0'), e = new Date(k + 'T07:00:00').getTime(); st.rests.push({ id: 'zr' + d, date: k, start: e - 8 * 3600e3, end: e, feel: 'okay' }); }
+    st.moments.push({ id: 'zw', area: 'win', text: 'Went outside', date: '2026-07-05', ts: 5 }); st.sessions.push({ id: 'zs', date: '2026-07-07', ts: 5, workoutId: 'fbA', workoutName: 'Full Body A', exercises: [] });
+    const out = {}; for (const ym of ['2026-07', '2026-06']) { const d = R.recapData(ym); out[ym] = { tile: d.tiles.find(t => /badminton|kickboxing/.test(t[1])), url: R.drawRecap(ym, 'SIDE QUEST SEASON', {}).toDataURL('image/png') }; }
+    out.own = R.actWord('climb', 3); return out; });
+  fs.writeFileSync(OUT + '/recap-moved-two.png', Buffer.from(many['2026-07'].url.split(',')[1], 'base64'));
+  fs.writeFileSync(OUT + '/recap-moved-many.png', Buffer.from(many['2026-06'].url.split(',')[1], 'base64'));
+  ok('12 badminton games, + 4 walks', JSON.stringify(many['2026-07'].tile) === '[12,"badminton games","+ 4 walks"]', JSON.stringify(many['2026-07'].tile));
+  ok('three or more: 6 kickboxing rounds, + 4 more times you moved', JSON.stringify(many['2026-06'].tile) === '[6,"kickboxing rounds","+ 4 more times you moved"]', JSON.stringify(many['2026-06'].tile));
+  ok('your own activity is named too', many.own === 'times: rock climbing', many.own);
   const empty = await p.evaluate(async () => { const R = await import('./js/recap.js'); return R.drawRecap('2026-08', '').toDataURL('image/png').length; });
   ok('an almost empty month still draws kindly', empty > 50000);
   // Plan a month still works from the same page

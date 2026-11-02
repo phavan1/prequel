@@ -14,6 +14,21 @@ import { soundtrackOf } from './music.js';
 import { drawTape } from './cards.js';
 import { EXERCISES } from './data.js';
 import { showNum, wu, isPlate } from './units.js';
+import { actDef } from './activities.js';
+
+// v88: what each activity is called on the recap ("12 badminton games"). Your own activities: "times: <name>".
+const ACT_WORD = { walk: ['walk', 'walks'], run: ['run', 'runs'], cycle: ['ride', 'rides'], swim: ['swim', 'swims'], hike: ['hike', 'hikes'],
+  badminton: ['badminton game', 'badminton games'], football: ['football game', 'football games'], cricket: ['cricket game', 'cricket games'], tennis: ['tennis game', 'tennis games'],
+  kickboxing: ['kickboxing round', 'kickboxing rounds'], mma: ['MMA round', 'MMA rounds'], yoga: ['yoga session', 'yoga sessions'], dance: ['dance class', 'dance classes'], home: ['home workout', 'home workouts'] };
+export const actWord = (id, n) => { const w = ACT_WORD[id]; if (w) return w[n === 1 ? 0 : 1]; return (n === 1 ? 'time: ' : 'times: ') + actDef(id).n.toLowerCase(); };
+// the moving tile: your most-done activity by name, and a small line for the rest
+function movedTile(acts) {
+  if (!acts.length) return [0];
+  const by = {}; acts.forEach(a => { by[a.type] = (by[a.type] || 0) + 1; });
+  const order = Object.keys(by).sort((a, b) => by[b] - by[a] || a.localeCompare(b)), top = order[0], rest = order.slice(1), more = acts.length - by[top];
+  const sub = !rest.length ? '' : rest.length === 1 ? '+ ' + by[rest[0]] + ' ' + actWord(rest[0], by[rest[0]]) : '+ ' + more + ' more ' + (more === 1 ? 'time' : 'times') + ' you moved';
+  return [by[top], actWord(top, by[top]), actWord(top, by[top]), sub];
+}
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const W = 1654, H = 2339, M = 80, INK = '#1E1E24', CREAM = '#FDF3D6', YEL = '#F4C430', BLU = '#1F55D0', RED = '#E5452F', NAVY = '#161D3A';
@@ -32,12 +47,12 @@ export function recapData(ym) {
   const wins = moments.filter(m => m.area === 'win' && inMonth(m.date, ym));
   const tiles = [
     [new Set((st.sessions || []).filter(s => inMonth(s.date, ym)).map(s => s.date)).size, 'rep days', 'rep day'], // v87: days at the gym (two workouts in a day are one rep day)
-    [(st.activities || []).filter(a => inMonth(a.date, ym)).length, 'times you moved', 'time you moved'],
+    movedTile((st.activities || []).filter(a => inMonth(a.date, ym))), // v88: named, with the rest on a small line
     [SOURCES.cooked.items(st).filter(ts => tsIn(ts, ym)).length, 'home-cooked meals', 'home-cooked meal'],
     [wins.length, 'tiny wins', 'tiny win'],
     [new Set((st.rests || []).filter(r => inMonth(r.date, ym)).map(r => r.date)).size, 'nights of rest', 'night of rest'],
     [(st.mind || []).filter(n => tsIn(n.letGo, ym)).length, 'lanterns let go', 'lantern let go']
-  ].filter(t => t[0] > 0).slice(0, 5).map(t => [t[0], t[0] === 1 ? t[2] : t[1]]);
+  ].filter(t => t[0] > 0).slice(0, 5).map(t => [t[0], t[0] === 1 ? t[2] : t[1], t[3] || '']);
   // the sky: constellations that formed this month, and the month's new stars
   let sky = null; try { sky = updateSky(); } catch (e) { sky = st.sky; }
   const byId = Object.fromEntries(moments.map(m => [m.id, m]));
@@ -155,9 +170,16 @@ export function drawRecap(ym, phrase, covers, photos) {
     const x = M + i * (tw + tg), fill = FILLS[i % FILLS.length], dark = fill === RED;
     g.save(); g.translate(x + tw / 2, y + 125); g.rotate(i % 2 ? 0.015 : -0.015); g.translate(-(x + tw / 2), -(y + 125));
     box(g, x, y, tw, 250, fill, { shadow: 12 });
-    g.textAlign = 'center'; const nf = fitFont(g, String(t[0]), BANG, 128, 70, tw - 40);
-    g.font = '400 ' + nf + 'px ' + BANG; g.fillStyle = dark ? '#FFFFFF' : INK; g.fillText(String(t[0]), x + tw / 2, y + 150);
-    wrapLines(g, t[1], '800 27px ' + BODY, tw - 30, 2).forEach((l, j) => { g.font = '800 27px ' + BODY; g.fillStyle = dark ? '#FFFFFF' : INK; g.fillText(l, x + tw / 2, y + 196 + j * 30); });
+    g.textAlign = 'center'; const sub = t[2], nf = fitFont(g, String(t[0]), BANG, sub ? 110 : 128, 70, tw - 40);
+    g.font = '400 ' + nf + 'px ' + BANG; g.fillStyle = dark ? '#FFFFFF' : INK; g.fillText(String(t[0]), x + tw / 2, y + (sub ? 122 : 150));
+    const L = wrapLines(g, t[1], '800 27px ' + BODY, tw - 30, 2), ly0 = sub ? 162 : 196;
+    L.forEach((l, j) => { g.font = '800 27px ' + BODY; g.fillStyle = dark ? '#FFFFFF' : INK; g.fillText(l, x + tw / 2, y + ly0 + j * 30); });
+    if (sub) { // v88: the rest of how you moved, smaller
+      // two lines of label leave room for one small line: it shrinks a little to fit whole, never cut
+      let fs = 22; if (L.length > 1) { while (fs > 16) { g.font = '700 ' + fs + 'px ' + BODY; if (g.measureText(sub).width <= tw - 30) break; fs--; } }
+      const S = L.length > 1 ? [sub] : wrapLines(g, sub, '700 22px ' + BODY, tw - 30, 2), sy = y + ly0 + L.length * 30 + 6;
+      S.forEach((l, j) => { g.font = '700 ' + fs + 'px ' + BODY; g.fillStyle = dark ? '#FFE3DD' : '#5E584B'; g.fillText(l, x + tw / 2, sy + j * 25); });
+    }
     g.restore();
   });
   g.textAlign = 'left';
