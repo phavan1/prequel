@@ -10,7 +10,7 @@ import { get, save, uid, today, dateKey, parseKey } from '../store.js';
 import { esc, nav, backLink, him, openSheet, closeSheet, toast, IOS, canShareFile, saveToDevice, SAVED_NOTE } from '../ui.js';
 import { makePDF, shareFile } from '../pdf.js';
 import { fontsReady, loadCovers } from '../cards.js';
-import { recapData, drawRecap } from '../recap.js';
+import { recapData, drawRecap, photoWin, cropRect } from '../recap.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -120,14 +120,50 @@ function shrink(file) {
 async function onPick(e) {
   const inp = e.target.closest('[data-wphoto]'); if (!inp || !inp.files || !inp.files[0]) return;
   const f = inp.files[0], i = Math.min(Number(inp.dataset.wphoto), photos.length, 2);
-  try { const [img, date] = await Promise.all([shrink(f), photoDate(f)]); photos[i] = { img, cap: photos[i] ? photos[i].cap : '', date }; render(); }
+  try { const [img, date] = await Promise.all([shrink(f), photoDate(f)]); photos[i] = { img, cap: photos[i] ? photos[i].cap : '', date, cx: 0.5, cy: 0.5, z: 1 }; render(); }
   catch (err) { toast('That photo wouldn\'t open. Try another one?'); }
+}
+// v90: what the polaroid will show, as a small picture (your framing, the window's shape)
+const win = () => { const d = recapData(bym); return photoWin(!!(d.snd || d.best)); };
+function framed(p, w) {
+  const W0 = win(), c = document.createElement('canvas'); c.width = w; c.height = Math.round(w * W0.h / W0.w);
+  const r = cropRect(p.img.width, p.img.height, c.width, c.height, p.cx, p.cy, p.z); c.getContext('2d').drawImage(p.img, r.sx, r.sy, r.sw, r.sh, 0, 0, c.width, c.height); return c;
+}
+// move and zoom a photo inside its polaroid window: drag with a finger, a slider for zoom. Forgotten with the photo.
+function cropSheet(i) {
+  const p = photos[i]; if (!p) return;
+  const sheet = openSheet('<h2>Move or zoom</h2><p class="muted" style="margin:0;font-size:13px">Drag the photo until it looks right. This is exactly what the polaroid shows.</p>' +
+    '<div class="wcropbox"><canvas class="wcrop" aria-label="Your photo in its polaroid window"></canvas></div>' +
+    '<label class="wzoom"><span>Zoom</span><input type="range" min="1" max="3" step="0.01" value="' + p.z + '" data-wz aria-label="Zoom"></label>' +
+    '<div class="grid2"><button type="button" class="btn alt" data-wreset>Start again</button><button type="button" class="btn" data-close>Done</button></div>', ev => {
+    if (ev.target.closest('[data-wreset]')) { p.cx = 0.5; p.cy = 0.5; p.z = 1; sheet.querySelector('[data-wz]').value = 1; draw(); render(); }
+  });
+  const cv = sheet.querySelector('.wcrop'), W0 = win(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const size = () => { const w = cv.parentNode.clientWidth || 300; cv.style.width = w + 'px'; cv.style.height = Math.round(w * W0.h / W0.w) + 'px'; cv.width = Math.round(w * dpr); cv.height = Math.round(w * W0.h / W0.w * dpr); };
+  const settle = () => { // keep the middle where the window can actually reach, so a drag never feels stuck
+    const r = cropRect(p.img.width, p.img.height, W0.w, W0.h, p.cx, p.cy, p.z);
+    p.cx = (r.sx + r.sw / 2) / p.img.width; p.cy = (r.sy + r.sh / 2) / p.img.height;
+  };
+  const draw = () => { const r = cropRect(p.img.width, p.img.height, cv.width, cv.height, p.cx, p.cy, p.z), g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(p.img, r.sx, r.sy, r.sw, r.sh, 0, 0, cv.width, cv.height); };
+  size(); draw();
+  let last = null;
+  cv.addEventListener('pointerdown', e => { last = [e.clientX, e.clientY]; try { cv.setPointerCapture(e.pointerId); } catch (er) { /* fine */ } e.preventDefault(); });
+  cv.addEventListener('pointermove', e => {
+    if (!last) return;
+    const r = cropRect(p.img.width, p.img.height, cv.width, cv.height, p.cx, p.cy, p.z), k = r.sw / cv.clientWidth; // photo pixels per screen pixel
+    p.cx -= (e.clientX - last[0]) * k / p.img.width; p.cy -= (e.clientY - last[1]) * k / p.img.height; last = [e.clientX, e.clientY];
+    settle(); draw();
+  });
+  const up = () => { if (last) { last = null; render(); } };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  sheet.querySelector('[data-wz]').addEventListener('input', e => { p.z = Number(e.target.value); settle(); draw(); });
+  sheet.querySelector('[data-wz]').addEventListener('change', () => render());
 }
 function photosCard(d) {
   const chips = (d.hls || []).slice(0, 4);
   return '<div class="card wphotos"><b>Your photos <span class="muted" style="font-weight:600">(if you like)</span></b>' +
     '<p class="muted" style="margin:0;font-size:13px">Up to three, printed as polaroids. They\'re never saved: leave this page and they\'re gone.</p>' +
-    photos.map((p, i) => '<div class="wph"><img src="' + p.img.toDataURL('image/jpeg', 0.6) + '" alt="Photo ' + (i + 1) + '"><div class="wphr">' +
+    photos.map((p, i) => '<div class="wph"><button type="button" class="wthumb" data-wcrop="' + i + '" aria-label="Move or zoom photo ' + (i + 1) + '"><img src="' + framed(p, 192).toDataURL('image/jpeg', 0.7) + '" alt=""><span>Move or zoom</span></button><div class="wphr">' +
       '<input type="text" maxlength="32" data-wcap="' + i + '" value="' + esc(p.cap) + '" placeholder="a few words, if you like" aria-label="Caption for photo ' + (i + 1) + '">' +
       (chips.length ? '<div class="wchips">' + chips.map(h => '<button type="button" class="wchip" data-wchip="' + i + '" data-t="' + esc(h) + '">' + esc(h) + '</button>').join('') + '</div>' : '') +
       '<p class="muted" style="margin:0;font-size:12px">' + (p.date ? 'Left empty, it says ' + esc(p.date) + '.' : 'Left empty, the caption stays blank.') + '</p>' +
@@ -188,6 +224,7 @@ function onClick(e) {
   if ((b = t.closest('[data-mode]'))) { mode = b.dataset.mode; render(); window.scrollTo(0, 0); return; }
   if ((b = t.closest('[data-bym]')) && !b.disabled) { bym = stepMonth(bym, Number(b.dataset.bym)); photos = []; render(); return; } // photos belong to one month
   if ((b = t.closest('[data-wchip]'))) { const p = photos[b.dataset.wchip]; if (p) { p.cap = b.dataset.t.slice(0, 32); render(); } return; }
+  if ((b = t.closest('[data-wcrop]'))) { cropSheet(Number(b.dataset.wcrop)); return; }
   if ((b = t.closest('[data-wdel]'))) { photos.splice(Number(b.dataset.wdel), 1); render(); return; }
   if (t.closest('[data-recap]')) { makeRecap(); return; }
   if (t.closest('[data-shuffle]')) { // the next one from the list (your own phrase is set aside)

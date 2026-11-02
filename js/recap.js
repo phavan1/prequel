@@ -31,6 +31,13 @@ function movedTile(acts) {
 }
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+// v90: a polaroid's photo window (416 wide; shorter when there's a box at the bottom), and which part of a photo
+// shows in it: cx, cy = the middle of what shows (0 to 1 across the photo), z = zoom (1 = just fills the window)
+export const photoWin = bottom => ({ w: 416, h: bottom ? 280 : 350 });
+export function cropRect(iw, ih, ww, wh, cx = 0.5, cy = 0.5, z = 1) {
+  const s = Math.max(ww / iw, wh / ih) * Math.max(1, z), sw = ww / s, sh = wh / s;
+  return { sx: Math.min(Math.max(0, cx * iw - sw / 2), iw - sw), sy: Math.min(Math.max(0, cy * ih - sh / 2), ih - sh), sw, sh };
+}
 const W = 1654, H = 2339, M = 80, INK = '#1E1E24', CREAM = '#FDF3D6', YEL = '#F4C430', BLU = '#1F55D0', RED = '#E5452F', NAVY = '#161D3A';
 const BANG = '"Bangers", "Impact", sans-serif', BODY = '"Nunito", system-ui, sans-serif', HAND = '"Gaegu", cursive';
 const inMonth = (k, ym) => typeof k === 'string' && k.startsWith(ym);
@@ -241,8 +248,8 @@ export function drawRecap(ym, phrase, covers, photos) {
       g.save(); g.translate(x + fw / 2, y + fh / 2); g.rotate(TILT[i]); g.translate(-(x + fw / 2), -(y + fh / 2));
       box(g, x, y, fw, fh, '#FFFFFF', { shadow: 10, lw: 5, r: 3 });
       // the photo, filling its window (cropped from the middle)
-      const iw = p.img.width, ih = p.img.height, bw0 = fw - 44, s2 = Math.max(bw0 / iw, ph / ih), sw = bw0 / s2, sh2 = ph / s2;
-      g.drawImage(p.img, (iw - sw) / 2, (ih - sh2) / 2, sw, sh2, x + 22, y + 22, bw0, ph);
+      const bw0 = fw - 44, cr = cropRect(p.img.width, p.img.height, bw0, ph, p.cx, p.cy, p.z); // v90: your framing
+      g.drawImage(p.img, cr.sx, cr.sy, cr.sw, cr.sh, x + 22, y + 22, bw0, ph);
       g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(x + 22, y + 22, bw0, ph);
       const cap = (p.cap || '').trim() || p.date || '';
       g.textAlign = 'center';

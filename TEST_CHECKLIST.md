@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v90) Look back: tap a photo's thumbnail → Move or zoom; drag with a finger (the page shouldn't scroll), zoom with the slider; Done; the thumbnail and the recap show the same framing.
 - [ ] (v89) The recap's quilt box: white title strip, then patches edge to edge with no gaps (try a month with few nights and one with many); gold stars on soft days.
 - [ ] (v88) Look back on a month with activities: the moving tile names the most-done one ("12 badminton games") with "+ 4 walks" or "+ N more times you moved" underneath; nothing is cut off when printed.
 - [ ] (v87) "Rep days" on the recap, the Milestone share card, the Move report, a gym milestone, the Gym tile on Move ("Rep day N next" / "Reps in today") and the journey's Gym view; two workouts on one day count as one.

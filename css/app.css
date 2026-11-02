@@ -1142,7 +1142,13 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .wphotos { display: flex; flex-direction: column; gap: 10px; }
 .wph { display: flex; gap: 12px; align-items: flex-start; padding: 10px; border: 2.5px solid #1E1E24; border-radius: 6px; box-shadow: 3px 3px 0 #1E1E24; background: #FFFFFF; }
-.wph img { width: 84px; height: 84px; object-fit: cover; border-radius: 3px; border: 2px solid #1E1E24; flex: none; }
+.wthumb { flex: none; width: 96px; padding: 0; border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--blue, #1F55D0); font: 800 11px 'Nunito', sans-serif; cursor: pointer; }
+.wthumb img { width: 96px; height: auto; display: block; border-radius: 3px; border: 2px solid #1E1E24; }
+/* v90: move or zoom a photo */
+.wcropbox { width: 100%; border: 3px solid #1E1E24; border-radius: 4px; box-shadow: 4px 4px 0 #1E1E24; overflow: hidden; background: #FFFFFF; }
+.wcrop { display: block; touch-action: none; cursor: grab; }
+.wzoom { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 14px; }
+.wzoom input { flex: 1; accent-color: #1F55D0; }
 .wphr { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
 .wphr input { width: 100%; box-sizing: border-box; font: 700 18px 'Gaegu', 'Nunito', sans-serif; padding: 6px 8px; border: 2px solid #1E1E24; border-radius: 6px; background: #FFFDF6; color: #1E1E24; }
 .wphr input::placeholder { color: #9A9384; }
