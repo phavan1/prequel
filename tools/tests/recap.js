@@ -1,5 +1,6 @@
 // v81: "Look what you did", the month's recap poster (A4 portrait), on Your wall's "Look back", and its Home
 // nudge in the first week of a month. Throwaway profile, a made-up October.
+// v84: the month at a glance when there are no photos; your own photos (never saved) as polaroids; Save as picture.
 // Run: PREQUEL_URL=http://localhost:8765/ node tools/tests/recap.js
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs'); const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';
@@ -45,11 +46,42 @@ const errors = [];
   await p.click('[data-recap]'); await p.waitForTimeout(3000);
   const pdf = await p.evaluate(async () => { const f = document.querySelector('main').__poster; const t = new TextDecoder('latin1').decode(new Uint8Array(await f.arrayBuffer())); return { name: f.name, box: (t.match(/MediaBox \[([^\]]+)\]/) || [])[1] }; });
   ok('a one-page A4 portrait PDF', /^0 0 595\.28 841\.89$/.test(pdf.box) && pdf.name === 'October 2026 recap.pdf', JSON.stringify(pdf));
+  const png = await p.evaluate(async () => { const f = document.querySelector('main').__png; const u = new Uint8Array(await f.arrayBuffer()); return { name: f.name, type: f.type, sig: Array.from(u.slice(1, 4)).map(c => String.fromCharCode(c)).join(''), size: u.length }; });
+  ok('and the same as a picture (PNG)', png.name === 'October 2026 recap.png' && png.type === 'image/png' && png.sig === 'PNG', JSON.stringify(png));
+  ok('two ways out: PDF to print, Save as picture', /PDF to print/.test(await p.locator('#sheet').innerText()) && /Save as picture/.test(await p.locator('#sheet').innerText()));
+  await p.screenshot({ path: OUT + '/rc-sheet.png' });
   await p.click('#sheet [data-close]').catch(() => {});
+  // ---- your photos (v84) ----
+  const jpg = Buffer.from((await p.evaluate(() => { const c = document.createElement('canvas'); c.width = 1600; c.height = 1200; const g = c.getContext('2d'); const gr = g.createLinearGradient(0, 0, 1600, 1200); gr.addColorStop(0, '#F6B24A'); gr.addColorStop(1, '#4E77DE'); g.fillStyle = gr; g.fillRect(0, 0, 1600, 1200); g.fillStyle = '#fff'; g.beginPath(); g.arc(800, 600, 260, 0, 7); g.fill(); return c.toDataURL('image/jpeg', 0.8); })).split(',')[1], 'base64');
+  const exif = (() => { const t = Buffer.alloc(64); t.write('MM', 0, 'latin1'); t.writeUInt16BE(42, 2); t.writeUInt32BE(8, 4); t.writeUInt16BE(1, 8); t.writeUInt16BE(0x8769, 10); t.writeUInt16BE(4, 12); t.writeUInt32BE(1, 14); t.writeUInt32BE(26, 18); t.writeUInt32BE(0, 22);
+    t.writeUInt16BE(1, 26); t.writeUInt16BE(0x9003, 28); t.writeUInt16BE(2, 30); t.writeUInt32BE(20, 32); t.writeUInt32BE(44, 36); t.writeUInt32BE(0, 40); t.write('2026:10:14 18:30:00\0', 44, 'latin1');
+    const body = Buffer.concat([Buffer.from('Exif\0\0', 'latin1'), t]), h = Buffer.alloc(4); h.writeUInt16BE(0xFFE1, 0); h.writeUInt16BE(body.length + 2, 2); return Buffer.concat([h, body]); })();
+  const withDate = Buffer.concat([jpg.slice(0, 2), exif, jpg.slice(2)]);
+  await p.goto(BASE + '#/wall?from=me&back=2026-10'); await p.waitForTimeout(500);
+  ok('with no photos, the page says the month at a glance', /month at a glance/.test(await p.locator('main').innerText()));
+  await p.setInputFiles('[data-wphoto]', { name: 'a.jpg', mimeType: 'image/jpeg', buffer: withDate }); await p.waitForTimeout(700);
+  ok('a photo shows, with its date from the photo', await p.locator('.wph').count() === 1 && /says 14 October/.test(await p.locator('.wph').innerText()), await p.locator('.wph').innerText().catch(() => ''));
+  ok('the caption starts empty, with a soft hint', (await p.locator('[data-wcap="0"]').inputValue()) === '' && (await p.locator('[data-wcap="0"]').getAttribute('placeholder')) === 'a few words, if you like');
+  await p.click('[data-wchip="0"] >> nth=0'); await p.waitForTimeout(200);
+  ok('tapping a highlight fills the caption', (await p.locator('[data-wcap="0"]').inputValue()) === 'First 60 kg squat');
+  await p.setInputFiles('[data-wphoto]', { name: 'b.jpg', mimeType: 'image/jpeg', buffer: jpg }); await p.waitForTimeout(700);
+  await p.fill('[data-wcap="1"]', 'Sunday with Amma');
+  await p.setInputFiles('[data-wphoto]', { name: 'c.jpg', mimeType: 'image/jpeg', buffer: jpg }); await p.waitForTimeout(700);
+  ok('three photos, then no more room', await p.locator('.wph').count() === 3 && await p.locator('[data-wphoto]').count() === 0 && (await p.locator('[data-wcap="1"]').inputValue()) === 'Sunday with Amma');
+  await p.screenshot({ path: OUT + '/rc-photos.png', fullPage: true });
+  await p.click('[data-wdel="2"]'); await p.waitForTimeout(200);
+  ok('a photo can be removed', await p.locator('.wph').count() === 2);
+  await p.click('[data-recap]'); await p.waitForTimeout(3000);
+  const shot = await p.locator('#sheet img.wprev').getAttribute('src'); fs.writeFileSync(OUT + '/recap-photos.jpg', Buffer.from(shot.split(',')[1], 'base64'));
+  await p.click('#sheet [data-close]').catch(() => {});
+  ok('photos are never saved', !JSON.stringify(await st()).includes('data:image'));
+  await p.goto(BASE + '#/me'); await p.goto(BASE + '#/wall?from=me&back=2026-10'); await p.waitForTimeout(500);
+  ok('leave the page and they\'re gone', await p.locator('.wph').count() === 0);
   await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(400);
   ok('once you\'ve looked, the nudge rests', await p.locator('a.wallnudge.recap').count() === 0);
-  const data = await p.evaluate(async () => { const R = await import('./js/recap.js'); const d = R.recapData('2026-10'); return { w: d.weather.length, caps: d.caps, snd: d.snd && d.snd.title, best: d.best, cons: d.cons.map(c => c.name), quilt: d.quilt.length }; });
-  ok('captions come from your highlights first', data.caps[0] === 'First 60 kg squat' && data.caps[1] === 'Survived midterm week', JSON.stringify(data.caps));
+  const data = await p.evaluate(async () => { const R = await import('./js/recap.js'); const d = R.recapData('2026-10'); return { w: d.weather.length, hls: d.hls, moved: d.moved.size, rested: d.rested.size, soft: d.softDays.size, snd: d.snd && d.snd.title, best: d.best, cons: d.cons.map(c => c.name), quilt: d.quilt.length }; });
+  ok('caption ideas are only your Move highlights (no tiny wins)', JSON.stringify(data.hls) === '["First 60 kg squat","Survived midterm week"]', JSON.stringify(data.hls));
+  ok('the glance counts days moved, rest nights and soft days', data.moved === 18 && data.rested === 10 && data.soft === 1, JSON.stringify(data));
   ok('the bottom: the month\'s soundtrack (no tiny win)', data.snd === 'Golden Hour' && !data.best, JSON.stringify(data));
   ok('the page says the soundtrack, not a tiny win', /The soundtrack: Golden Hour/.test(page) && !/A tiny win/.test(page));
   const draw = async (ym, ph, prep) => p.evaluate(async ([ym, ph, prep]) => { const S = await import('./js/store.js'), R = await import('./js/recap.js'), C = await import('./js/cards.js'); await C.fontsReady(); await document.fonts.load('400 100px Bangers');

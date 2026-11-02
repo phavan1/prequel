@@ -189,6 +189,8 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v84) Look back with no photos: the recap shows "Your month at a glance" (blue circles, gold stars, moons, legend in words). Add a photo from the iPhone: it shows with an empty caption; a highlight chip fills it; an empty caption prints the photo's date. Leave the page and come back: the photos are gone.
+- [ ] (v84) Both posters: "PDF to print" opens the share sheet with the PDF; "Save as picture" opens it with a PNG (Save Image puts it in Photos).
 - [ ] (v83) Look back: a month with a song on repeat shows the soundtrack at the bottom; without one, a best bit (heaviest lift, longest rest or most active week).
 - [ ] (v82) After the 25th, Home has no poster reminder.
 - [ ] (v81) Your wall → Look back: pick October, check the summary, make the recap, print it A4 portrait. In the first week of a month, Home says the recap is ready (gone once you've looked).

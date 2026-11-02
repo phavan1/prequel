@@ -1138,3 +1138,15 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .wtiles span { display: flex; flex-direction: column; min-width: 84px; padding: 8px 10px; border: 2.5px solid #1E1E24; border-radius: 6px; box-shadow: 3px 3px 0 #1E1E24; background: #FFF3C8; color: #1E1E24; font-size: 12px; font-weight: 800; }
 .wtiles span b { font: 400 28px/1 'Bangers', Impact, sans-serif; }
 .wallnudge.recap { background: #E4ECFF; }
+/* v84: your photos on the recap (never saved) */
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.wphotos { display: flex; flex-direction: column; gap: 10px; }
+.wph { display: flex; gap: 12px; align-items: flex-start; padding: 10px; border: 2.5px solid #1E1E24; border-radius: 6px; box-shadow: 3px 3px 0 #1E1E24; background: #FFFFFF; }
+.wph img { width: 84px; height: 84px; object-fit: cover; border-radius: 3px; border: 2px solid #1E1E24; flex: none; }
+.wphr { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.wphr input { width: 100%; box-sizing: border-box; font: 700 18px 'Gaegu', 'Nunito', sans-serif; padding: 6px 8px; border: 2px solid #1E1E24; border-radius: 6px; background: #FFFDF6; color: #1E1E24; }
+.wphr input::placeholder { color: #9A9384; }
+.wchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wchip { font: 700 12px 'Nunito', sans-serif; padding: 4px 9px; border: 2px solid #1E1E24; border-radius: 999px; background: #D8E5FF; color: #1E1E24; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wphr .lnk { align-self: flex-start; }
+.wadd { position: relative; text-align: center; cursor: pointer; }

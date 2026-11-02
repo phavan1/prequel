@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v84: empty photo frames felt like homework, so by default the recap shows "your month at a glance" (shapes, not only colour, with a legend in words). Photos are optional, picked fresh each time and never saved (private by default; no storage growth). Captions start empty because Prequel can't know what a photo shows; highlights are offered as chips, and an empty caption falls back to the photo's date. Both posters can be saved as a picture (PNG) as well as a PDF.
 - v82: **no reminder to make a planner**, anywhere (Phavan: Prequel has no pressure, and a monthly "make your poster" is a job). The recap reminder stays: it points at what you already did, not at something to do.
 - v81: **Look what you did** (Phavan): portrait; a tiny win instead of a letter line (letters stay sealed); no character; the Home line says the recap "is ready" (nothing to make). Only numbers above zero. Empty polaroid frames for real photos. First version, to be iterated.
 - v80: a logged rest can be fixed, not only removed (Phavan). Your wall is part of backups (it always was) and is now checked like everything else.

@@ -59,7 +59,9 @@ const errors = [];
   await p.screenshot({ path: OUT + '/wall-page.png', fullPage: true });
   // the poster
   await p.click('[data-poster]'); await p.waitForTimeout(2500);
-  ok('the poster sheet shows a preview and a way to save', await p.locator('#sheet img.wprev').count() === 1 && await p.locator('#sheet [data-savepdf], #sheet [data-sharepdf]').count() >= 1);
+  ok('the poster sheet shows a preview, PDF to print and Save as picture (v84)', await p.locator('#sheet img.wprev').count() === 1 && await p.locator('#sheet [data-out="pdf"]').count() === 1 && await p.locator('#sheet [data-out="png"]').count() === 1);
+  const pPng = await p.evaluate(() => { const f = document.querySelector('main').__png; return f && f.name + ' ' + f.type; });
+  ok('the planner comes as a picture too', /poster\.png image\/png$/.test(pPng || ''), pPng);
   const pdf = await p.evaluate(async () => { const f = document.querySelector('main').__poster; const t = new TextDecoder('latin1').decode(new Uint8Array(await f.arrayBuffer())); return { name: f.name, size: f.size, box: (t.match(/MediaBox \[([^\]]+)\]/) || [])[1], pages: (t.match(/\/Type \/Page /g) || []).length }; });
   ok('a one-page A4 landscape PDF', pdf.pages === 1 && /^0 0 841\.89 595\.28$/.test(pdf.box) && /December 2026 poster\.pdf/.test(pdf.name), JSON.stringify(pdf));
   await p.screenshot({ path: OUT + '/wall-ready.png' });

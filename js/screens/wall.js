@@ -42,7 +42,7 @@ const STAMP = {
 };
 const svgIcon = (k, s = 18) => ICONS[k] && ICONS[k].p ? '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICONS[k].p + '"/></svg>' : '';
 
-let ym = null, root = null, mode = 'plan', bym = null; // mode (v81): 'plan' (the planner) or 'back' (Look what you did, for bym)
+let ym = null, root = null, mode = 'plan', bym = null, photos = []; // photos (v84): [{ img, cap, date }], never saved, forgotten when you leave // mode (v81): 'plan' (the planner) or 'back' (Look what you did, for bym)
 const W = () => { const st = get(); st.wall = st.wall || {}; st.wall.plans = st.wall.plans || {}; st.wall.phrase = st.wall.phrase || {}; st.wall.made = st.wall.made || {}; return st.wall; };
 const ymOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 const stepMonth = (k, n) => { const [y, m] = k.split('-').map(Number); return ymOf(new Date(y, m - 1 + n, 1)); };
@@ -76,8 +76,64 @@ export function mount(r, params = {}) {
   if (params.back) { mode = 'back'; bym = params.back.length === 7 ? params.back : null; } // ?back=YYYY-MM from the Home nudge
   // the month to plan: this month, or next month once this one is nearly over
   if (!ym) ym = defaultYm();
+  photos = [];
   render();
   root.addEventListener('click', onClick);
+  root.addEventListener('change', onPick);
+  root.addEventListener('input', e => { const b = e.target.closest('[data-wcap]'); if (b && photos[b.dataset.wcap]) photos[b.dataset.wcap].cap = b.value; });
+}
+export function unmount() { photos = []; } // leaving the page forgets the photos
+
+// ---------- your photos on the recap (v84): picked fresh each time, kept only while this page is open ----------
+// the date a photo was taken, from its EXIF (JPEG only), in words; '' when it can't tell
+async function photoDate(file) {
+  try {
+    const v = new DataView(await file.slice(0, 256 * 1024).arrayBuffer());
+    if (v.getUint16(0) !== 0xFFD8) return '';
+    let o = 2;
+    while (o + 4 < v.byteLength) {
+      const mk = v.getUint16(o), len = v.getUint16(o + 2);
+      if (mk === 0xFFE1 && v.getUint32(o + 4) === 0x45786966) { // "Exif"
+        const t = o + 10, le = v.getUint16(t) === 0x4949, u16 = a => v.getUint16(a, le), u32 = a => v.getUint32(a, le);
+        const find = (ifd, tag) => { const n = u16(t + ifd); for (let i = 0; i < n; i++) { const e = t + ifd + 2 + i * 12; if (u16(e) === tag) return e; } return 0; };
+        const ex = find(u32(t + 4), 0x8769); if (!ex) return '';
+        const e = find(u32(ex + 8), 0x9003) || find(u32(ex + 8), 0x9004); if (!e) return '';
+        let str = ''; const at = t + u32(e + 8); for (let i = 0; i < 19; i++) str += String.fromCharCode(v.getUint8(at + i));
+        const m = str.match(/^(\d{4}):(\d{2}):(\d{2})/); if (!m) return '';
+        return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' });
+      }
+      if ((mk & 0xFF00) !== 0xFF00) return '';
+      o += 2 + len;
+    }
+  } catch (e) { /* no date, that's fine */ }
+  return '';
+}
+// a smaller copy (about 1200 px on the long side): plenty for print, light on the phone
+function shrink(file) {
+  return new Promise((ok, no) => {
+    const u = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { const s = Math.min(1, 1200 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * s); c.height = Math.round(im.naturalHeight * s); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c); };
+    im.onerror = () => { URL.revokeObjectURL(u); no(new Error('not a picture')); };
+    im.src = u;
+  });
+}
+async function onPick(e) {
+  const inp = e.target.closest('[data-wphoto]'); if (!inp || !inp.files || !inp.files[0]) return;
+  const f = inp.files[0], i = Math.min(Number(inp.dataset.wphoto), photos.length, 2);
+  try { const [img, date] = await Promise.all([shrink(f), photoDate(f)]); photos[i] = { img, cap: photos[i] ? photos[i].cap : '', date }; render(); }
+  catch (err) { toast('That photo wouldn\'t open. Try another one?'); }
+}
+function photosCard(d) {
+  const chips = (d.hls || []).slice(0, 4);
+  return '<div class="card wphotos"><b>Your photos <span class="muted" style="font-weight:600">(if you like)</span></b>' +
+    '<p class="muted" style="margin:0;font-size:13px">Up to three, printed as polaroids. They\'re never saved: leave this page and they\'re gone.</p>' +
+    photos.map((p, i) => '<div class="wph"><img src="' + p.img.toDataURL('image/jpeg', 0.6) + '" alt="Photo ' + (i + 1) + '"><div class="wphr">' +
+      '<input type="text" maxlength="32" data-wcap="' + i + '" value="' + esc(p.cap) + '" placeholder="a few words, if you like" aria-label="Caption for photo ' + (i + 1) + '">' +
+      (chips.length ? '<div class="wchips">' + chips.map(h => '<button type="button" class="wchip" data-wchip="' + i + '" data-t="' + esc(h) + '">' + esc(h) + '</button>').join('') + '</div>' : '') +
+      '<p class="muted" style="margin:0;font-size:12px">' + (p.date ? 'Left empty, it says ' + esc(p.date) + '.' : 'Left empty, the caption stays blank.') + '</p>' +
+      '<button type="button" class="lnk" data-wdel="' + i + '">Remove this photo</button></div></div>').join('') +
+    (photos.length < 3 ? '<label class="btn alt wadd"><input type="file" accept="image/*" data-wphoto="' + photos.length + '" class="vh">Add a photo</label>' : '') +
+    '</div>';
 }
 
 const modeHtml = () => '<div class="seg wmodes" role="group" aria-label="Which poster"><button type="button" data-mode="plan" aria-pressed="' + (mode === 'plan') + '">Plan a month</button><button type="button" data-mode="back" aria-pressed="' + (mode === 'back') + '">Look back</button></div>';
@@ -97,7 +153,8 @@ function renderBack() {
           (d.tiles.length ? '<div class="wtiles">' + d.tiles.map(t => '<span><b>' + t[0] + '</b>' + esc(t[1]) + '</span>').join('') + '</div>' : '') +
           '<p class="muted" style="margin:0;font-size:13px">' + [d.weather.length ? d.weather.length + (d.weather.length === 1 ? ' day' : ' days') + ' of weather' : '', d.cons.length ? d.cons.map(c => c.name).join(' and ') : d.newStars ? d.newStars + ' new stars' : '', d.quilt.length ? d.quilt.length + ' quilt ' + (d.quilt.length === 1 ? 'patch' : 'patches') : ''].filter(Boolean).map(esc).join(' · ') + '</p>' +
           (d.snd ? '<p style="margin:0;font-size:14px"><b>The soundtrack:</b> ' + esc(d.snd.title) + (d.snd.artist ? ' · ' + esc(d.snd.artist) : '') + '</p>' : d.best ? '<p style="margin:0;font-size:14px"><b>' + esc(d.best[0]) + ':</b> ' + esc(d.best[1]) + '</p>' : '') +
-          '<p class="muted" style="margin:0;font-size:13px">Three empty photo frames, for real photos of your month.</p></div>' +
+          '<p class="muted" style="margin:0;font-size:13px">' + (photos.length ? 'Your ' + (photos.length === 1 ? 'photo' : photos.length + ' photos') + ' as polaroids.' : 'Your month at a glance: the days you moved, soft days and nights of rest. Or add your own photos below.') + '</p></div>' +
+        photosCard(d) +
         '<div class="card wphrase"><b>The sticker</b><p class="muted" style="font-size:13px;margin:0">The same phrase as ' + esc(name) + '\'s planner.</p><div class="wstk"><span class="wsticker blue">' + esc(phraseOf(bym)) + '</span></div><div class="grid2"><button type="button" class="btn alt" data-shuffle>Shuffle</button><button type="button" class="btn alt" data-ownphrase>Write my own</button></div></div>' +
         '<button type="button" class="btn wide" data-recap>Make my ' + esc(name) + ' recap</button>' +
         '<p class="muted" style="font-size:12px;text-align:center;margin:0">A4 portrait, in colour. Print it and stick it up.</p>'
@@ -129,7 +186,9 @@ function onClick(e) {
   if ((b = t.closest('[data-wday]'))) { daySheet(b.dataset.wday); return; }
   if (t.closest('[data-poster]')) { makePoster(); return; }
   if ((b = t.closest('[data-mode]'))) { mode = b.dataset.mode; render(); window.scrollTo(0, 0); return; }
-  if ((b = t.closest('[data-bym]')) && !b.disabled) { bym = stepMonth(bym, Number(b.dataset.bym)); render(); return; }
+  if ((b = t.closest('[data-bym]')) && !b.disabled) { bym = stepMonth(bym, Number(b.dataset.bym)); photos = []; render(); return; } // photos belong to one month
+  if ((b = t.closest('[data-wchip]'))) { const p = photos[b.dataset.wchip]; if (p) { p.cap = b.dataset.t.slice(0, 32); render(); } return; }
+  if ((b = t.closest('[data-wdel]'))) { photos.splice(Number(b.dataset.wdel), 1); render(); return; }
   if (t.closest('[data-recap]')) { makeRecap(); return; }
   if (t.closest('[data-shuffle]')) { // the next one from the list (your own phrase is set aside)
     const k = cur(), L = PHRASES(MON(k)), i = L.indexOf(phraseOf(k)); W().phrase[k] = L[(i < 0 ? pick0(k) : i + 1) % L.length]; save(); render(); return;
@@ -277,39 +336,32 @@ async function makeRecap() {
   try {
     await fontsReady(); if (document.fonts) await document.fonts.load('400 100px Bangers').catch(() => null);
     const covers = await Promise.race([loadCovers().catch(() => ({})), new Promise(r => setTimeout(() => r({}), 4000))]); // the soundtrack's cover, if it loads in time
-    const c = drawRecap(k, phraseOf(k), covers), file = new File([makePDF([c])], name + ' ' + k.slice(0, 4) + ' recap.pdf', { type: 'application/pdf' });
-    readySheet('Your ' + name + ' recap', c, file, 'A4 portrait. In the print options, pick portrait and "fit to page".');
+    const c = drawRecap(k, phraseOf(k), covers, photos);
+    await readySheet('Your ' + name + ' recap', c, name + ' ' + k.slice(0, 4) + ' recap', false, 'A4 portrait. To print, pick portrait and "fit to page".');
   } catch (err) { closeSheet(); toast('Something went wrong making the recap.'); console.error(err); }
 }
-function readySheet(title, c, file, tip) {
+// v84: two ways out, for both posters: a PDF to print, or a picture (PNG) for your photos or to send.
+// Both files are made before the buttons show, so the iPhone share sheet opens straight from the tap.
+async function readySheet(title, c, base, landscape, tip) {
+  const pdf = new File([makePDF([c], landscape)], base + '.pdf', { type: 'application/pdf' });
+  const blob = await new Promise(r => c.toBlob(r, 'image/png')), png = blob ? new File([blob], base + '.png', { type: 'image/png' }) : null;
   openSheet('<h2>' + esc(title) + '</h2><img class="wprev" src="' + c.toDataURL('image/jpeg', 0.7) + '" alt="' + esc(title) + '">' +
-    '<p class="muted" style="margin:0;font-size:13px">' + esc(tip) + '</p>' +
-    (IOS ? '<button type="button" class="btn" data-sharepdf>Share, save or print the PDF</button>'
-      : '<button type="button" class="btn" data-savepdf>Save to this phone</button>' + (canShareFile(file) ? '<button type="button" class="btn alt" data-sharepdf>Share it</button>' : '')) +
-    '<button type="button" class="btn ' + (IOS ? 'alt' : 'ghost') + '" data-close>Done</button>', async ev => {
-    if (ev.target.closest('[data-savepdf]')) { saveToDevice(file); toast(SAVED_NOTE); return; }
-    if (!ev.target.closest('[data-sharepdf]')) return;
-    const r = await shareFile(file); if (r === 'saved') toast(SAVED_NOTE);
+    '<div class="grid2"><button type="button" class="btn" data-out="pdf">PDF to print</button>' + (png ? '<button type="button" class="btn" data-out="png">Save as picture</button>' : '') + '</div>' +
+    '<p class="muted" style="margin:0;font-size:13px">' + esc(tip) + (IOS ? ' The picture can go straight into your Photos.' : '') + '</p>' +
+    '<button type="button" class="btn ghost" data-close>Done</button>', async ev => {
+    const b = ev.target.closest('[data-out]'); if (!b) return;
+    const f = b.dataset.out === 'png' ? png : pdf;
+    if (!IOS && !canShareFile(f)) { saveToDevice(f); toast(SAVED_NOTE); return; }
+    const r = await shareFile(f); if (r === 'saved') toast(SAVED_NOTE);
   });
-  root.__poster = file; // for the automated tests only
+  root.__poster = pdf; root.__png = png; // for the automated tests only
 }
 async function makePoster() {
-  const k = ym;
+  const k = ym, name = MONTHS[Number(k.slice(5)) - 1];
   openSheet('<h2>Making your poster…</h2><p class="muted">Just a moment.</p>');
   try {
     await fontsReady(); if (document.fonts) await document.fonts.load('400 100px Bangers').catch(() => null);
-    W().made[k] = Date.now(); save(); // the Home nudge can rest now
-    const c = drawPoster(k), file = new File([makePDF([c], true)], MONTHS[Number(k.slice(5)) - 1] + ' ' + k.slice(0, 4) + ' poster.pdf', { type: 'application/pdf' });
-    const img = c.toDataURL('image/jpeg', 0.7);
-    openSheet('<h2>Your ' + esc(MONTHS[Number(k.slice(5)) - 1]) + ' poster</h2><img class="wprev" src="' + img + '" alt="Your month poster">' +
-      '<p class="muted" style="margin:0;font-size:13px">A4 landscape. In the print options, pick landscape and "fit to page".</p>' +
-      (IOS ? '<button type="button" class="btn" data-sharepdf>Share, save or print the PDF</button>'
-        : '<button type="button" class="btn" data-savepdf>Save to this phone</button>' + (canShareFile(file) ? '<button type="button" class="btn alt" data-sharepdf>Share it</button>' : '')) +
-      '<button type="button" class="btn ' + (IOS ? 'alt' : 'ghost') + '" data-close>Done</button>', async ev => {
-      if (ev.target.closest('[data-savepdf]')) { saveToDevice(file); toast(SAVED_NOTE); return; }
-      if (!ev.target.closest('[data-sharepdf]')) return;
-      const r = await shareFile(file); if (r === 'saved') toast(SAVED_NOTE);
-    });
-    root.__poster = file; // for the automated tests only
+    W().made[k] = Date.now(); save();
+    await readySheet('Your ' + name + ' poster', drawPoster(k), name + ' ' + k.slice(0, 4) + ' poster', true, 'A4 landscape. To print, pick landscape and "fit to page".');
   } catch (err) { closeSheet(); toast('Something went wrong making the poster.'); console.error(err); }
 }

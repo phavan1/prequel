@@ -1,8 +1,8 @@
 // "Look what you did" (v81): a month's recap as an A4 portrait poster, the second print on Your wall. From page 14
 // of Phavan's wireframes, in the same comic style as the planner, filled with the real month: the weather you
 // carried, big numbers (only the ones above zero), the constellations that joined up, the month's quilt, three
-// empty polaroid frames to stick real photos into (captions from your highlights and tiny wins), and that
-// month's phrase sticker. At the bottom (v83): the month's soundtrack from On repeat, or else one of "your month's
+// v84: "your month at a glance" (a little calendar: moved, soft days, rest), or, if you add photos in the app,
+// polaroids with your photos printed in (photos are never saved), and that month's phrase sticker. At the bottom (v83): the month's soundtrack from On repeat, or else one of "your month's
 // best bits" (a proud fact, not a feeling), or else nothing (the photos get taller). Tiny wins and letters stay in
 // the app (Phavan: they're personal; a wall is public). No character. First version, to be iterated.
 import { get, parseKey, dateKey } from './store.js';
@@ -46,13 +46,15 @@ export function recapData(ym) {
   const newStars = moments.filter(m => inMonth(m.date, ym)).length;
   // the quilt
   const quilt = patches().filter(p => inMonth(p.date, ym));
-  // captions for the photo frames: your highlights first, then tiny wins (hard-day ones first)
-  const caps = [];
-  (st.activities || []).filter(a => inMonth(a.date, ym) && a.hl && a.hl.trim()).sort((a, b) => a.date.localeCompare(b.date)).forEach(a => caps.push(a.hl.trim()));
-  wins.slice().sort((a, b) => (b.bright ? 1 : 0) - (a.bright ? 1 : 0) || a.date.localeCompare(b.date)).forEach(m => { if (!caps.includes(m.text)) caps.push(m.text); });
+  // caption suggestions for your photos: only your Move highlights (tiny wins stay in the app)
+  const hls = [...new Set((st.activities || []).filter(a => inMonth(a.date, ym) && a.hl && a.hl.trim()).sort((a, b) => a.date.localeCompare(b.date)).map(a => a.hl.trim()))];
+  // the month at a glance: each day you moved, each soft day, each night of rest
+  const moved = new Set((st.sessions || []).map(s => s.date).concat((st.activities || []).map(a => a.date)).filter(d => inMonth(d, ym)));
+  const rested = new Set((st.rests || []).map(r => r.date).filter(d => inMonth(d, ym)));
+  const softDays = new Set(Object.keys(st.heavy || {}).filter(d => inMonth(d, ym)));
   // the bottom: the soundtrack, or else one best bit
   let snd = null; try { snd = soundtrackOf(ym); } catch (e) { snd = null; }
-  return { weather, tally, tiles, cons, newStars, quilt, caps: caps.slice(0, 3), snd, best: snd ? null : bestBit(st, ym, quilt), soft: new Set(Object.keys(st.heavy || {})), any: weather.length + tiles.length + quilt.length + newStars > 0 };
+  return { weather, tally, tiles, cons, newStars, quilt, hls, moved, rested, softDays, snd, best: snd ? null : bestBit(st, ym, quilt), soft: new Set(Object.keys(st.heavy || {})), any: weather.length + tiles.length + quilt.length + newStars > 0 };
 }
 
 // "your month's best bits": one proud fact from the numbers, the first there is of: your heaviest lift, your
@@ -89,7 +91,36 @@ function wrapLines(g, s, font, maxW, maxL) {
 function fitFont(g, s, family, start, min, maxW, weight = '400') { let fs = start; g.font = weight + ' ' + fs + 'px ' + family; while (g.measureText(s).width > maxW && fs > min) { fs -= 2; g.font = weight + ' ' + fs + 'px ' + family; } return fs; }
 function panelTitle(g, s, x, y, col) { g.textAlign = 'left'; g.font = '400 50px ' + BANG; g.fillStyle = col || INK; g.fillText(s, x, y); }
 
-export function drawRecap(ym, phrase, covers) {
+// your month at a glance: a little comic calendar. A filled blue circle on days you moved, a gold star on soft days
+// you got through, a small moon on nights you rested. Shapes, not only colours, with a legend in words.
+function glance(g, d, ym, x, y, w, h) {
+  box(g, x, y, w, h, '#FFFFFF');
+  panelTitle(g, 'YOUR MONTH AT A GLANCE', x + 30, y + 62);
+  const [yy, mm] = ym.split('-').map(Number), first = new Date(yy, mm - 1, 1), n = new Date(yy, mm, 0).getDate(), lead = (first.getDay() + 6) % 7, rows = Math.ceil((lead + n) / 7);
+  const calW = w * 0.64, cx0 = x + 30, top = y + 92, cw = (calW - 30) / 7, ch = (h - 92 - 30 - 24) / rows;
+  g.textAlign = 'center'; g.font = '800 20px ' + BODY; g.fillStyle = '#5E584B';
+  ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach((l, i) => g.fillText(l, cx0 + i * cw + cw / 2, top + 4));
+  for (let day = 1; day <= n; day++) {
+    const i = lead + day - 1, cx = cx0 + (i % 7) * cw + cw / 2, cy = top + 24 + Math.floor(i / 7) * ch + ch / 2, k = ym + '-' + String(day).padStart(2, '0'), r = Math.min(cw, ch) * 0.4;
+    const mv = d.moved.has(k), sf = d.softDays.has(k), rs = d.rested.has(k);
+    if (mv) { g.fillStyle = BLU; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); }
+    g.font = '400 ' + Math.round(r * 1.05) + 'px ' + BANG; g.fillStyle = mv ? '#FFFFFF' : INK; g.fillText(String(day), cx, cy + r * 0.36);
+    if (sf) smallStar(g, cx + r * 0.85, cy - r * 0.8, r * 0.48);
+    if (rs) moon(g, cx + r * 0.9, cy + r * 0.78, r * 0.32);
+  }
+  // the legend, in words
+  const lx = x + calW + 20, ly = top + 20, lr = 22; g.textAlign = 'left';
+  const row = (k, draw, label, sub) => { const yy2 = ly + k * 92; draw(lx + lr, yy2 + lr); g.font = '800 28px ' + BODY; g.fillStyle = INK; g.fillText(label, lx + lr * 2 + 18, yy2 + lr + 4); if (sub) { g.font = '700 22px ' + BODY; g.fillStyle = '#5E584B'; g.fillText(sub, lx + lr * 2 + 18, yy2 + lr + 32); } };
+  // only what happened gets a row (no zeros)
+  let k = 0; const cnt = (v, one, many) => v + ' ' + (v === 1 ? one : many);
+  if (d.moved.size) row(k++, (a, b) => { g.fillStyle = BLU; g.beginPath(); g.arc(a, b, lr, 0, 7); g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); }, 'you moved', cnt(d.moved.size, 'day', 'days'));
+  if (d.softDays.size) row(k++, (a, b) => smallStar(g, a, b, lr * 1.1), 'a soft day', 'you got through ' + cnt(d.softDays.size, 'of them', 'of them').replace(/^1 of them$/, 'one'));
+  if (d.rested.size) row(k++, (a, b) => moon(g, a, b, lr * 0.85), 'a night of rest', cnt(d.rested.size, 'night', 'nights'));
+}
+function smallStar(g, cx, cy, R) { g.beginPath(); for (let q = 0; q < 10; q++) { const r = q % 2 ? R * 0.48 : R, an = -Math.PI / 2 + q * Math.PI / 5; g.lineTo(cx + Math.cos(an) * r, cy + Math.sin(an) * r); } g.closePath(); g.fillStyle = YEL; g.fill(); g.lineWidth = 2.5; g.lineJoin = 'round'; g.strokeStyle = INK; g.stroke(); }
+function moon(g, cx, cy, R) { g.save(); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip(); g.fillStyle = '#4E77DE'; g.fillRect(cx - R, cy - R, 2 * R, 2 * R); g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(cx + R * 0.55, cy - R * 0.4, R * 0.82, 0, 7); g.fill(); g.restore(); }
+
+export function drawRecap(ym, phrase, covers, photos) {
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
   const d = recapData(ym), [yy, mm] = ym.split('-').map(Number);
   g.fillStyle = CREAM; g.fillRect(0, 0, W, H);
@@ -164,20 +195,26 @@ export function drawRecap(ym, phrase, covers) {
     drawQuiltMonth(g, qx + (pw - qw) / 2, y + 86 + Math.max(0, (avail - qh) / 2), qw, d.quilt, { current: false, now: 1e15, dpr: 2, still: true, soft: d.soft });
   } else { g.font = '700 40px ' + HAND; g.fillStyle = INK; g.textAlign = 'center'; g.fillText('Your quilt starts with', qx + pw / 2, y + 300); g.fillText('your first night of rest.', qx + pw / 2, y + 350); g.textAlign = 'left'; }
 
-  // three polaroids to stick real photos into (taller when there's nothing for the bottom box)
+  // your photos as polaroids, or else your month at a glance (taller when there's nothing for the bottom box)
   const bottom = d.snd || d.best, fh = bottom ? 400 : 470;
-  y = 1700; const fw = (W - 2 * M - 80) / 3, TILT = [-0.03, 0.02, -0.015];
-  for (let i = 0; i < 3; i++) {
-    const x = M + i * (fw + 40);
-    g.save(); g.translate(x + fw / 2, y + fh / 2); g.rotate(TILT[i]); g.translate(-(x + fw / 2), -(y + fh / 2));
-    box(g, x, y, fw, fh, '#FFFFFF', { shadow: 10, lw: 5, r: 3 });
-    g.fillStyle = '#EDE3CC'; g.fillRect(x + 22, y + 22, fw - 44, fh - 130); g.strokeStyle = 'rgba(30,30,36,.35)'; g.lineWidth = 2; g.setLineDash([10, 10]); g.strokeRect(x + 22, y + 22, fw - 44, fh - 130); g.setLineDash([]);
-    g.textAlign = 'center'; g.font = '800 24px ' + BODY; g.fillStyle = 'rgba(30,30,36,.45)'; g.fillText('your photo here', x + fw / 2, y + 22 + (fh - 130) / 2 + 8);
-    const cap = d.caps[i];
-    if (cap) wrapLines(g, cap, '800 26px ' + BODY, fw - 44, 2).forEach((l, j, a) => { g.font = '800 26px ' + BODY; g.fillStyle = INK; g.fillText(l, x + fw / 2, y + fh - (a.length === 2 ? 70 : 52) + j * 30); });
-    else { g.strokeStyle = 'rgba(30,30,36,.35)'; g.lineWidth = 2; g.setLineDash([8, 8]); g.beginPath(); g.moveTo(x + 40, y + fh - 48); g.lineTo(x + fw - 40, y + fh - 48); g.stroke(); g.setLineDash([]); }
-    g.textAlign = 'left'; g.restore();
-  }
+  y = 1700;
+  const pics = (photos || []).filter(p => p && p.img).slice(0, 3);
+  if (pics.length) {
+    const n = pics.length, fw = Math.min(460, (W - 2 * M - 40 * 2) / 3), gap = 40, x0 = (W - (n * fw + (n - 1) * gap)) / 2, TILT = [-0.03, 0.02, -0.015];
+    pics.forEach((p, i) => {
+      const x = x0 + i * (fw + gap), ph = fh - 120;
+      g.save(); g.translate(x + fw / 2, y + fh / 2); g.rotate(TILT[i]); g.translate(-(x + fw / 2), -(y + fh / 2));
+      box(g, x, y, fw, fh, '#FFFFFF', { shadow: 10, lw: 5, r: 3 });
+      // the photo, filling its window (cropped from the middle)
+      const iw = p.img.width, ih = p.img.height, bw0 = fw - 44, s2 = Math.max(bw0 / iw, ph / ih), sw = bw0 / s2, sh2 = ph / s2;
+      g.drawImage(p.img, (iw - sw) / 2, (ih - sh2) / 2, sw, sh2, x + 22, y + 22, bw0, ph);
+      g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(x + 22, y + 22, bw0, ph);
+      const cap = (p.cap || '').trim() || p.date || '';
+      g.textAlign = 'center';
+      if (cap) wrapLines(g, cap, '700 34px ' + HAND, fw - 44, 2).forEach((l, j, a) => { g.font = '700 34px ' + HAND; g.fillStyle = INK; g.fillText(l, x + fw / 2, y + fh - (a.length === 2 ? 64 : 42) + j * 36); });
+      g.textAlign = 'left'; g.restore();
+    });
+  } else glance(g, d, ym, M, y, W - 2 * M, fh);
 
   // the bottom: the soundtrack, or one best bit, with the month's sticker beside it; or just the sticker, bigger
   const ph2 = phrase || '';
