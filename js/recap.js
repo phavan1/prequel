@@ -8,7 +8,7 @@
 import { get, parseKey, dateKey } from './store.js';
 import { weatherByName } from './data.js';
 import { updateSky, starPos, mulberry32, hashStr } from './sky-model.js';
-import { patches, drawQuiltMonth } from './screens/quilt.js';
+import { patches, drawPatch, goldStar } from './screens/quilt.js';
 import { SOURCES } from './goals.js';
 import { soundtrackOf } from './music.js';
 import { drawTape } from './cards.js';
@@ -210,11 +210,24 @@ export function drawRecap(ym, phrase, covers, photos) {
   const qx = M + pw + 40; box(g, qx, y, pw, ph, '#FFFFFF');
   panelTitle(g, 'THIS MONTH’S QUILT', qx + 30, y + 66);
   if (d.quilt.length) {
-    const scratch = document.createElement('canvas').getContext('2d'), avail = ph - 120;
-    let qw = pw - 60; const probe = drawQuiltMonth(scratch, 0, 0, qw, d.quilt, { current: false, now: 1e15, dpr: 2, still: true, soft: d.soft });
-    if (probe.height > avail) qw = qw * avail / probe.height;
-    const qh = drawQuiltMonth(scratch, 0, 0, qw, d.quilt, { current: false, now: 1e15, dpr: 2, still: true, soft: d.soft }).height;
-    drawQuiltMonth(g, qx + (pw - qw) / 2, y + 86 + Math.max(0, (avail - qh) / 2), qw, d.quilt, { current: false, now: 1e15, dpr: 2, still: true, soft: d.soft });
+    // v89: no rod and no binding: the patches fill the whole box under the white title strip, one per night, in date
+    // order. The grid fits the count (rows of near-square patches; a row with fewer patches stretches them to close
+    // the gap), so the box is always full. Stitches and soft days' gold stars stay.
+    const top = y + 92, bx = qx + 2.5, bw = pw - 5, bh = ph - (top - y) - 2.5, n = d.quilt.length;
+    const rows = Math.max(1, Math.min(n, Math.round(Math.sqrt(n * bh / bw)))), base = Math.floor(n / rows), extra = n % rows, rh = bh / rows;
+    g.save(); g.beginPath(); g.rect(bx, top, bw, bh); g.clip();
+    let k = 0;
+    for (let r = 0; r < rows; r++) {
+      const cnt = base + (r < extra ? 1 : 0), cw = bw / cnt, py = top + r * rh;
+      for (let c = 0; c < cnt; c++, k++) {
+        const p = d.quilt[k], px = bx + c * cw;
+        drawPatch(g, p, px, py, rh, 2, { w: cw, scale: Math.max(1, Math.min(cw, rh) / 110) });
+        if (d.soft.has(p.date)) goldStar(g, px + cw - Math.min(cw, rh) * 0.2, py + Math.min(cw, rh) * 0.2, Math.min(cw, rh) * 0.13);
+      }
+    }
+    g.restore();
+    g.strokeStyle = INK; g.lineWidth = 5; g.beginPath(); g.moveTo(qx, top); g.lineTo(qx + pw, top); g.stroke(); // the strip's edge
+    rr(g, qx, y, pw, ph, 6); g.stroke(); // the box's outline again, crisp over the patch edges
   } else { g.font = '700 40px ' + HAND; g.fillStyle = INK; g.textAlign = 'center'; g.fillText('Your quilt starts with', qx + pw / 2, y + 300); g.fillText('your first night of rest.', qx + pw / 2, y + 350); g.textAlign = 'left'; }
 
   // your photos as polaroids, or else your month at a glance (taller when there's nothing for the bottom box)
