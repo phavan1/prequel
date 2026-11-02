@@ -14,9 +14,9 @@ const errors = [];
   const st = () => p.evaluate(async () => JSON.parse(JSON.stringify((await import('./js/store.js')).get())));
   await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().newsSeen = 999; S.save(); document.querySelectorAll('.hello').forEach(e => e.remove()); });
 
-  // v79: the Home nudge from the 25th
+  // v79 had a Home nudge from the 25th; v82 removed it
   await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(500);
-  ok('from the 25th, Home says next month\'s poster is ready to make', /December's poster is ready to make/.test(await p.locator('a.wallnudge').innerText().catch(() => '')));
+  ok('no reminder on Home to make a planner (v82: it felt like pressure)', await p.locator('a.wallnudge').count() === 0 && !/poster is ready to make/.test(await p.locator('main').innerText()));
   await p.goto(BASE + '#/me'); await p.waitForTimeout(500);
   const wc = await p.locator('a.wallcard').innerText().catch(() => '');
   ok('Me shows Your wall as a mini poster (month and sticker)', /YOUR WALL/.test(wc) && /DECEMBER/.test(wc) && /ready to print/.test(wc), wc.replace(/\n/g, ' '));
@@ -66,7 +66,7 @@ const errors = [];
   await p.click('#sheet [data-close]').catch(() => {});
   ok('making the poster is remembered', !!(await st()).wall.made['2026-12']);
   await p.goto(BASE + '#/days'); await p.goto(BASE + '#/home'); await p.waitForTimeout(400);
-  ok('…and the Home nudge rests', await p.locator('a.wallnudge').count() === 0);
+  ok('…and still no reminder on Home', await p.locator('a.wallnudge').count() === 0);
   const png = await p.evaluate(async () => { const W = await import('./js/screens/wall.js'), C = await import('./js/cards.js'); await C.fontsReady(); await document.fonts.load('400 100px Bangers'); return W.drawPoster('2026-12').toDataURL('image/png'); });
   fs.writeFileSync(OUT + '/wall-poster.png', Buffer.from(png.split(',')[1], 'base64'));
   // a month with nothing planned still makes a calm poster

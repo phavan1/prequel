@@ -54,6 +54,7 @@ export const monthWord = k => MONTHS[Number(k.slice(5)) - 1];
 // the Home nudge (v79): from the 25th, until next month's poster has been made
 // the recap nudge (v81): in the first week of a month, last month's recap is ready (if anything happened in it), until you've looked
 export function recapNudge() { const t = new Date(); if (t.getDate() > 7) return null; const k = stepMonth(ymOf(t), -1); const w = W(); return (w.seen || {})[k] ? null : recapData(k).any ? k : null; }
+// (v79's Home nudge for the planner was removed in v82: it felt like pressure; nudge() is kept, unused)
 export function nudge() { const t = new Date(); if (t.getDate() < 25) return null; const k = stepMonth(ymOf(t), 1); return W().made[k] ? null : k; }
 // the red sticker: cool, not soft (Phavan). Prequel picks one; shuffle for another, or write your own.
 export const PHRASES = M => ['MAIN CHARACTER MONTH', M + ', UNFILTERED', 'MY ' + M + ' ERA', 'SIDE QUEST SEASON', 'NEW CHAPTER UNLOCKED', 'PLOT TWIST PENDING', 'LOADING: GOOD THINGS', 'CERTIFIED ' + M, 'SOFT LAUNCH: ME', 'NO NOTES. JUST ' + M + '.', M + ' ON REPEAT', 'BIG ' + M + ' ENERGY', M + ', IN TECHNICOLOUR', 'THE ' + M + ' EDIT'];
