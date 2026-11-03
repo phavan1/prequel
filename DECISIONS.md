@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v92: on laptops (1000 px and wider) Prequel gets a left sidebar, a wider column, two columns on Home and Me, and centred windows; phones are unchanged. Full-screen pages (the sky, games, Slow ride) stay full screen.
 - v91: Me's Your wall card shows both features as two posters: the planner in front, last month's recap peeking out behind (only when there's something to recap), with a button for each. The original card design is kept.
 - v90: recap photos can be moved (drag) and zoomed (a slider, not pinch) inside the exact polaroid window; the framing is forgotten with the photo.
 - v89: the recap's quilt is just the patches filling the box under a white title strip (no rod or binding); the grid adapts to the number of nights, never repeating patches. Lanterns stay a sixth tile that only shows when there's room.

@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v92) On a laptop: the sidebar (and the current page lit), Home's two columns, Me's two columns, a sheet opening in the middle; on the iPhone, nothing changed.
 - [ ] (v91) Me: last month's recap peeks out behind the wall card; "Plan <month>", "Look back at <month>", the front poster and the strip behind each go to the right place.
 - [ ] (v90) Look back: tap a photo's thumbnail → Move or zoom; drag with a finger (the page shouldn't scroll), zoom with the slider; Done; the thumbnail and the recap show the same framing.
 - [ ] (v89) The recap's quilt box: white title strip, then patches edge to edge with no gaps (try a month with few nights and one with many); gold stars on soft days.

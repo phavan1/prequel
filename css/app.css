@@ -1170,3 +1170,35 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .wphr .lnk { align-self: flex-start; }
 .wadd { position: relative; text-align: center; cursor: pointer; }
 .wtiles span small { font-size: 11px; font-weight: 700; color: #5E584B; margin-top: 2px; } /* v88: the rest of how you moved */
+
+/* ---------- v92: laptops and big screens ----------
+   On a phone nothing here applies. From 1000 px wide: the tab bar becomes a sidebar on the left with the
+   Prequel name, pages sit in a slightly wider column to the right of it, Home and Me spread into two columns,
+   and sheets open as centred windows. Full-screen pages (the sky, the games, Slow ride) stay full screen. */
+.dcols, .dcol { display: contents; }
+@media (min-width: 1000px) {
+  :root { --side: 232px; }
+  .tabbar { top: 0; right: auto; width: var(--side); display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 28px 16px; border-top: 0; border-right: 1px solid var(--line); }
+  .tabbar::before { content: 'prequel'; font-family: var(--font-hand); font-size: 36px; font-weight: 700; color: var(--ink); padding: 0 12px 18px; line-height: 1; }
+  .tabbar a { flex-direction: row; justify-content: flex-start; gap: 14px; font-size: 16px; padding: 10px 14px; border-radius: 14px; }
+  .tabbar a:hover { background: var(--room, rgba(0,0,0,.04)); color: var(--ink); }
+  .tabbar a[aria-current="page"] { background: var(--blue-soft); }
+  .tabbar svg { width: 22px; height: 22px; }
+  .screen:has(> nav.tabbar) { --colw: 720px; max-width: var(--colw); margin: 0 auto 0 calc(var(--side) + max(32px, (100vw - var(--side) - var(--colw)) / 2)); padding-top: 32px; padding-bottom: 56px; }
+  .toast { left: calc(50% + var(--side) / 2); bottom: 32px; }
+  /* sheets: a centred window instead of a drawer from the bottom */
+  .scrim { align-items: center; padding: 32px 32px 32px calc(var(--side) + 32px); } /* centred over the page, beside the sidebar */
+  .sheet { max-width: 520px; max-height: 86vh; border-radius: 24px; box-shadow: 0 24px 60px rgba(35, 38, 47, .25); padding: 22px 22px 22px; }
+  /* Home: the room on the left, everything else on the right */
+  .screen-home:has(> nav.tabbar), .screen-me:has(> nav.tabbar) { --colw: 1060px; }
+  .dcols { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 20px 28px; align-items: start; }
+  .dcol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .screen-home .dcol.ca { position: sticky; top: 24px; }
+  /* Me: goals and your journey, with Looking back under them, on the left; your wall and the rest on the right */
+  .dcols.me3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: 'a b' 'c b'; grid-template-rows: auto 1fr; }
+  .dcols.me3 .ca { grid-area: a; } .dcols.me3 .cb { grid-area: b; } .dcols.me3 .cc { grid-area: c; }
+  .screen-me .hero { margin-top: 8px; }
+  .screen-me .gear { top: 28px; }
+  .wallstack.two { padding-top: 44px; }
+  .wallback { transform: rotate(-0.9deg); } /* a wider card tips less, so the label behind stays readable */
+}

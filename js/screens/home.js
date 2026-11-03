@@ -65,6 +65,7 @@ function render() {
 
   root.innerHTML =
     '<div class="top"><div><div class="lbl">' + new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div><h1>' + greet + name + '</h1></div></div>' +
+    '<div class="dcols"><div class="dcol ca">' + // v92: on a laptop, the room on the left and everything else on the right (on a phone these wrappers do nothing)
     '<div class="room">' +
       '<div class="floor"></div>' + (soft ? '' : '<svg class="rug" viewBox="0 0 240 44" aria-hidden="true"><ellipse cx="120" cy="22" rx="118" ry="20" fill="#DCE7FF"/><ellipse cx="120" cy="22" rx="104" ry="14" fill="none" stroke="#9FB8E8" stroke-width="2" stroke-dasharray="6 5"/></svg>') +
       '<a class="window" href="#/sky?from=home" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas>' + WINDOW + (st.moments.length ? '<span>' + st.moments.length + (st.moments.length === 1 ? ' star' : ' stars') + '</span>' : '') + '</a>' +
@@ -73,7 +74,7 @@ function render() {
         ? '<a class="note" href="#/mind">hey… ' + esc(due[0].text.toLowerCase()) + '?</a>'
         : '<div class="bubble" id="line">' + esc(line) + '</div>') +
       '<div class="stage wide"><button type="button" id="tap" aria-label="Say hi">' + him(pose, 'wide breathe', 'Your character') + '</button></div>' +
-    '</div>' +
+    '</div></div><div class="dcol cb">' +
     (soft
       ? gamesShelf(st) +
         (() => { const m = fromJar(true); return m ? '<a class="fromjar" href="#/wins"><small>From your jar · ' + esc(new Date(m.ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })) + '</small>' + esc(m.text) + '<em>Remember this one? That was all you.</em></a>' : ''; })() +
@@ -91,6 +92,7 @@ function render() {
         '</div>' +
         (backupDue() ? '<a class="rowlink" href="#/settings" style="background:#FFF1C4"><span>Time for a little backup? It keeps everything safe.</span><b>›</b></a>' : '') +
         '<button type="button" class="rowlink softask" data-heavy style="width:100%"><span><i class="softemoji" aria-hidden="true">🍵</i><em>' + pick(SOFT_ASK) + '</em></span><b>›</b></button>') +
+    '</div></div>' +
     nav('home');
 
   drawMini(root.querySelector('#mini'), st);
