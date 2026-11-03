@@ -51,7 +51,8 @@ export function mount(root, params = {}) {
   for (let i = 0; i < 260; i++) dust.push({ x: dr(), y: dr(), a: 0.15 + dr() * 0.35, s: 0.4 + dr() * 0.8 });
 
   const nCons = cons.length;
-  root.querySelector('#stats').textContent = stars.length + (stars.length === 1 ? ' star' : ' stars') + ' · ' + nCons + (nCons === 1 ? ' constellation' : ' constellations') + ' · ' + lanterns.length + (lanterns.length === 1 ? ' lantern' : ' lanterns');
+  // v94: only what's there (no zeros); an empty sky gets a kind line instead
+  root.querySelector('#stats').textContent = [[stars.length, ' star', ' stars'], [nCons, ' constellation', ' constellations'], [lanterns.length, ' lantern', ' lanterns']].filter(x => x[0] > 0).map(x => x[0] + (x[0] === 1 ? x[1] : x[2])).join(' · ') || 'Your first star is on its way.';
   const fresh = cons.filter(c => c.isNew);
   if (fresh.length) {
     setTimeout(() => { const el = root.querySelector('#newcon'); if (!el) return; root.querySelector('#newconName').textContent = fresh.map(c => c.name).join(' · '); el.hidden = false; setTimeout(() => { el.hidden = true; }, 4200); }, 2200);

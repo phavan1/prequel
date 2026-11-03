@@ -54,7 +54,7 @@ function render(root) {
   const st = get();
   const sealed = st.letters.filter(l => !l.opened).length;
   root.innerHTML =
-    '<div class="top">' + backLink('#/mind', 'Mind') + '<span class="lbl">' + sealed + ' sealed</span></div>' +
+    '<div class="top">' + backLink('#/mind', 'Mind') + (sealed ? '<span class="lbl">' + sealed + ' sealed</span>' : '') + '</div>' /* v94: no "0 sealed" */ +
     '<div><h1>Letters from good-day you</h1><p class="sub">Written on sunny days. Handed to you on stormy ones.</p></div>' +
     (showing
       ? '<div class="paper"><span class="lbl">Written ' + esc(prettyDate(dateKey(new Date(showing.ts)), { weekday: 'long', day: 'numeric', month: 'long' })) + (showing.weather ? ' · ' + esc(showing.weather.toLowerCase()) : '') + '</span><p class="tx">' + esc(showing.text) + '</p><button type="button" class="btn alt" data-fold>Fold it back up</button><div class="paperacts"><button type="button" class="btn ghost" data-editletter>Change it</button><button type="button" class="btn ghost" data-delletter>Remove it</button></div></div>'
