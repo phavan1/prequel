@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 96, date: '2026-11-04', items: [
+    'On repeat has its own page now: find it on Me, next to Your sky and Your quilt.',
+    'Days has a few extra tabs you can add, like Cycle, a private period tracker. Tap "+ More" on Days, or switch them on in Settings.'
+  ] },
   { v: 95, date: '2026-11-04', items: [
     'Scrolling inside a pop-up (like this one) no longer scrolls the page behind it. When you close it, you\'re right where you were.'
   ] },

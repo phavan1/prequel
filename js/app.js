@@ -21,9 +21,10 @@ import * as road from './screens/road.js';
 import * as wall from './screens/wall.js';
 import * as settings from './screens/settings.js';
 import * as share from './screens/share.js';
+import * as repeat from './screens/repeat.js';
 import { closeSheet, setLogDate, esc, reduceMotion } from './ui.js';
 
-const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, keepup, stack, journey, road, wall, settings, share };
+const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, keepup, stack, journey, road, wall, settings, share, repeat };
 let root = document.getElementById('app');
 let current = null;
 

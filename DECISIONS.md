@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v96: On repeat gets its own page, linked from Me next to Your sky and Your quilt (no new card: Me is full; Home's room too, on a phone; Mind doesn't fit). Cycle stays a private, opt-in Days tab, now findable from a labelled "+ More" on Days and switches in Settings. A bigger spot for On repeat waits for the Me redesign.
 - v95: an open pop-up holds the page behind it still; closing it returns you to the same spot.
 - v94: zeros on screen are dropped wherever they appear (Your sky's counts, Letters' "sealed"); an empty state gets a kind line instead.
 - v93: on bigger screens the whole page is drawn larger (1.15× to 1.5×) so it fills the screen like it fills a phone, and Home's room fills the window's height.

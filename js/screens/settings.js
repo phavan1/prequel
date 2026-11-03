@@ -4,6 +4,7 @@ import { esc, nav, backLink, toast, openSheet, closeSheet, downloadFile } from '
 import { dayDate, clock } from '../pdf.js';
 import { NEWS, LATEST, openNews } from '../news.js';
 import { wu, setUnit, askLb } from '../units.js';
+import { OPTIONAL } from './days.js';
 
 export function mount(root) {
   render(root);
@@ -12,6 +13,7 @@ export function mount(root) {
     if (t.closest('[data-export]')) { backup(root); return; }
     if (t.closest('[data-fresh]')) { startFresh(root); return; }
     if ((b = t.closest('[data-wunit]'))) { if (b.dataset.wunit !== wu()) { setUnit(b.dataset.wunit); render(root); if (!askLb()) toast('Weights are now in ' + (wu() === 'lb' ? 'pounds' : 'kilograms') + '.'); } return; }
+    if ((b = t.closest('[data-dtab]'))) { const s = get().settings, k = b.dataset.dtab; s.dayTabs = s.dayTabs || []; s.dayTabs = s.dayTabs.includes(k) ? s.dayTabs.filter(x => x !== k) : s.dayTabs.concat(k); save(); render(root); toast(s.dayTabs.includes(k) ? 'It\'s on Days now.' : 'Taken off Days. Nothing you logged is lost.'); return; } // v96
     if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
     if (t.closest('[data-words]')) { wordsSheet(root); return; }
@@ -128,6 +130,9 @@ function render(root) {
     '<button type="button" class="rowlink" data-words style="width:100%"><span>Your name, kind words and tiny wins<small class="rowsub">' + (s.name ? 'He calls you ' + esc(s.name) : 'Tell him what to call you') + '</small></span><b>›</b></button>' +
     '<div class="lbl">Weights in</div>' + // v71: kg or lb, for lifts and body weight
     '<div class="seg3 two">' + [['kg', 'kg · kilograms'], ['lb', 'lb · pounds']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
+    // v96: the optional Days tabs, where people look for things to turn on (also on Days under + More)
+    '<div class="lbl">Extra tabs on Days</div>' +
+    '<div class="dtabs">' + OPTIONAL.map(o => { const on = (s.dayTabs || []).includes(o[0]); return '<button type="button" class="mgrow" data-dtab="' + o[0] + '" aria-pressed="' + on + '" style="width:100%;text-align:left"><span>' + esc(o[1]) + (o[2] ? '<small>' + esc(o[2]) + '</small>' : '') + '</span><b>' + (on ? 'Shown ✓' : 'Show') + '</b></button>'; }).join('') + '</div>' +
     '<div class="lbl">Look</div>' +
     '<div class="seg3">' + [['light', 'Light'], ['dark', 'Cosy dark'], ['auto', 'Match my phone']].map(o => '<button type="button" data-look="' + o[0] + '" aria-pressed="' + ((s.theme || 'light') === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
     '<div class="lbl">Your data</div>' +

@@ -57,7 +57,8 @@ function render(root) {
     // v75: "How you've moved" is gone: Your moving journey (above) does that job, so 18 gym sessions isn't said three times
     // the little counts that live nowhere else, only above zero
     (() => { const c = [[wins, 'tiny wins'], [lanterns, 'lanterns let go'], [st.letters.length, st.letters.length === 1 ? 'letter' : 'letters']].filter(x => x[0] > 0); return c.length ? '<div class="grid' + (c.length === 1 ? '1' : c.length) + '">' + c.map(x => '<div class="count"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('') + '</div>' : ''; })() +
-    '<div class="grid2"><a class="rowlink" href="#/sky?from=me"><span>Your sky</span><b>›</b></a><a class="rowlink" href="#/quilt?from=me"><span>Your quilt</span><b>›</b></a></div>' +
+    // v96: On repeat joins your sky and your quilt (things you've collected over time), so it can be found without a Days tab
+    '<div class="grid3 collect"><a class="rowlink" href="#/sky?from=me"><span>Your sky</span><b>›</b></a><a class="rowlink" href="#/quilt?from=me"><span>Your quilt</span><b>›</b></a><a class="rowlink" href="#/repeat?from=me"><span>On repeat</span><b>›</b></a></div>' +
     '<a class="sharecta" href="#/share"><span><b>Share your story</b><small>Cards made from your sky, milestones and month</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></a>' +
     '</div><div class="dcol cc">' +
     '<div class="lbl">Looking back</div>' +

@@ -23,7 +23,7 @@ const ICON = {
   plus: '<path d="M12 5v14M5 12h14"/>'
 };
 const svg = (k, cls) => '<svg class="' + (cls || 'ic') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + '</svg>';
-const OPTIONAL = [['win', 'Tiny wins'], ['weather', 'Weather'], ['cycle', 'Cycle', 'a private period tracker, just for you'], ['music', 'On repeat', 'the song you can\'t stop playing, era by era']];
+export const OPTIONAL = [['win', 'Tiny wins'], ['weather', 'Weather'], ['cycle', 'Cycle', 'a private period tracker, just for you'], ['music', 'On repeat', 'the song you can\'t stop playing, era by era']];
 let month = null, selected = null, tab = 'all', open = null;
 
 // what happened on a day, per category
@@ -227,7 +227,7 @@ function render(root) {
   const monthName = first.toLocaleDateString('en-AU', { month: 'long' });
   root.innerHTML =
     '<div class="tabsrow">' + tabs.map(x => '<button type="button" data-tab="' + esc(x[0]) + '" aria-pressed="' + (x[0] === tab) + '">' + svg(x[2]) + '<span>' + esc(x[1]) + '</span></button>').join('') +
-      '<button type="button" data-addtab aria-label="Add a tab">' + svg('plus') + '</button></div>' +
+      '<button type="button" data-addtab aria-label="More tabs">' + svg('plus') + '<span>More</span></button></div>' + // v96: a word, not just a +
     '<div class="cal2' + (tab === 'cycle' ? ' cy' : '') + '"><div class="monthbar"><button type="button" data-month="-1" aria-label="Previous month">‹</button><h2>' + first.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }) + '</h2><button type="button" data-month="1" aria-label="Next month"' + (nextDisabled ? ' disabled' : '') + '>›</button></div>' +
       '<div class="dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div><div class="grid">' + cells + '</div></div>' +
     (() => { const t = summary(tab, marked, monthName, y, mo); return t ? '<p class="calsum">' + t + '</p>' : ''; })() +
