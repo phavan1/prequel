@@ -25,11 +25,9 @@ export const DEFAULT_KIND_LINES = [
   'Rest is part of the plan, not a break from it.',
   'You\'ve done hard things before.'
 ];
-export const DEFAULT_COMFORT = [
-  { id: 'c1', name: 'Chicken + dosas', time: '15 min' },
-  { id: 'c2', name: 'Eggs in a tortilla', time: '8 min' },
-  { id: 'c3', name: 'Banana + orange', time: '1 min' }
-];
+// v98: the old comfort menu (no screen shows it) starts empty; its personal example meals are gone from the code.
+// The list stays in the data, so older backups still restore exactly.
+export const DEFAULT_COMFORT = [];
 
 function fresh() {
   return {

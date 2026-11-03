@@ -249,7 +249,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | Light motion lines on dark share cards | v23 | Offered |
 | Fix the bottom tab bar so it highlights the section you came from (mainly Quilt, opened from Me and Rest; see HANDOVER section 8, issue 2) | Found during this handover; described more accurately 14 Oct 2026 | **Done in v56** (option A: follow where you came from) |
 | A pin on usuals, so a favourite always stays in the top five | v37 discussion | Offered; not answered, so not built |
-| Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | Left untouched for now; to discuss |
+| Keep, change or remove the old comfort-menu defaults (`DEFAULT_COMFORT` in `store.js`) | 14 Oct 2026 review | **Removed in v98 (4 Nov 2026):** the list starts empty; existing data untouched. A soft-day comfort menu of your own meals is a possible later idea. |
 | Change Home's date order to "October 10" | Found during this handover | Not discussed yet; **ask him** |
 | Protecting data if the phone breaks or is replaced: three directions offered: (1) a stronger backup habit (more frequent gentle nudge, one-tap save from Home), (2) steer backup files to iCloud Drive so they survive the phone, (3) cloud sync (Firebase), the real fix but a big step away from "nothing leaves the phone". Not decided; also worth testing whether iCloud's own phone backup keeps a home-screen web app's data (unverified) | Phavan's question, 14 Oct 2026 | **Shelved** until the next session |
 | A simpler "Hours each day" (one bar per day, hours on top, labelled typical line, no stripes or legend), because his doctor found it confusing | Claude, 17 Oct 2026 | **Waiting**: Phavan wants to keep it as it is for a while. The two-line version (B) was dropped as too hard to read. Week by week (D) was built in v47. |
@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v98: the unused comfort-menu example meals (personal) are out of the code; new profiles start with an empty list, old backups still restore.
 - v97: on the recap, your own activities are named by their name alone (the big number says how many).
 - v96: On repeat gets its own page, linked from Me next to Your sky and Your quilt (no new card: Me is full; Home's room too, on a phone; Mind doesn't fit). Cycle stays a private, opt-in Days tab, now findable from a labelled "+ More" on Days and switches in Settings. A bigger spot for On repeat waits for the Me redesign.
 - v95: an open pop-up holds the page behind it still; closing it returns you to the same spot.
