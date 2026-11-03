@@ -16,11 +16,12 @@ import { EXERCISES } from './data.js';
 import { showNum, wu, isPlate } from './units.js';
 import { actDef } from './activities.js';
 
-// v88: what each activity is called on the recap ("12 badminton games"). Your own activities: "times: <name>".
+// v88: what each activity is called on the recap ("12 badminton games"). Your own activities: just the name (v97; the big
+// number already says how many, and "times: rock climbing" wrapped clumsily).
 const ACT_WORD = { walk: ['walk', 'walks'], run: ['run', 'runs'], cycle: ['ride', 'rides'], swim: ['swim', 'swims'], hike: ['hike', 'hikes'],
   badminton: ['badminton game', 'badminton games'], football: ['football game', 'football games'], cricket: ['cricket game', 'cricket games'], tennis: ['tennis game', 'tennis games'],
   kickboxing: ['kickboxing round', 'kickboxing rounds'], mma: ['MMA round', 'MMA rounds'], yoga: ['yoga session', 'yoga sessions'], dance: ['dance class', 'dance classes'], home: ['home workout', 'home workouts'] };
-export const actWord = (id, n) => { const w = ACT_WORD[id]; if (w) return w[n === 1 ? 0 : 1]; return (n === 1 ? 'time: ' : 'times: ') + actDef(id).n.toLowerCase(); };
+export const actWord = (id, n) => { const w = ACT_WORD[id]; if (w) return w[n === 1 ? 0 : 1]; return actDef(id).n.toLowerCase(); };
 // the moving tile: your most-done activity by name, and a small line for the rest
 function movedTile(acts) {
   if (!acts.length) return [0];

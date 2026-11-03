@@ -119,7 +119,7 @@ const errors = [];
   fs.writeFileSync(OUT + '/recap-moved-many.png', Buffer.from(many['2026-06'].url.split(',')[1], 'base64'));
   ok('12 badminton games, + 4 walks', JSON.stringify(many['2026-07'].tile) === '[12,"badminton games","+ 4 walks"]', JSON.stringify(many['2026-07'].tile));
   ok('three or more: 6 kickboxing rounds, + 4 more times you moved', JSON.stringify(many['2026-06'].tile) === '[6,"kickboxing rounds","+ 4 more times you moved"]', JSON.stringify(many['2026-06'].tile));
-  ok('your own activity is named too', many.own === 'times: rock climbing', many.own);
+  ok('your own activity is named too, just by its name (v97)', many.own === 'rock climbing', many.own);
   const empty = await p.evaluate(async () => { const R = await import('./js/recap.js'); return R.drawRecap('2026-08', '').toDataURL('image/png').length; });
   ok('an almost empty month still draws kindly', empty > 50000);
   // v91: Me's wall card: last month's recap peeks out behind the planner, with a button for each
