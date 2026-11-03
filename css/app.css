@@ -1177,18 +1177,20 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
    and sheets open as centred windows. Full-screen pages (the sky, the games, Slow ride) stay full screen. */
 .dcols, .dcol { display: contents; }
 @media (min-width: 1000px) {
-  :root { --side: 232px; }
-  .tabbar { top: 0; right: auto; width: var(--side); display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 28px 16px; border-top: 0; border-right: 1px solid var(--line); }
+  :root { --side: 232px; --z: 1; } /* --z (v93): how much bigger everything is drawn on this screen */
+  .tabbar { top: 0; right: auto; width: var(--side); /* inside the page, so it's drawn --z bigger too */ display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 28px 16px; border-top: 0; border-right: 1px solid var(--line); }
   .tabbar::before { content: 'prequel'; font-family: var(--font-hand); font-size: 36px; font-weight: 700; color: var(--ink); padding: 0 12px 18px; line-height: 1; }
   .tabbar a { flex-direction: row; justify-content: flex-start; gap: 14px; font-size: 16px; padding: 10px 14px; border-radius: 14px; }
   .tabbar a:hover { background: var(--room, rgba(0,0,0,.04)); color: var(--ink); }
   .tabbar a[aria-current="page"] { background: var(--blue-soft); }
   .tabbar svg { width: 22px; height: 22px; }
-  .screen:has(> nav.tabbar) { --colw: 720px; max-width: var(--colw); margin: 0 auto 0 calc(var(--side) + max(32px, (100vw - var(--side) - var(--colw)) / 2)); padding-top: 32px; padding-bottom: 56px; }
-  .toast { left: calc(50% + var(--side) / 2); bottom: 32px; }
+  /* v93: the page sits in the space beside the sidebar (the body makes room for it), centred there */
+  body:has(nav.tabbar) { padding-left: calc(var(--side) * var(--z)); }
+  .screen:has(> nav.tabbar) { --colw: 720px; max-width: var(--colw); margin: 0 auto; padding: 32px 32px 56px; }
+  .toast { left: calc(50% + var(--side) * var(--z) / 2); bottom: 32px; }
   /* sheets: a centred window instead of a drawer from the bottom */
-  .scrim { align-items: center; padding: 32px 32px 32px calc(var(--side) + 32px); } /* centred over the page, beside the sidebar */
-  .sheet { max-width: 520px; max-height: 86vh; border-radius: 24px; box-shadow: 0 24px 60px rgba(35, 38, 47, .25); padding: 22px 22px 22px; }
+  .scrim { align-items: center; padding: 32px 32px 32px calc(var(--side) * var(--z) + 32px); } /* centred over the page, beside the sidebar */
+  .sheet { max-width: 520px; max-height: calc(86vh / var(--z)); border-radius: 24px; box-shadow: 0 24px 60px rgba(35, 38, 47, .25); padding: 22px 22px 22px; }
   /* Home: the room on the left, everything else on the right */
   .screen-home:has(> nav.tabbar), .screen-me:has(> nav.tabbar) { --colw: 1060px; }
   .dcols { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 20px 28px; align-items: start; }
@@ -1201,4 +1203,17 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
   .screen-me .gear { top: 28px; }
   .wallstack.two { padding-top: 44px; }
   .wallback { transform: rotate(-0.9deg); } /* a wider card tips less, so the label behind stays readable */
+  /* v93: Home's room is a big scene that fills the window's height (on a tall enough screen), with a bigger character */
+  .screen-home .room { height: clamp(420px, calc(100vh / var(--z) - 150px), 760px); }
+  .screen-home .room .him.wide { width: 300px; max-height: 330px; }
+  .screen-home .room .stage.wide { bottom: 30px; }
+  .screen-home .room .rug { width: 360px; height: 64px; bottom: 18px; }
+  .screen-home .room .floor { height: 96px; }
+  .screen-home .room .window { width: 220px; height: 196px; }
+  .screen-home .room .hoop { width: 104px; height: 118px; top: 170px; right: 30px; }
+  .screen-home .room .bubble { font-size: 21px; }
 }
+/* v93: on bigger screens everything is drawn a little bigger, so it fills the screen the way it fills a phone */
+@media (min-width: 1360px) { :root { --z: 1.15; } .screen:has(> nav.tabbar), .sheet { zoom: var(--z); } .screen:has(> nav.tabbar) { min-height: calc(100vh / var(--z)); } } /* the sidebar lives inside the page, so it grows with it */
+@media (min-width: 1680px) { :root { --z: 1.3; } }
+@media (min-width: 2200px) { :root { --z: 1.5; } }
