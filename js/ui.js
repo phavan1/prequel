@@ -51,8 +51,22 @@ export function him(pose, cls = '', alt) {
 export function pop(el) { if (!el || reduceMotion) return; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
 
 // ---------- sheets + toasts ----------
+// v95: while a sheet is open, the page behind it stays still (on iPhone, scrolling inside a sheet used to scroll
+// the page underneath too). The page is pinned where it was and put back exactly there when the sheet closes.
+let pinnedY = null;
+function pinPage() {
+  if (pinnedY !== null) return;
+  pinnedY = window.scrollY; const b = document.body.style;
+  b.position = 'fixed'; b.top = -pinnedY + 'px'; b.left = '0'; b.right = '0'; b.width = '100%';
+}
+function unpinPage() {
+  if (pinnedY === null) return;
+  const y = pinnedY, b = document.body.style; pinnedY = null;
+  b.position = ''; b.top = ''; b.left = ''; b.right = ''; b.width = '';
+  window.scrollTo(0, y);
+}
 export function openSheet(html, onClick) {
-  closeSheet();
+  const old = document.getElementById('sheet'); if (old) old.remove(); // swapping one sheet for another keeps the page pinned
   const wrap = document.createElement('div');
   wrap.className = 'scrim'; wrap.id = 'sheet';
   wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>';
@@ -60,7 +74,7 @@ export function openSheet(html, onClick) {
     if (e.target === wrap || e.target.closest('[data-close]')) { closeSheet(); return; }
     if (onClick) onClick(e, wrap);
   });
-  document.body.appendChild(wrap);
+  document.body.appendChild(wrap); pinPage();
   // iPhone: after the keyboard closes, taps can land in the wrong place until the page reflows. Nudge it.
   wrap.addEventListener('focusout', () => setTimeout(() => {
     const a = document.activeElement; if (a && wrap.contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
@@ -69,7 +83,7 @@ export function openSheet(html, onClick) {
   const first = wrap.querySelector('input[type="text"], textarea'); if (first && first.dataset.autofocus !== undefined) first.focus();
   return wrap;
 }
-export function closeSheet() { const s = document.getElementById('sheet'); if (s) s.remove(); }
+export function closeSheet() { const s = document.getElementById('sheet'); if (s) s.remove(); unpinPage(); }
 
 let toastTimer = null;
 // act (v74): an optional button inside the note, like { label: 'Undo', fn, ms: 6000 }
