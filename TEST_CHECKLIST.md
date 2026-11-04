@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v99) Move → Move report → Everything: the dates start at your first log; the PDF has Month by month, My lifts over time, the weight line (if 2+ weigh-ins) and the list by month.
 - [ ] (v96) Me: Your sky · Your quilt · On repeat fit in one row; On repeat opens its page (Back → Me), Play works. Days: "+ More" visible at the end of the tabs. Settings → Extra tabs on Days: switch Cycle on and off.
 - [ ] (v95) On the iPhone: scroll down a page, open What's new (Settings) or any long sheet, scroll inside it: the page behind stays put; close it: you're where you were.
 - [ ] (v94) A brand-new profile: Your sky says "Your first star is on its way." (no "0 stars"); Letters shows no "0 sealed"; Rest shows "Your quilt" with no count.

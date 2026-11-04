@@ -340,7 +340,67 @@ const setWeight = z => { const a = String(z.a); return a.startsWith('b+') ? Numb
 const better = (x, y) => !y || setWeight(x) > setWeight(y) || (setWeight(x) === setWeight(y) && (Number(x.b) || 0) > (Number(y.b) || 0));
 const topSet = sets => sets.reduce((b, z) => better(z, b) ? z : b, null);
 
-export async function moveReport(from, to) {
+// ---------- v99: charts for the "Everything" Move report ----------
+const MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const hatchOf = g => { const c = document.createElement('canvas'); c.width = c.height = 12; const cg = c.getContext('2d'); cg.fillStyle = '#B9CCF6'; cg.fillRect(0, 0, 12, 12); cg.strokeStyle = BLUE; cg.lineWidth = 2; cg.beginPath(); cg.moveTo(-3, 15); cg.lineTo(15, -3); cg.stroke(); return g.createPattern(c, 'repeat'); };
+// month by month: a bar per month for the days you moved; solid = rep days, striped = days with only other activities
+function monthBars(doc, byDay, all) {
+  const months = []; all.forEach(d => { const k = d.slice(0, 7); let m = months[months.length - 1]; if (!m || m.k !== k) months.push(m = { k, rep: 0, other: 0 }); const it = byDay[d]; if (it.gym.length) m.rep++; else if (it.acts.length) m.other++; });
+  const mx = Math.max(4, Math.ceil(Math.max(...months.map(m => m.rep + m.other)) / 4) * 4);
+  doc.heading('Month by month', 'the days I moved in each month', 460);
+  const ch = 300, g = doc.need(ch + 130), x0 = M + 50, x1 = PW - M - 10, top = doc.y + 16, bw = (x1 - x0) / months.length, Y = v => top + ch - v / mx * ch, hatch = hatchOf(g);
+  g.fillStyle = CARD; rr(g, M, doc.y, PW - 2 * M, ch + 100, 22); g.fill();
+  for (let v = 0; v <= mx; v += mx / 4) { g.fillStyle = LINE; g.fillRect(x0, Y(v), x1 - x0, 1.5); if (v) txt(g, String(v), x0 - 12, Y(v) + 7, '700 17px ' + BODY, SOFT, 'right'); }
+  months.forEach((m, i) => {
+    const w = Math.min(70, bw * 0.66), x = x0 + i * bw + (bw - w) / 2, t = m.rep + m.other;
+    if (m.rep) { g.fillStyle = BLUE; g.fillRect(x, Y(m.rep), w, Y(0) - Y(m.rep)); }
+    if (m.other) { g.fillStyle = hatch; g.fillRect(x, Y(t), w, Y(m.rep) - Y(t)); g.strokeStyle = BLUE; g.lineWidth = 1.5; g.strokeRect(x, Y(t), w, Y(m.rep) - Y(t)); }
+    if (t && bw > 28) txt(g, String(t), x + w / 2, Y(t) - 9, '800 17px ' + BODY, INK, 'center');
+    const [yy, mm] = m.k.split('-').map(Number), every = Math.ceil(months.length / 14);
+    if (i % every === 0 || i === months.length - 1) { txt(g, MON3[mm - 1], x + w / 2, top + ch + 28, '800 16px ' + BODY, INK, 'center'); if (i === 0 || mm === 1) txt(g, String(yy), x + w / 2, top + ch + 48, '700 14px ' + BODY, SOFT, 'center'); }
+  });
+  doc.y = top + ch + 96;
+  let cx = M; cx += chip(g, cx, doc.y, 'Solid: rep days', BLUE, '#FFFFFF') + 10; chip(g, cx, doc.y, 'Striped: days with other activities', '#B9CCF6', INK);
+  doc.y += 56;
+}
+// a small line chart: dots joined by a line, the first and latest values in words, the dates underneath
+function lineCard(g, x, y, w, h, title, pts, fmt) {
+  g.fillStyle = CARD; rr(g, x, y, w, h, 20); g.fill(); g.strokeStyle = LINE; g.lineWidth = 2; g.stroke();
+  txt(g, title, x + 20, y + 36, '800 21px ' + BODY, INK, 'left', w - 40);
+  txt(g, fmt(pts[0].v) + ' → ' + fmt(pts[pts.length - 1].v), x + 20, y + 66, '700 19px ' + BODY, BLUE, 'left', w - 40);
+  const lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v)), pad = (hi - lo) * 0.15 || 1;
+  const cx0 = x + 24, cx1 = x + w - 24, cy0 = y + 92, cy1 = y + h - 44, t0 = parseKey(pts[0].d).getTime(), t1 = parseKey(pts[pts.length - 1].d).getTime();
+  const X = d => t1 === t0 ? (cx0 + cx1) / 2 : cx0 + (parseKey(d).getTime() - t0) / (t1 - t0) * (cx1 - cx0), Yv = v => cy1 - (v - (lo - pad)) / ((hi + pad) - (lo - pad)) * (cy1 - cy0);
+  g.fillStyle = LINE; g.fillRect(cx0, cy1, cx1 - cx0, 1.5);
+  g.strokeStyle = BLUE; g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(X(p.d), Yv(p.v)) : g.moveTo(X(p.d), Yv(p.v))); g.stroke();
+  const r = pts.length > 40 ? 3 : 5; g.fillStyle = BLUE; pts.forEach(p => { g.beginPath(); g.arc(X(p.d), Yv(p.v), r, 0, 7); g.fill(); });
+  txt(g, shortDay(pts[0].d).replace(/^\w+, /, ''), cx0, y + h - 16, '700 15px ' + BODY, SOFT);
+  txt(g, shortDay(pts[pts.length - 1].d).replace(/^\w+, /, ''), cx1, y + h - 16, '700 15px ' + BODY, SOFT, 'right');
+}
+// your lifts over time: the heaviest set each time, for the exercises you've done most (weights only; plates are counted in pins)
+function liftCharts(doc, sessions, st) {
+  const ex = {};
+  sessions.forEach(x => (x.exercises || []).forEach(e => {
+    const top = topSet(e.sets || []); if (!top || !(setWeight(top) > 0)) return;
+    const key = e.swap ? 'swap:' + e.swap : e.key, plate = ((st.units || {})[e.key] || (e.key === 'legpress' ? 'plate' : 'kg')) === 'plate', bar = String(top.a).startsWith('b+');
+    const r = ex[key] = ex[key] || { name: e.swap || e.name, plate, pts: [] };
+    const last = r.pts[r.pts.length - 1], v = setWeight(top), p = { d: x.date, v, bar };
+    if (last && last.d === x.date) { if (v > last.v) r.pts[r.pts.length - 1] = p; } else r.pts.push(p);
+  }));
+  const list = Object.values(ex).filter(r => r.pts.length >= 2).sort((a, b) => b.pts.length - a.pts.length || a.name.localeCompare(b.name)).slice(0, 6);
+  if (!list.length) return;
+  const cw = (PW - 2 * M - 24) / 2, chh = 270;
+  doc.heading('My lifts over time', 'the heaviest set each time, for the exercises I did most', chh + 80);
+  for (let i = 0; i < list.length; i += 2) {
+    const g = doc.need(chh + 24);
+    list.slice(i, i + 2).forEach((r, j) => lineCard(g, M + j * (cw + 24), doc.y, cw, chh, r.name, r.pts, v => r.plate ? 'plate ' + v : showNum(v) + ' ' + wu() + (r.pts.some(p => p.bar) ? ' each side' : '')));
+    doc.y += chh + 24;
+  }
+  doc.y += 8;
+}
+
+export async function moveReport(from, to, mode) {
+  const whole = mode === 'all'; // v99: "Everything", from the first log to today, with month bars and charts instead of the day-by-day calendar
   const st = get(), art = await prep(['moving']); // v63: him with his notebook after a workout, white sticker outline for the blue cover
   const name = st.settings.name;
   const sessions = st.sessions.filter(x => x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date) || (Number(a.ts) || 0) - (Number(b.ts) || 0));
@@ -356,7 +416,7 @@ export async function moveReport(from, to) {
   const mins = acts.reduce((n, a) => n + (Number(a.mins) || 0), 0); // v73: only the minutes you typed; a gym session's own length is kept but not shown (many log after the workout, so it isn't real)
 
   // at a glance
-  doc.heading('At a glance', 'the ' + nDays + ' days from ' + longDate(from) + ' to ' + longDate(to));
+  doc.heading('At a glance', whole ? 'everything since ' + longDate(from, true) + ', ' + nDays + ' days' : 'the ' + nDays + ' days from ' + longDate(from) + ' to ' + longDate(to));
   const tiles = [[activeDays.length + ' of ' + nDays, 'days I moved']];
   const repDays = new Set(sessions.map(s => s.date)).size; // v87
   if (repDays) tiles.push([repDays, repDays === 1 ? 'rep day' : 'rep days']);
@@ -377,7 +437,10 @@ export async function moveReport(from, to) {
 
   // body weight: every weigh-in in these dates, with where (different scales read differently)
   const W = (st.weights || []).filter(w => w.date >= from && w.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
-  if (W.length) {
+  if (whole && W.length > 1) { // v99: a line over a long stretch, instead of a long table
+    doc.heading('Body weight', 'from ' + withUnit(W[0].kg) + ' to ' + withUnit(W[W.length - 1].kg), 380);
+    const g = doc.need(320); lineCard(g, M, doc.y, PW - 2 * M, 300, 'Every weigh-in', W.map(w => ({ d: w.date, v: w.kg })), withUnit); doc.y += 324;
+  } else if (W.length) {
     doc.heading('Body weight', W.length > 1 ? 'from ' + withUnit(W[0].kg) + ' to ' + withUnit(W[W.length - 1].kg) : '', 120 + W.length * 46);
     doc.table([{ label: 'Day', w: 420 }, { label: 'Weight', w: 260 }, { label: 'Where', w: 368 }], W.map(w => ({ cells: [dayDate(w.date), withUnit(w.kg), w.where || ''] })), { boldFirst: true });
   }
@@ -386,7 +449,9 @@ export async function moveReport(from, to) {
   const used = ['gym'].filter(() => sessions.length).concat([...new Set(acts.map(a => a.type))]);
   const code = {}; const taken = new Set();
   used.forEach(t => { const n = t === 'gym' ? 'Gym' : actDef(t).n; let c = n[0].toUpperCase(); if (taken.has(c)) c = n.slice(0, 2).replace(/^./, x => x.toUpperCase()); taken.add(c); code[t] = c; });
-  {
+  if (whole) monthBars(doc, byDay, all); // v99
+  if (whole) liftCharts(doc, sessions, st);
+  if (!whole) {
     const cols = 7, gap = 12, cw = (PW - 2 * M - gap * (cols - 1)) / cols, ch = all.length > 14 ? 108 : 132, nRows = Math.ceil(all.length / cols);
     doc.heading('Day by day', 'a letter for each thing I did that day', nRows * (ch + gap) + 60); // the whole calendar stays on one page
     for (let i = 0; i < all.length; i += cols) {
@@ -409,7 +474,7 @@ export async function moveReport(from, to) {
 
   // week by week: the dates in 7-day stretches from the first day (two rows for two weeks), never a zero
   const weeks = []; for (let i = 0; i < all.length; i += 7) weeks.push(all.slice(i, i + 7));
-  if (weeks.length > 1) {
+  if (weeks.length > 1 && !whole) {
     doc.heading('Week by week', 'each row is 7 days', 140 + weeks.length * 46);
     doc.table([{ label: 'Dates', w: 330 }, { label: 'Days I moved', w: 190 }, { label: 'Gym', w: 150 }, { label: 'Other', w: 150 }, { label: 'Time noted', w: 228 }], weeks.map(ds => {
       const act = ds.filter(d => byDay[d].gym.length || byDay[d].acts.length).length, gy = ds.reduce((n, d) => n + byDay[d].gym.length, 0), ot = ds.reduce((n, d) => n + byDay[d].acts.length, 0), mm = ds.reduce((n, d) => n + byDay[d].acts.reduce((a, x) => a + (Number(x.mins) || 0), 0), 0);
@@ -449,9 +514,15 @@ export async function moveReport(from, to) {
   const list = sessions.map(x => ({ d: x.date, t: Number(x.ts) || 0, what: 'Gym · ' + x.workoutName, det: [plural((x.exercises || []).length, 'exercise', 'exercises'), x.light ? 'felt ' + x.light : ''].filter(Boolean).join(' · ') }))
     .concat(acts.map(a => ({ d: a.date, t: a.ts, what: actDef(a.type).n, det: summary(a) }))).sort((a, b) => a.d.localeCompare(b.d) || a.t - b.t);
   let lastD = null;
+  if (whole) { // v99: compact, with a heading for each month, so a long history stays a few pages
+    let lastM = null; const rowsC = [];
+    list.forEach(r => { const mk = r.d.slice(0, 7); if (mk !== lastM) { const [yy, mm] = mk.split('-').map(Number), n = list.filter(z => z.d.startsWith(mk)).length; rowsC.push({ group: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][mm - 1] + ' ' + yy, note: plural(n, 'entry', 'entries') }); lastM = mk; lastD = null; }
+      rowsC.push({ cells: [r.d !== lastD ? shortDay(r.d) : '', r.what, r.det] }); lastD = r.d; });
+    doc.table([{ label: 'Day', w: 220 }, { label: 'What', w: 360 }, { label: 'Details', w: 468 }], rowsC, { boldFirst: true, fs: 16, rh: 36 });
+  } else
   doc.table([{ label: 'Day', w: 330 }, { label: 'What', w: 330 }, { label: 'Details', w: 388 }], list.map(r => { const c = [r.d !== lastD ? dayDate(r.d) : '', r.what, r.det]; lastD = r.d; return { cells: c }; }), { boldFirst: true, fs: 19 });
   doc.para('Logged by me in the Prequel app. Times are only where I noted them; highlights and notes are left out.', '600 20px ' + BODY, SOFT);
-  return doc.finish('Move report ' + longDate(from) + ' to ' + longDate(to) + '.pdf', 'Move report · ' + range(from, to));
+  return doc.finish(whole ? 'Move report, everything to ' + longDate(to, true) + '.pdf' : 'Move report ' + longDate(from) + ' to ' + longDate(to) + '.pdf', 'Move report · ' + range(from, to));
 }
 
 // ---------- the sheets that ask which dates, then hand you the file ----------
@@ -516,7 +587,8 @@ export function openMoveReport() {
   const t = today(), st = get(), from = addDays(t, -13);
   const dates = st.sessions.map(x => x.date).concat((st.activities || []).map(a => a.date));
   if (!dates.length) { notYet('proudstar', 'Your first Move report is on its way', 'Log a workout or any activity, and your report will be ready to make.'); return; }
-  const opts = [['Last 2 weeks', from, t], ['Last 4 weeks', addDays(t, -27), t]]; // v62: 4 weeks too
+  const first = dates.reduce((m, d) => d < m ? d : m, t);
+  const opts = [['Last 2 weeks', from, t], ['Last 4 weeks', addDays(t, -27), t], ['Everything', first, t, 'all']]; // v62: 4 weeks too; v99: everything
   markEmpty(opts, dates);
-  rangeSheet('Move report', 'How you\'ve moved, as a PDF for you, your doctor or a coach. Highlights and notes stay private.', opts, [], (a, b) => build(() => moveReport(a, b), 'Move report'));
+  rangeSheet('Move report', 'How you\'ve moved, as a PDF for you, your doctor or a coach. Highlights and notes stay private.', opts, [], (a, b, mode) => build(() => moveReport(a, b, mode), 'Move report'));
 }
