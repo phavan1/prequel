@@ -1,6 +1,7 @@
 import { load, get, save, today, dateKey, hasData } from './store.js';
 import { NEWS, LATEST, openNews } from './news.js';
 import { settleUnits } from './units.js';
+import { pageAllowed, needsAreasAsk, markAsked, AREAS, on, setOn } from './features.js';
 import * as home from './screens/home.js';
 import * as weather from './screens/weather.js';
 import * as move from './screens/move.js';
@@ -22,7 +23,7 @@ import * as wall from './screens/wall.js';
 import * as settings from './screens/settings.js';
 import * as share from './screens/share.js';
 import * as repeat from './screens/repeat.js';
-import { closeSheet, setLogDate, esc, reduceMotion } from './ui.js';
+import { closeSheet, openSheet, setLogDate, esc, reduceMotion } from './ui.js';
 
 const ROUTES = { home, weather, move, food, rest, wins, mind, letters, days, me, sky, quilt, skate, keepup, stack, journey, road, wall, settings, share, repeat };
 let root = document.getElementById('app');
@@ -36,6 +37,7 @@ function route() {
   params.args = rest;
   setLogDate(params.d || null);
   document.body.classList.remove('heavy-day');
+  if (ROUTES[name] && !pageAllowed(name)) { location.replace('#/home'); return; } // v101: a switched-off area
   const screen = ROUTES[name] || home;
   if (current && current.unmount) current.unmount();
   current = screen;
@@ -90,6 +92,24 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') hello(); else { st.lastSeen = Date.now(); save(); }
 });
 
+// v101: the first time someone opens Prequel, one sheet asks what they'd like it for, with everything ticked, so one
+// tap keeps it all. Asked once (even if they close it); they can change it any time in Settings.
+let wandered = false; window.addEventListener('hashchange', () => { wandered = true; });
+function askAreas() {
+  // only while they're still on Home, before they've gone anywhere (someone already exploring isn't interrupted; they're asked next time)
+  const onHome = /^#?\/?(home)?(\?.*)?$/.test(location.hash);
+  if (!needsAreasAsk() || wandered || !onHome || document.getElementById('sheet')) return;
+  if (hasData()) return; // someone already using Prequel is never asked (nothing is written, so backups stay exactly as they were)
+  markAsked();
+  const pick = Object.fromEntries(AREAS.map(a => [a[0], on(a[0])]));
+  const rows = () => AREAS.map(a => '<button type="button" class="mgrow" data-pick-area="' + a[0] + '" aria-pressed="' + pick[a[0]] + '" style="width:100%;text-align:left"><span>' + esc(a[1]) + '<small>' + esc(a[2]) + '</small></span><b>' + (pick[a[0]] ? '✓' : '') + '</b></button>').join('');
+  const sh = openSheet('<h2>What would you like Prequel for?</h2><p class="muted">Untick anything you don\'t need. You can change this any time in Settings.</p><div class="dtabs areas">' + rows() + '</div>' +
+    '<button type="button" class="btn" data-areas-ok>Looks good</button>', ev => {
+    const b = ev.target.closest('[data-pick-area]');
+    if (b) { const k = b.dataset.pickArea; pick[k] = !pick[k]; sh.querySelector('.areas').innerHTML = rows(); return; }
+    if (ev.target.closest('[data-areas-ok]')) { AREAS.forEach(a => setOn(a[0], pick[a[0]])); closeSheet(); route(); }
+  });
+}
 // What's new: once, after an update, as soon as the hello has gone. A brand-new user has nothing "new", so they
 // skip it. Someone updating from before this window existed sees the latest update. Showing it counts as seen.
 function whatsNew() {
@@ -122,6 +142,7 @@ load().then(() => {
   if (window.prequelStarted) window.prequelStarted(); // tells the start-up safety net in index.html all is well (v53)
   hello();
   setTimeout(whatsNew, 300);
+  setTimeout(askAreas, reduceMotion ? 1700 : 2700); // v101: a brand-new person picks what they want, once
   document.documentElement.classList.add('ready');
 }).catch(e => { if (window.prequelFailed) window.prequelFailed(e); });
 

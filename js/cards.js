@@ -1,6 +1,7 @@
 // Share cards: story-sized (1080 x 1920) pictures drawn from your own data, in a few looks each.
 // Everything is drawn here on a canvas, offline. Only what the card shows ever leaves the phone.
 import { get, parseKey, dateKey, today } from './store.js';
+import { on, goalShown } from './features.js';
 import { AREAS, weatherByName } from './data.js';
 import { updateSky, starPos, mulberry32, hashStr } from './sky-model.js';
 import { patches, PAT, byMonth, drawQuiltMonth, monthName as ymName, QCOLS, fullLayout } from './screens/quilt.js';
@@ -137,13 +138,13 @@ export function drawSky(g, look, imgs) {
 // ---------- 2. milestones ----------
 export function milestones() {
   const st = get(); ensureGoals(); const out = [];
-  (st.goals || []).filter(g => g.finished).forEach(g => out.push({ id: 'g' + g.id, n: g.target, unit: unitOf(g), title: g.name, kicker: 'GOAL REACHED', line: 'counted up, one at a time' }));
-  (st.goals || []).filter(g => !g.finished && count(g) > 0).forEach(g => out.push({ id: 'p' + g.id, n: count(g), unit: unitOf(g), title: g.name, kicker: 'SO FAR', line: 'on the way to ' + g.target }));
+  (st.goals || []).filter(g => g.finished && goalShown(g)).forEach(g => out.push({ id: 'g' + g.id, n: g.target, unit: unitOf(g), title: g.name, kicker: 'GOAL REACHED', line: 'counted up, one at a time' }));
+  (st.goals || []).filter(g => !g.finished && goalShown(g) && count(g) > 0).forEach(g => out.push({ id: 'p' + g.id, n: count(g), unit: unitOf(g), title: g.name, kicker: 'SO FAR', line: 'on the way to ' + g.target }));
   const repDays = new Set(st.sessions.map(s => s.date)).size; // v87: rep days, not gym sessions
-  if (repDays) out.push({ id: 's', n: repDays, unit: repDays === 1 ? 'rep day' : 'rep days', title: 'Rep days', kicker: 'SHOWED UP', line: 'got my reps in, one day at a time' });
-  const wins = st.moments.filter(m => m.area === 'win').length; if (wins) out.push({ id: 'w', n: wins, unit: 'tiny wins', title: 'Tiny wins', kicker: 'SMALL THINGS', line: 'on hard days, these are the big ones' });
+  if (repDays && on('move')) out.push({ id: 's', n: repDays, unit: repDays === 1 ? 'rep day' : 'rep days', title: 'Rep days', kicker: 'SHOWED UP', line: 'got my reps in, one day at a time' });
+  const wins = st.moments.filter(m => m.area === 'win').length; if (wins && on('wins')) out.push({ id: 'w', n: wins, unit: 'tiny wins', title: 'Tiny wins', kicker: 'SMALL THINGS', line: 'on hard days, these are the big ones' });
   if (st.moments.length) out.push({ id: 'm', n: st.moments.length, unit: 'stars', title: 'Stars in my sky', kicker: 'MY SKY', line: 'every one a day I showed up' });
-  const rd = new Set(st.rests.map(r => r.date)).size; if (rd) out.push({ id: 'r', n: rd, unit: 'days of rest', title: 'Rest', kicker: 'RESTED', line: 'rest is part of the plan' });
+  const rd = new Set(st.rests.map(r => r.date)).size; if (rd && on('rest')) out.push({ id: 'r', n: rd, unit: 'days of rest', title: 'Rest', kicker: 'RESTED', line: 'rest is part of the plan' });
   return out;
 }
 export const MILE_LOOKS = [
@@ -190,14 +191,14 @@ export const MONTH_LOOKS = [
 ];
 function monthStats(y, mo) {
   const st = get(), inM = d => { const p = parseKey(d); return p.getFullYear() === y && p.getMonth() === mo; };
-  const moved = new Set(st.sessions.filter(s => inM(s.date)).map(s => s.date)).size;
-  const meals = (st.meals || []).filter(m => inM(m.date)).length + st.foods.filter(f => inM(f.date)).length;
-  const rests = new Set(st.rests.filter(r => inM(r.date)).map(r => r.date)).size;
-  const wins = st.moments.filter(m => m.area === 'win' && inM(m.date)).length;
+  const moved = on('move') ? new Set(st.sessions.filter(s => inM(s.date)).map(s => s.date)).size : 0; // v101: switched-off areas aren't counted
+  const meals = !on('food') ? 0 : (st.meals || []).filter(m => inM(m.date)).length + st.foods.filter(f => inM(f.date)).length;
+  const rests = on('rest') ? new Set(st.rests.filter(r => inM(r.date)).map(r => r.date)).size : 0;
+  const wins = !on('wins') ? 0 : st.moments.filter(m => m.area === 'win' && inM(m.date)).length;
   const stars = st.moments.filter(m => inM(m.date)).length;
-  const wx = st.weather.filter(w => inM(w.date)).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
+  const wx = st.weather.filter(w => on('weather') && inM(w.date)).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
   const tiles = [[moved, moved === 1 ? 'day I moved' : 'days I moved'], [meals, meals === 1 ? 'thing I ate, logged' : 'things I ate, logged'], [rests, rests === 1 ? 'day of rest' : 'days of rest'], [wins, wins === 1 ? 'tiny win' : 'tiny wins'], [stars, 'new stars']].filter(t => t[0] > 0).slice(0, 4);
-  const qp = patches().filter(p => inM(p.date)).slice(-8);
+  const qp = on('rest') ? patches().filter(p => inM(p.date)).slice(-8) : [];
   return { tiles, wx, qp };
 }
 // v85: the months the card can show, newest first: this month, plus any month with something logged in it

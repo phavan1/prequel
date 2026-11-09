@@ -1,5 +1,6 @@
 // Small shared helpers: escaping, sheets, toasts, the character, the date you're logging for.
 import { today, addDays, parseKey } from './store.js';
+import { on, daysOn } from './features.js';
 
 export const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -136,7 +137,9 @@ function hashPage() { const [path, q] = location.hash.replace(/^#\/?/, '').split
 export function nav(active) {
   const { page, from } = hashPage();
   if (!NAV.some(n => n[0] === page) && NAV.some(n => n[0] === from)) active = from; // a page under a tab lights the tab you came from
-  return '<nav class="tabbar" aria-label="Main">' + NAV.map(n => '<a href="#/' + n[0] + '"' + (n[0] === active ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + n[2] + '</svg>' + n[1] + '</a>').join('') + '</nav>';
+  // v101: a switched-off area takes its tab with it; the bar spreads out over what's left
+  const tabs = NAV.filter(n => n[0] === 'days' ? daysOn() : n[0] === 'move' || n[0] === 'mind' ? on(n[0]) : true);
+  return '<nav class="tabbar" aria-label="Main" style="grid-template-columns:repeat(' + tabs.length + ',minmax(0,1fr))">' + tabs.map(n => '<a href="#/' + n[0] + '"' + (n[0] === active ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + n[2] + '</svg>' + n[1] + '</a>').join('') + '</nav>';
 }
 export const FROM = { me: ['#/me', 'Me'], home: ['#/home', 'Home'], rest: ['#/rest', 'Rest'], share: ['#/share', 'Share'], days: ['#/days', 'Days'], move: ['#/move', 'Move'] };
 export function backLink(href, label) {

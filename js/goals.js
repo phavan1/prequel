@@ -3,6 +3,7 @@
 import { get, save, uid, addMoment, today, dateKey } from './store.js';
 import { esc, him, openSheet, closeSheet, toast, prettyDate } from './ui.js';
 import { actDef, measures, measureTotal } from './activities.js';
+import { on, goalArea } from './features.js';
 
 const tsOfDay = rests => { const m = {}; rests.forEach(r => { if (!m[r.date] || r.end < m[r.date]) m[r.date] = r.end || r.start; }); return Object.values(m); };
 // a meal counts as home-cooked when the food it came from is marked home-cooked
@@ -80,7 +81,7 @@ function readUnit(d) { const el = document.getElementById('gUnit'); if (el) d.un
 export function openNewGoal(onDone) {
   const st = get();
   const d = { kind: 'own', source: null, name: '', target: '', from: 'all', unit: 'times', amount: false };
-  const sources = Object.keys(SOURCES).concat(st.settings.tinyWins.map(w => 'win:' + w));
+  const sources = Object.keys(SOURCES).concat(st.settings.tinyWins.map(w => 'win:' + w)).filter(k => on(goalArea({ source: k }))); // v101: only from areas you have on
   const draw = msg => '<h2>A new goal</h2><p class="muted">Something to count up to. It never resets, and there\'s no deadline.</p>' +
     '<div class="seg" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" data-k="own" aria-pressed="' + (d.kind === 'own') + '">Something of my own</button><button type="button" data-k="linked" aria-pressed="' + (d.kind === 'linked') + '">Something the app counts</button></div>' +
     (d.kind === 'own'

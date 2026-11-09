@@ -1,4 +1,5 @@
 import { get, save, today, dateKey, parseKey, removeById } from '../store.js';
+import { on } from '../features.js';
 import { weatherByName, EXERCISES } from '../data.js';
 import { SPECIAL, isBP, bpKg } from './move.js';
 import { wu, showA, kgA, isPlate } from '../units.js';
@@ -35,7 +36,9 @@ function dayData(d) {
   const wins = st.moments.filter(m => m.date === d && m.area === 'win');
   const wx = st.weather.filter(w => w.date === d);
   const goals = {}; (st.goalLogs || []).filter(l => l.date === d).forEach(l => { (goals[l.goalId] = goals[l.goalId] || []).push(l); });
-  return { d, move, meals, oldFood, rests, restNotes, wins, wx, goals, cycle: cycleDay(d) };
+  // v101: a switched-off area simply isn't there on Days (its data is kept)
+  const N = [];
+  return { d, move: on('move') ? move : N, meals: on('food') ? meals : N, oldFood: on('food') ? oldFood : N, rests: on('rest') ? rests : N, restNotes: on('rest') ? restNotes : N, wins: on('wins') ? wins : N, wx: on('weather') ? wx : N, goals: on('goals') ? goals : {}, cycle: cycleDay(d) };
 }
 function has(D, k) {
   if (k === 'move') return D.move.length > 0;
@@ -105,7 +108,7 @@ function tabSheet(root) {
 function addSheet(root) {
   const go = g => { closeSheet(); const q = (g === 'move' ? [] : ['from=days']).concat(selected === today() ? [] : ['d=' + selected]); location.hash = '#/' + g + (q.length ? '?' + q.join('&') : ''); }; // from=days: the tab bar and back button lead back to Days (v56)
   openSheet('<h2>Add to ' + esc(prettyDate(selected, { weekday: 'long', day: 'numeric', month: 'long' })) + '</h2>' +
-    '<div class="addgrid">' + [['move', 'Move', 'move'], ['food', 'Food', 'food'], ['rest', 'Rest', 'rest'], ['wins', 'Tiny win', 'win'], ['weather', 'Weather', 'weather'], ['goals', 'Your goals', 'goal']].map(o => '<button type="button" data-g="' + o[0] + '">' + svg(o[2]) + '<span>' + o[1] + '</span></button>').join('') + '</div>' +
+    '<div class="addgrid">' + [['move', 'Move', 'move'], ['food', 'Food', 'food'], ['rest', 'Rest', 'rest'], ['wins', 'Tiny win', 'win'], ['weather', 'Weather', 'weather'], ['goals', 'Your goals', 'goal']].filter(o => on(o[0])).map(o => '<button type="button" data-g="' + o[0] + '">' + svg(o[2]) + '<span>' + o[1] + '</span></button>').join('') + '</div>' +
     '<button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
     const b = ev.target.closest('[data-g]'); if (!b) return;
     if (b.dataset.g === 'goals') { closeSheet(); openLog(selected, () => render(root)); return; }
@@ -204,9 +207,9 @@ export function editSession(root, id, done) {
 
 function render(root) {
   const st = get(), t = today();
-  const goals = (st.goals || []).filter(g => g.kind === 'own' && !g.paused);
-  const tabs = [['all', 'All', 'all'], ['move', 'Move', 'move'], ['food', 'Food', 'food'], ['rest', 'Rest', 'rest']]
-    .concat(OPTIONAL.filter(o => (st.settings.dayTabs || []).includes(o[0])).map(o => [o[0], o[1], o[0]]))
+  const goals = on('goals') ? (st.goals || []).filter(g => g.kind === 'own' && !g.paused) : [];
+  const tabs = [['all', 'All', 'all']].concat([['move', 'Move', 'move'], ['food', 'Food', 'food'], ['rest', 'Rest', 'rest']].filter(x => on(x[0]))) // v101
+    .concat(OPTIONAL.filter(o => (st.settings.dayTabs || []).includes(o[0]) && (o[0] === 'win' ? on('wins') : o[0] === 'weather' ? on('weather') : true)).map(o => [o[0], o[1], o[0]]))
     .concat(goals.map(g => ['g:' + g.id, g.name, 'goal']));
   if (!tabs.some(x => x[0] === tab)) tab = 'all';
   const [y, mo] = month;

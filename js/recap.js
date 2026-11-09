@@ -6,6 +6,7 @@
 // best bits" (a proud fact, not a feeling), or else nothing (the photos get taller). Tiny wins and letters stay in
 // the app (Phavan: they're personal; a wall is public). No character. First version, to be iterated.
 import { get, parseKey, dateKey } from './store.js';
+import { on } from './features.js';
 import { weatherByName } from './data.js';
 import { updateSky, starPos, mulberry32, hashStr } from './sky-model.js';
 import { patches, drawPatch, goldStar } from './screens/quilt.js';
@@ -46,13 +47,15 @@ const tsIn = (ts, ym) => !!ts && dateKey(new Date(ts)).startsWith(ym);
 
 // everything the poster needs, from the month's data (also used by the page to show what will be on it)
 export function recapData(ym) {
-  const st = get(), moments = st.moments || [];
+  // v101: switched-off areas are left out of the recap (their data is kept); the sky keeps every star
+  const G = get(), E = [], st = Object.assign({}, G, { sessions: on('move') ? G.sessions : E, activities: on('move') ? G.activities : E, foods: on('food') ? G.foods : E, meals: on('food') ? G.meals : E,
+    rests: on('rest') ? G.rests : E, weather: on('weather') ? G.weather : E, mind: on('mind') ? G.mind : E }), moments = st.moments || [];
   // the weather: the last check-in of each day, in order
   const byDay = {}; (st.weather || []).filter(w => inMonth(w.date, ym)).sort((a, b) => a.ts - b.ts).forEach(w => { byDay[w.date] = w; });
   const weather = Object.keys(byDay).sort().map(d => byDay[d].types[0]).filter(Boolean);
   const tally = {}; weather.forEach(n => { tally[n] = (tally[n] || 0) + 1; });
   // the numbers, only above zero
-  const wins = moments.filter(m => m.area === 'win' && inMonth(m.date, ym));
+  const wins = on('wins') ? moments.filter(m => m.area === 'win' && inMonth(m.date, ym)) : [];
   const tiles = [
     [new Set((st.sessions || []).filter(s => inMonth(s.date, ym)).map(s => s.date)).size, 'rep days', 'rep day'], // v87: days at the gym (two workouts in a day are one rep day)
     movedTile((st.activities || []).filter(a => inMonth(a.date, ym))), // v88: named, with the rest on a small line
@@ -68,7 +71,7 @@ export function recapData(ym) {
     .map(c => ({ name: c.con.name, edges: c.con.edges, stars: c.con.ids.filter(id => byId[id]).map(id => Object.assign({ id }, starPos(byId[id], c))) })).filter(c => c.stars.length >= 2).slice(-2);
   const newStars = moments.filter(m => inMonth(m.date, ym)).length;
   // the quilt
-  const quilt = patches().filter(p => inMonth(p.date, ym));
+  const quilt = on('rest') ? patches().filter(p => inMonth(p.date, ym)) : [];
   // caption suggestions for your photos: only your Move highlights (tiny wins stay in the app)
   const hls = [...new Set((st.activities || []).filter(a => inMonth(a.date, ym) && a.hl && a.hl.trim()).sort((a, b) => a.date.localeCompare(b.date)).map(a => a.hl.trim()))];
   // the month at a glance: each day you moved, each soft day, each night of rest
@@ -161,8 +164,10 @@ export function drawRecap(ym, phrase, covers, photos) {
   box(g, 0, 0, lw, 88, RED, { shadow: 9, lw: 6, r: 2 }); g.fillStyle = '#FFFFFF'; g.fillText('LOOK WHAT YOU DID', 28, 66);
   g.restore();
 
-  // the weather you carried
-  let y = 440; box(g, M, y, W - 2 * M, 250, '#FFFFFF');
+  // the weather you carried (v101: with Weather switched off the box isn't drawn, and everything below moves up)
+  const dy = on('weather') ? 0 : 310; let y = 440;
+  if (!dy) {
+  box(g, M, y, W - 2 * M, 250, '#FFFFFF');
   panelTitle(g, 'THE WEATHER YOU CARRIED', M + 30, y + 66);
   if (d.weather.length) {
     const inner = W - 2 * M - 60, n = d.weather.length, gap = n > 24 ? 6 : 8, bw = Math.min(56, (inner - gap * (n - 1)) / n);
@@ -171,8 +176,9 @@ export function drawRecap(ym, phrase, covers, photos) {
     const wl = wrapLines(g, words, '800 26px ' + BODY, W - 2 * M - 60, 2); g.font = '800 26px ' + BODY; g.fillStyle = INK; wl.forEach((l, j) => g.fillText(l, M + 30, y + (wl.length > 1 ? 206 : 218) + j * 30));
   } else { g.font = '700 40px ' + HAND; g.fillStyle = INK; g.fillText('No weather written down this month. Every day still counted.', M + 30, y + 150); }
 
+  }
   // the numbers
-  y = 750; const tiles = d.tiles.length ? d.tiles : [[d.newStars || 1, d.newStars === 1 ? 'star in your sky' : 'stars in your sky']];
+  y = 750 - dy; const tiles = d.tiles.length ? d.tiles : [[d.newStars || 1, d.newStars === 1 ? 'star in your sky' : 'stars in your sky']];
   const n = tiles.length, tg = 26, tw = (W - 2 * M - 14 - tg * (n - 1)) / n, FILLS = [YEL, '#FFFFFF', RED, '#FFFFFF', '#9FC0FF'];
   tiles.forEach((t, i) => {
     const x = M + i * (tw + tg), fill = FILLS[i % FILLS.length], dark = fill === RED;
@@ -193,13 +199,14 @@ export function drawRecap(ym, phrase, covers, photos) {
   g.textAlign = 'left';
 
   // stars that joined up, and this month's quilt
-  y = 1070; const pw = (W - 2 * M - 40) / 2, ph = 560;
-  box(g, M, y, pw, ph, NAVY);
+  // v101: with Rest switched off there's no quilt, and the stars take the whole width
+  y = 1070 - dy; const showQ = on('rest'), pw = (W - 2 * M - 40) / 2, spw = showQ ? pw : W - 2 * M, ph = 560 + dy;
+  box(g, M, y, spw, ph, NAVY);
   panelTitle(g, 'STARS THAT JOINED UP', M + 30, y + 66, YEL);
   const rnd = mulberry32(hashStr(ym)); g.fillStyle = 'rgba(255,248,225,.75)';
-  for (let i = 0; i < 70; i++) { g.beginPath(); g.arc(M + 20 + rnd() * (pw - 40), y + 100 + rnd() * (ph - 130), 1.5 + rnd() * 2.5, 0, 7); g.fill(); }
+  for (let i = 0; i < 70; i++) { g.beginPath(); g.arc(M + 20 + rnd() * (spw - 40), y + 100 + rnd() * (ph - 130), 1.5 + rnd() * 2.5, 0, 7); g.fill(); }
   if (d.cons.length) {
-    const slotW = pw / d.cons.length, COLS = ['#9FC0FF', YEL];
+    const slotW = spw / d.cons.length, COLS = ['#9FC0FF', YEL];
     d.cons.forEach((con, i) => {
       const xs = con.stars.map(s => s.x), ys = con.stars.map(s => s.y), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
       const bw2 = slotW - 90, bh = ph - 250, sc = Math.min(bw2 / Math.max(1, x1 - x0), bh / Math.max(1, y1 - y0), 2.4);
@@ -212,9 +219,10 @@ export function drawRecap(ym, phrase, covers, photos) {
     });
     g.textAlign = 'left';
   } else {
-    g.textAlign = 'center'; g.font = '400 120px ' + BANG; g.fillStyle = YEL; g.fillText(String(d.newStars), M + pw / 2, y + 320);
-    g.font = '700 44px ' + HAND; g.fillStyle = '#FFF4CC'; g.fillText(d.newStars === 1 ? 'new star in your sky' : 'new stars in your sky', M + pw / 2, y + 390); g.textAlign = 'left';
+    g.textAlign = 'center'; g.font = '400 120px ' + BANG; g.fillStyle = YEL; g.fillText(String(d.newStars), M + spw / 2, y + 320);
+    g.font = '700 44px ' + HAND; g.fillStyle = '#FFF4CC'; g.fillText(d.newStars === 1 ? 'new star in your sky' : 'new stars in your sky', M + spw / 2, y + 390); g.textAlign = 'left';
   }
+  if (showQ) {
   const qx = M + pw + 40; box(g, qx, y, pw, ph, '#FFFFFF');
   panelTitle(g, 'THIS MONTH’S QUILT', qx + 30, y + 66);
   if (d.quilt.length) {
@@ -237,6 +245,7 @@ export function drawRecap(ym, phrase, covers, photos) {
     g.strokeStyle = INK; g.lineWidth = 5; g.beginPath(); g.moveTo(qx, top); g.lineTo(qx + pw, top); g.stroke(); // the strip's edge
     rr(g, qx, y, pw, ph, 6); g.stroke(); // the box's outline again, crisp over the patch edges
   } else { g.font = '700 40px ' + HAND; g.fillStyle = INK; g.textAlign = 'center'; g.fillText('Your quilt starts with', qx + pw / 2, y + 300); g.fillText('your first night of rest.', qx + pw / 2, y + 350); g.textAlign = 'left'; }
+  }
 
   // your photos as polaroids, or else your month at a glance (taller when there's nothing for the bottom box)
   const bottom = d.snd || d.best, fh = bottom ? 400 : 470;

@@ -34,7 +34,7 @@ const errors = [];
   await p.click('[data-dtab="cycle"]'); await p.waitForTimeout(300);
   const st1 = await p.evaluate(async () => (await import('./js/store.js')).get().settings.dayTabs);
   ok('turning Cycle on adds its tab', st1.includes('cycle') && /Shown/.test(await p.locator('[data-dtab="cycle"]').innerText()));
-  await p.locator('.dtabs').scrollIntoViewIfNeeded(); await p.locator('.dtabs').screenshot({ path: OUT + '/fd-settings.png' });
+  await p.locator('.dtabs:not(.areas)').scrollIntoViewIfNeeded(); await p.locator('.dtabs:not(.areas)').screenshot({ path: OUT + '/fd-settings.png' });
   await p.goto(BASE + '#/days'); await p.waitForTimeout(400);
   ok('…and Days shows the Cycle tab', await p.locator('[data-tab="cycle"]').count() === 1);
   await p.goto(BASE + '#/settings'); await p.waitForTimeout(300); await p.click('[data-dtab="cycle"]'); await p.waitForTimeout(300);

@@ -1,6 +1,7 @@
 import { get, save, uid, addMoment, today, dateKey } from '../store.js';
 import { AREAS, weatherByName } from '../data.js';
 import { esc, prettyDate, reduceMotion, openSheet, closeSheet, toast } from '../ui.js';
+import { on, skyFed } from '../features.js';
 import { updateSky, starPos, clusterCenter, mulberry32, hashStr } from '../sky-model.js';
 
 let raf = 0, cleanup = [];
@@ -17,7 +18,7 @@ export function mount(root, params = {}) {
     '<canvas id="sky" aria-label="Your sky. Each star is a moment you logged."></canvas>' +
     '<div class="sky-top"><a class="back" href="' + (params.from === 'me' ? '#/me">‹ Me' : '#/home">‹ Home') + '</a><h1>Your sky</h1><div class="stats" id="stats"></div><div class="legend">' +
       Object.keys(AREAS).map(k => '<span><i style="background:' + AREAS[k].colour + '"></i>' + AREAS[k].name + '</span>').join('') + '</div></div>' +
-    '<div class="sky-bar"><button type="button" class="btn alt" id="letBtn">Let something go</button><button type="button" class="btn alt" id="zoomBtn">Year view</button></div>' +
+    '<div class="sky-bar">' + (on('mind') ? '<button type="button" class="btn alt" id="letBtn">Let something go</button>' : '') + '<button type="button" class="btn alt" id="zoomBtn">Year view</button></div>' +
     '<div class="sky-card" id="card" hidden><button type="button" class="x" id="cardClose" aria-label="Close">×</button><div class="lbl" id="cardK"></div><div class="t" id="cardT"></div><div class="m" id="cardM"></div><div class="say" id="cardH" style="color:var(--blue)"></div></div>' +
     '<div class="sky-toast" id="newcon" hidden><div class="lbl">A new constellation</div><div class="n" id="newconName"></div></div>';
 
@@ -52,7 +53,7 @@ export function mount(root, params = {}) {
 
   const nCons = cons.length;
   // v94: only what's there (no zeros); an empty sky gets a kind line instead
-  root.querySelector('#stats').textContent = [[stars.length, ' star', ' stars'], [nCons, ' constellation', ' constellations'], [lanterns.length, ' lantern', ' lanterns']].filter(x => x[0] > 0).map(x => x[0] + (x[0] === 1 ? x[1] : x[2])).join(' · ') || 'Your first star is on its way.';
+  root.querySelector('#stats').textContent = !skyFed() ? 'Your sky is resting. Switch something on in Settings, under Make it yours, and new stars will join it.' : [[stars.length, ' star', ' stars'], [nCons, ' constellation', ' constellations'], [lanterns.length, ' lantern', ' lanterns']].filter(x => x[0] > 0).map(x => x[0] + (x[0] === 1 ? x[1] : x[2])).join(' · ') || 'Your first star is on its way.';
   const fresh = cons.filter(c => c.isNew);
   if (fresh.length) {
     setTimeout(() => { const el = root.querySelector('#newcon'); if (!el) return; root.querySelector('#newconName').textContent = fresh.map(c => c.name).join(' · '); el.hidden = false; setTimeout(() => { el.hidden = true; }, 4200); }, 2200);
@@ -200,7 +201,7 @@ export function mount(root, params = {}) {
   }
   root.querySelector('#cardClose').addEventListener('click', () => { card.hidden = true; });
   zoomBtn.addEventListener('click', () => { card.hidden = true; if (target.s < 0.6) latest(); else yearView(); zoomLabel(); });
-  root.querySelector('#letBtn').addEventListener('click', () => {
+  if (root.querySelector('#letBtn')) root.querySelector('#letBtn').addEventListener('click', () => { // v101: lanterns belong to Mind
     openSheet('<h2>Let something go</h2><p class="muted">It folds into a paper lantern and floats up into your sky.</p><label class="sr" for="letText">What are you letting go?</label><input id="letText" type="text" placeholder="e.g. that thing someone said" autocomplete="off"><button type="button" class="btn" data-go>Let it go</button><button type="button" class="btn alt" data-close>Not now</button>', ev => {
       if (!ev.target.closest('[data-go]')) return;
       const text = document.getElementById('letText').value.trim(); if (!text) return;

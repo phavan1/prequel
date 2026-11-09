@@ -107,8 +107,8 @@ export function noticing(st) {
   st.weather.forEach(w => { const l = w.types.filter(t => LIGHT.includes(t)).length / w.types.length; light[w.date] = (light[w.date] || []).concat(l); });
   const days = Object.keys(light); if (days.length < 8) return null;
   const isLight = d => { const v = light[d]; return v.reduce((a, b) => a + b, 0) / v.length >= 0.5; };
-  const cands = st.settings.tinyWins.map(w => [w.toLowerCase(), new Set(st.moments.filter(m => m.area === 'win' && m.text === w).map(m => m.date))])
-    .concat([['moved your body', new Set(st.sessions.map(s => s.date))], ['cooked for yourself', new Set(st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.date))]]);
+  const cands = (st.settings.off || []).includes('wins') ? [] : st.settings.tinyWins.map(w => [w.toLowerCase(), new Set(st.moments.filter(m => m.area === 'win' && m.text === w).map(m => m.date))])
+    .concat([['moved your body', new Set(st.sessions.map(s => s.date))], ['cooked for yourself', new Set(st.foods.filter(f => f.tags.includes('Cooked it myself')).map(f => f.date))]].filter(c => !(st.settings.off || []).includes(c[0] === 'moved your body' ? 'move' : 'food'))); // v101: only areas that are on
   let best = null;
   cands.forEach(([phrase, set]) => {
     const withD = days.filter(d => set.has(d)), without = days.filter(d => !set.has(d));

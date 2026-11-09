@@ -1,4 +1,5 @@
 import { get, save, today, backupDue } from '../store.js';
+import { on, skyOn } from '../features.js';
 import { mulberry32 } from '../sky-model.js';
 import { patches, PAT } from './quilt.js';
 import { ensureGoals, checkFinished, openLog } from '../goals.js';
@@ -68,35 +69,32 @@ function render() {
     '<div class="dcols"><div class="dcol ca">' + // v92: on a laptop, the room on the left and everything else on the right (on a phone these wrappers do nothing)
     '<div class="room">' +
       '<div class="floor"></div>' + (soft ? '' : '<svg class="rug" viewBox="0 0 240 44" aria-hidden="true"><ellipse cx="120" cy="22" rx="118" ry="20" fill="#DCE7FF"/><ellipse cx="120" cy="22" rx="104" ry="14" fill="none" stroke="#9FB8E8" stroke-width="2" stroke-dasharray="6 5"/></svg>') +
-      '<a class="window" href="#/sky?from=home" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas>' + WINDOW + (st.moments.length ? '<span>' + st.moments.length + (st.moments.length === 1 ? ' star' : ' stars') + '</span>' : '') + '</a>' +
-      '<a class="hoop" href="#/quilt?from=home" aria-label="Your quilt"><canvas id="miniquilt"></canvas>' + HOOP + '</a>' +
-      (due.length && !soft
+      (!skyOn() ? '' : '<a class="window" href="#/sky?from=home" aria-label="Your sky, ' + st.moments.length + ' stars"><canvas id="mini"></canvas>' + WINDOW + (st.moments.length ? '<span>' + st.moments.length + (st.moments.length === 1 ? ' star' : ' stars') + '</span>' : '') + '</a>') + // v101: the sky shows while it has stars or can get new ones
+      (on('rest') ? '<a class="hoop" href="#/quilt?from=home" aria-label="Your quilt"><canvas id="miniquilt"></canvas>' + HOOP + '</a>' : '') + // v101: Rest off, no hoop (Home is about today)
+      (due.length && !soft && on('mind')
         ? '<a class="note" href="#/mind">hey… ' + esc(due[0].text.toLowerCase()) + '?</a>'
         : '<div class="bubble" id="line">' + esc(line) + '</div>') +
       '<div class="stage wide"><button type="button" id="tap" aria-label="Say hi">' + him(pose, 'wide breathe', 'Your character') + '</button></div>' +
     '</div></div><div class="dcol cb">' +
     (soft
       ? gamesShelf(st) +
-        (() => { const m = fromJar(true); return m ? '<a class="fromjar" href="#/wins"><small>From your jar · ' + esc(new Date(m.ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })) + '</small>' + esc(m.text) + '<em>Remember this one? That was all you.</em></a>' : ''; })() +
-        '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'A letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' +
+        (() => { const m = on('wins') && fromJar(true); return m ? '<a class="fromjar" href="#/wins"><small>From your jar · ' + esc(new Date(m.ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })) + '</small>' + esc(m.text) + '<em>Remember this one? That was all you.</em></a>' : ''; })() +
+        (on('mind') ? '<a class="rowlink" href="#/letters?open=1"><span>' + (st.letters.length ? 'A letter from good-day you' : 'No letters yet. Write one on a good day.') + '</span><b>›</b></a>' : '') +
         '<button type="button" class="btn alt wide softback" data-unheavy>Back to my regular day</button>'
-      : (st.active ? '<a class="rowlink" href="#/move" style="border-color:var(--blue)"><span>' + esc(st.active.n) + ' is still open</span><b>›</b></a>' : '') +
-        '<a class="rowlink" href="#/weather"><span>' + wxText + '</span>' + wxDots + '</a>' +
+      : (st.active && on('move') ? '<a class="rowlink" href="#/move" style="border-color:var(--blue)"><span>' + esc(st.active.n) + ' is still open</span><b>›</b></a>' : '') +
+        (on('weather') ? '<a class="rowlink" href="#/weather"><span>' + wxText + '</span>' + wxDots + '</a>' : '') +
         // v82: no reminder to make next month's planner (Phavan: it felt like pressure); the recap one stays, it's about what you did
-        (() => { const k = recapNudge(); return k ? '<a class="rowlink wallnudge recap" href="#/wall?from=home&back=' + k + '"><span>' + esc(monthWord(k)) + '\'s recap is ready</span><b>›</b></a>' : ''; })() + // v81: the first week of a month, until you've looked
-        '<div class="quick">' +
-          '<a href="#/food">' + svg(ICONS.food) + 'Food</a>' +
-          '<a href="#/rest">' + svg(ICONS.rest) + 'Rest</a>' +
-          '<a href="#/wins">' + svg(ICONS.win) + 'Jar</a>' +
-          '<a href="#/home" data-goals>' + svg(ICONS.goal) + 'Goals</a>' +
-        '</div>' +
+        (() => { const k = on('wall') && recapNudge(); return k ? '<a class="rowlink wallnudge recap" href="#/wall?from=home&back=' + k + '"><span>' + esc(monthWord(k)) + '\'s recap is ready</span><b>›</b></a>' : ''; })() + // v81: the first week of a month, until you've looked
+        // v101: only the areas you have on; the row spreads over however many are left
+        (() => { const q = [on('food') && '<a href="#/food">' + svg(ICONS.food) + 'Food</a>', on('rest') && '<a href="#/rest">' + svg(ICONS.rest) + 'Rest</a>', on('wins') && '<a href="#/wins">' + svg(ICONS.win) + 'Jar</a>', on('goals') && '<a href="#/home" data-goals>' + svg(ICONS.goal) + 'Goals</a>'].filter(Boolean);
+          return q.length ? '<div class="quick" style="grid-template-columns:repeat(' + q.length + ',minmax(0,1fr))">' + q.join('') + '</div>' : ''; })() +
         (backupDue() ? '<a class="rowlink" href="#/settings" style="background:#FFF1C4"><span>Time for a little backup? It keeps everything safe.</span><b>›</b></a>' : '') +
         '<button type="button" class="rowlink softask" data-heavy style="width:100%"><span><i class="softemoji" aria-hidden="true">🍵</i><em>' + pick(SOFT_ASK) + '</em></span><b>›</b></button>') +
     '</div></div>' +
     nav('home');
 
-  drawMini(root.querySelector('#mini'), st);
-  drawQuilt(root.querySelector('#miniquilt'));
+  if (root.querySelector('#mini')) drawMini(root.querySelector('#mini'), st);
+  if (root.querySelector('#miniquilt')) drawQuilt(root.querySelector('#miniquilt'));
 }
 
 function onClick(e) {

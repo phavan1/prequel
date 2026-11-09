@@ -1,6 +1,7 @@
 // Share: story-sized cards made from your own data. Pick a card, swipe through its looks, share or save.
 // Nothing is uploaded by the app; the picture only goes where you send it.
 import { get } from '../store.js';
+import { on } from '../features.js';
 import { esc, nav, backLink, toast, IOS, saveToDevice, SAVED_NOTE } from '../ui.js';
 import { shareFile } from '../pdf.js';
 import { W, H, POSES, loadArt, fontsReady, drawSky, drawMilestone, drawMonth, monthCardMonths, drawQuiltCard, quiltMonths, milestones, SKY_LOOKS, MILE_LOOKS, MONTH_LOOKS, QUILT_LOOKS, SONG_LOOKS, drawSongs, songYears, loadCovers } from '../cards.js';
@@ -18,7 +19,7 @@ let kind = null, lookIx = { sky: 0, mile: 0, month: 0, quilt: 0, songs: 0 }, mil
 export function mount(root, params = {}) {
   const st = get(), miles = milestones(), qms = quiltMonths(), sys = songYears(), mms = monthCardMonths();
   if (!mym || !mms.includes(mym)) mym = mms[0];
-  const avail = Object.keys(KINDS).filter(k => k === 'month' || (k === 'sky' ? st.moments.length > 0 : k === 'quilt' ? qms.length > 0 : k === 'songs' ? sys.length > 0 : miles.length > 0));
+  const avail = Object.keys(KINDS).filter(k => k === 'month' || (k === 'sky' ? st.moments.length > 0 : k === 'quilt' ? qms.length > 0 && on('rest') : k === 'songs' ? sys.length > 0 : miles.length > 0));
   if (!songYear || !sys.includes(songYear)) songYear = sys[0];
   if (params.t === 'quilt' && params.m && qms.includes(params.m)) qym = params.m;
   if (!qym || !qms.includes(qym)) qym = qms[0];
