@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 100, date: '2026-11-09', items: [
+    'On Your moving journey\'s hill, your character\'s head isn\'t cut off at the top anymore, wherever he is on the climb.'
+  ] },
   { v: 99, date: '2026-11-04', items: [
     'The Move report has a new option, Everything: all your moving since your first log, with a bar for each month, how your lifts have grown, and your body weight as a line.'
   ] },

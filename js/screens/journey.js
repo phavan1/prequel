@@ -174,17 +174,19 @@ export function hillSvg(f, o = {}) {
   const W = o.W || 340, H = o.H || 170, L = o.left || 16, R = o.right || 24, fs = o.flag || 26;
   const P = t => { const x = L + t * (W - L - R), y = H - 22 - (Math.sin(t * Math.PI / 2) ** 1.4) * (H - (o.top || 70)); return [x, y]; };
   let path = ''; for (let i = 0; i <= 40; i++) { const [x, y] = P(i / 40); path += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1); }
-  let s = '<svg class="' + (o.cls || 'jhill') + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Your hill: ' + h.n + ' so far, next flag at ' + h.next + '">' +
-    '<path d="M0 ' + P(0)[1].toFixed(1) + ' L' + path.slice(1) + ' L' + W + ' ' + P(1)[1].toFixed(1) + ' L' + W + ' ' + H + ' L0 ' + H + 'Z" class="jground"/><path d="' + path + '" class="jpath"/>';
+  let top = 0; // v100: the highest thing drawn (his head, a flag's number); the picture grows upward to fit it, so nothing is cut off
+  let s = '<path d="M0 ' + P(0)[1].toFixed(1) + ' L' + path.slice(1) + ' L' + W + ' ' + P(1)[1].toFixed(1) + ' L' + W + ' ' + H + ' L0 ' + H + 'Z" class="jground"/><path d="' + path + '" class="jpath"/>';
   FLAGS.filter(x => x <= h.next).forEach(x => {
     if (x === h.planted) return; // he's holding that one
-    const [fx, fy] = P(x / h.next), got = h.n >= x;
+    const [fx, fy] = P(x / h.next), got = h.n >= x; top = Math.min(top, fy - fs - 16);
     s += '<line x1="' + fx.toFixed(1) + '" y1="' + fy.toFixed(1) + '" x2="' + fx.toFixed(1) + '" y2="' + (fy - fs).toFixed(1) + '" class="jpole"/><path d="M' + fx.toFixed(1) + ' ' + (fy - fs).toFixed(1) + 'l' + (fs * 0.6).toFixed(1) + ' ' + (fs * 0.2).toFixed(1) + '-' + (fs * 0.6).toFixed(1) + ' ' + (fs * 0.2).toFixed(1) + 'z" class="jflag' + (got ? ' got' : '') + '"/><text x="' + (fx + 3).toFixed(1) + '" y="' + (fy - fs - 4).toFixed(1) + '" class="jfl">' + x + '</text>';
   });
   const at = h.planted ? h.planted / h.next : Math.min(1, h.n / h.next), [hx, hy] = P(at), ph = o.him || 62, img = h.planted ? 'flagplant' : 'climbing', ratio = h.planted ? 286 / 640 : 339 / 640;
   s += '<image href="art/' + img + '.webp" x="' + (hx - ph * ratio / 2).toFixed(1) + '" y="' + (hy - ph + 2).toFixed(1) + '" width="' + (ph * ratio).toFixed(1) + '" height="' + ph + '"/>';
-  if (h.planted) s += '<text x="' + (hx + ph * ratio * 0.45).toFixed(1) + '" y="' + (hy - ph - 2).toFixed(1) + '" class="jfl">' + h.planted + '</text>';
-  return s + '</svg>';
+  top = Math.min(top, hy - ph - 2);
+  if (h.planted) { s += '<text x="' + (hx + ph * ratio * 0.45).toFixed(1) + '" y="' + (hy - ph - 2).toFixed(1) + '" class="jfl">' + h.planted + '</text>'; top = Math.min(top, hy - ph - 16); }
+  top = Math.floor(top);
+  return '<svg class="' + (o.cls || 'jhill') + '" viewBox="0 ' + top + ' ' + W + ' ' + (H - top) + '" role="img" aria-label="Your hill: ' + h.n + ' so far, next flag at ' + h.next + '">' + s + '</svg>';
 }
 function theHill(f) {
   const h = hillState(f); if (!h) return '';
