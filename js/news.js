@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 104, date: '2026-11-12', items: [
+    'Food reports only talk about vitamin B12 and vitamin D when most of what you logged has a number for them. Most packs and Indian dishes leave them blank, so a guess from a few foods could look low when it isn\'t.'
+  ] },
   { v: 103, date: '2026-11-12', items: [
     'Food search knows your rice now: basmati, seeraga samba, sona masoori, ponni and red (matta) rice, each logged under its own name.'
   ] },

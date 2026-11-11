@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v104: the food report speaks about B12 and vitamin D only when at least three quarters of the foods logged in the period have a value; otherwise silence, not a guess. The label fields stay (useful on fortified packs). No made-up values for the Indian recipes.
 - v103: rice varieties are their own search entries with cooked rice's numbers under your name (white varieties are nutritionally almost the same cooked); red/matta rice uses brown rice.
 - v102: Keep it up is slower and gentler, the pillow glides and is dragged from anywhere, and it plays on a laptop (mouse, or hold ← → / A D).
 - v101: Make it yours: 8 big areas can be switched off (hidden everywhere, never deleted). Finer switches only if people ask. Brand-new people are asked once on first open, everything ticked; current users keep everything. A switched-off area's tab disappears (Days only when all its areas are off). The sky stays while it has stars (resting line when nothing can feed it); the quilt while it has patches (the hoop goes with Rest).

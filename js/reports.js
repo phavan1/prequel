@@ -180,6 +180,7 @@ export async function sleepDiary(from, to) {
 }
 
 // ---------- food report ----------
+const RARE = [10, 11], MOSTLY = 0.75;
 const kindOf = (m, mine) => m.kind || (mine[m.foodId] && mine[m.foodId].kind) || null;
 export async function foodReport(from, to, label) {
   const st = get(), art = await prep(['eating', 'cooking']);
@@ -205,6 +206,9 @@ export async function foodReport(from, to, label) {
 
   // daily averages
   const avg = NUTRIENTS.map((_, i) => { const v = withNums.filter(d => per[d].S.cnt[i] > 0).map(d => per[d].S.t[i]); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; });
+  // B12 and vitamin D are missing for most foods (Indian recipes, most labels): only speak when most foods logged have a value
+  const foodsN = withNums.reduce((a, d) => a + per[d].S.counted, 0);
+  RARE.forEach(i => { const known = withNums.reduce((a, d) => a + per[d].S.cnt[i], 0); if (!foodsN || known / foodsN < MOSTLY) avg[i] = null; });
   if (withNums.length) {
     doc.heading('A typical day', 'averaged over ' + plural(withNums.length, 'day', 'days') + ' with numbers');
     const show = NUTRIENTS.map((n, i) => [n, i]).filter(([, i]) => avg[i] != null);
@@ -286,7 +290,7 @@ export async function foodReport(from, to, label) {
     }
     if (avg[5] != null && avg[5] < 25) ideas.push(['Fibre', 'About ' + round(avg[5], 1) + ' g a day. A bowl of dal, chana or rajma, oats, or fruit with the skin on helps nudge it towards 30 g.']);
     if (avg[4] != null && avg[4] > 20) ideas.push(['Saturated fat', 'About ' + round(avg[4], 1) + ' g a day. Cooking with oil instead of ghee or butter some days, or picking curd over cream, can help with cholesterol.']);
-    if (avg[10] != null && avg[10] < 2.4) ideas.push(['Vitamin B12', 'About ' + round(avg[10], 1) + ' µg a day, against roughly 2.4 µg. Eggs, milk, curd, paneer, fish and chicken carry it. Many Indian recipes in the database don\'t list B12, so the real number may be a bit higher.']);
+    if (avg[10] != null && avg[10] < 2.4) ideas.push(['Vitamin B12', 'About ' + round(avg[10], 1) + ' µg a day, against roughly 2.4 µg. Eggs, milk, curd, paneer, fish and chicken carry it.']);
     if (avg[11] != null && avg[11] < 10) ideas.push(['Vitamin D', 'About ' + round(avg[11], 1) + ' µg from food. Food alone rarely covers vitamin D. Morning sun and whatever your doctor suggests matter more.']);
     if (avg[7] != null && avg[7] > 2300) ideas.push(['Sodium', 'About ' + round(avg[7]) + ' mg a day. Packaged snacks and restaurant food are usually the biggest source.']);
   }
