@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 102, date: '2026-11-12', items: [
+    'Keep it up is calmer now: the ball floats more slowly and speeds up more gently.',
+    'The pillow glides smoothly, and your finger can drag it from anywhere on the screen.',
+    'On a laptop, move your mouse or hold the ← → keys (or A and D) to play.'
+  ] },
   { v: 101, date: '2026-11-09', items: [
     'Make Prequel yours: in Settings, under Make it yours, switch off anything you don\'t use (Food, Move, Rest, Mind, Weather, Tiny wins, Goals, Your wall). It\'s only hidden, never deleted: switch it back on and everything is still there.'
   ] },

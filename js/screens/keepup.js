@@ -10,6 +10,8 @@ const OOPS = ['It got away!', 'Whoops!', 'Dropped it!', 'So close!', 'Down it go
 const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
 const firstChar = v => { v = (v || '').trim(); if (!v) return ''; try { if (window.Intl && Intl.Segmenter) return [...new Intl.Segmenter().segment(v)][0].segment; } catch (e) { /* older phones */ } return Array.from(v)[0]; };
 let raf = 0, alive = false, cleanup = null;
+const keys = { l: false, r: false }, LEFT = ['ArrowLeft', 'KeyA'], RIGHT = ['ArrowRight', 'KeyD'];
+const FINE = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches; // a laptop or computer with a mouse
 
 export function unmount() { cancelAnimationFrame(raf); alive = false; if (cleanup) cleanup(); }
 
@@ -26,7 +28,7 @@ export function mount(root) {
   let s;
   const dims = () => {
     const W = box.W, H = box.H, py = H * 0.82, r = Math.max(24, Math.min(38, W * 0.08)), pw = Math.max(110, Math.min(170, W * 0.34));
-    const h = py - H * 0.2, tUp = 0.62, G = 2 * h / (tUp * tUp);
+    const h = py - H * 0.2, tUp = 0.85, G = 2 * h / (tUp * tUp); // v102: a slower, floatier rise and fall (was 0.62 s)
     return { W, H, py, r, pw, ph: 30, G, V0: G * tUp, VX: W * 0.95 };
   };
   function reset() {
@@ -37,7 +39,7 @@ export function mount(root) {
 
   function startScreen() {
     const own = PICKS.includes(rec.emoji) ? '' : rec.emoji;
-    over.innerHTML = '<h1>Keep it up</h1><p>Slide the pillow with your finger.<br>Don\'t let it drop!</p>' +
+    over.innerHTML = '<h1>Keep it up</h1><p>' + (FINE ? 'Move your mouse, or hold ← → (or A and D).' : 'Slide your finger anywhere to move the pillow.') + '<br>Don\'t let it drop!</p>' +
       '<div class="emopick" role="group" aria-label="What bounces">' + PICKS.concat(own ? [own] : []).map(e => '<button type="button" data-emo="' + esc(e) + '" aria-pressed="' + (rec.emoji === e) + '" aria-label="' + (e === 'star' ? 'Paper star' : esc(e)) + '">' + (e === 'star' ? '<i class="pstar"></i>' : esc(e)) + '</button>').join('') + '</div>' +
       '<input id="kuOwn" class="emoown" placeholder="or your own emoji" aria-label="Your own emoji" autocomplete="off">' +
       '<button type="button" class="btn" id="kuGo">Start</button>';
@@ -50,7 +52,7 @@ export function mount(root) {
     s.y = d.py - d.r; s.vy = -d.V0;
     const off = Math.max(-1, Math.min(1, (s.x - s.px) / (d.pw / 2)));
     s.vx = off * d.VX + s.vx * 0.2; s.spin = off * 9 + (Math.random() - 0.5); s.squish = 1; s.pillow = 1;
-    s.n++; s.ts = Math.min(2.6, 1 + s.n * 0.05); // game speed: quicker with every bounce
+    s.n++; s.ts = Math.min(1.8, 1 + s.n * 0.03); // game speed: a little quicker with every bounce (v102: gentler, and it tops out lower)
     blip(420 + (s.n % 12) * 34);
     if (s.n % 10 === 0) {
       s.stars.push({ x: d.W * (0.1 + Math.random() * 0.8), y: d.H * (0.08 + Math.random() * 0.5), r: 5 + Math.random() * 5, born: s.t });
@@ -61,7 +63,9 @@ export function mount(root) {
 
   function step(dt) {
     const d = dims(), sd = dt * s.ts; s.t += dt;
-    s.px += (s.tx - s.px) * Math.min(1, dt * 30);
+    if (keys.l !== keys.r) s.tx = s.px + (keys.l ? -1 : 1) * d.W * 1.1 * dt; // v102: hold ← → (or A D) to glide
+    s.tx = Math.max(d.pw / 2, Math.min(d.W - d.pw / 2, s.tx));
+    s.px += (s.tx - s.px) * Math.min(1, dt * 22); // a touch of smoothing, so the pillow glides instead of jumping
     s.px = Math.max(d.pw / 2, Math.min(d.W - d.pw / 2, s.px));
     const prevBottom = s.y + d.r;
     s.vy += d.G * sd; s.x += s.vx * sd; s.y += s.vy * sd; s.rot += s.spin * sd;
@@ -130,9 +134,20 @@ export function mount(root) {
   }
   function start() { reset(); over.classList.add('gone'); alive = true; last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
 
-  const aim = e => { if (alive && !e.target.closest('a, button, input')) { e.preventDefault(); s.tx = e.clientX; } };
+  // v102: a finger drags the pillow from wherever it touches (no need to touch the pillow itself, and it never jumps);
+  // a mouse simply has the pillow follow it
+  let drag = null;
+  const aim = e => {
+    if (!alive || e.target.closest('a, button, input')) return;
+    e.preventDefault();
+    if (e.pointerType === 'mouse') { s.tx = e.clientX; return; }
+    if (e.type === 'pointerdown' || !drag) drag = { x: e.clientX, px: s.tx };
+    else s.tx = drag.px + (e.clientX - drag.x);
+  };
   root.addEventListener('pointerdown', aim);
   root.addEventListener('pointermove', aim);
+  const let_go = () => { drag = null; };
+  root.addEventListener('pointerup', let_go); root.addEventListener('pointercancel', let_go);
   root.addEventListener('click', e => {
     let b;
     if (e.target.closest('#kuGo')) start();
@@ -148,12 +163,14 @@ export function mount(root) {
   });
   const onKey = e => {
     if (e.target.matches && e.target.matches('input')) return;
-    if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { e.preventDefault(); s.tx = s.px + (e.code === 'ArrowLeft' ? -60 : 60); }
+    if (LEFT.includes(e.code)) { e.preventDefault(); keys.l = true; }
+    if (RIGHT.includes(e.code)) { e.preventDefault(); keys.r = true; }
     if (e.code === 'Space' && !alive && !over.classList.contains('gone')) { e.preventDefault(); start(); }
   };
   const onVis = () => { if (document.hidden && alive) { alive = false; over.innerHTML = '<h1>Paused</h1><p>' + (s.n ? s.n + (s.n === 1 ? ' bounce' : ' bounces') + ' so far.' : 'Ready when you are.') + '</p><button type="button" class="btn" id="kuResume">Keep going</button>'; over.classList.remove('gone'); } };
-  document.addEventListener('keydown', onKey);
+  const onKeyUp = e => { if (LEFT.includes(e.code)) keys.l = false; if (RIGHT.includes(e.code)) keys.r = false; };
+  document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKeyUp);
   document.addEventListener('visibilitychange', onVis);
-  cleanup = () => { stop(); document.removeEventListener('keydown', onKey); document.removeEventListener('visibilitychange', onVis); };
+  cleanup = () => { stop(); document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKeyUp); document.removeEventListener('visibilitychange', onVis); };
   draw();
 }

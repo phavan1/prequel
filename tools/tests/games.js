@@ -42,7 +42,7 @@ const errors = [];
   // the robot plays: the pillow follows the star
   await p.click('#kuGo');
   const t0 = Date.now(); let shot = false, mid = null;
-  while (Date.now() - t0 < 14000) {
+  while (Date.now() - t0 < 32000) { // v102: a slower game takes longer to reach 12
     const { s, d } = await game(); if (s.dead) break;
     await p.mouse.move(s.x + (s.vx > 0 ? 6 : -6), d.py);
     if (!shot && s.n >= 12) { await p.screenshot({ path: OUT + '/gm-keepup-play.png' }); shot = true; mid = s; }
@@ -51,7 +51,7 @@ const errors = [];
   }
   let { s } = await game();
   ok('bounces count up as you play', s.n >= 12, 'bounces: ' + s.n);
-  ok('game speed: it gets quicker with every bounce', mid && mid.ts > 1.4, mid ? 'speed ×' + mid.ts.toFixed(2) : '');
+  ok('game speed: it gets quicker with every bounce', mid && mid.ts > 1.3 /* v102: gentler ramp */, mid ? 'speed ×' + mid.ts.toFixed(2) : '');
   ok('every 10 bounces lights a star in the background', mid && mid.stars.length >= 1);
   await p.mouse.move(5, 700); await p.waitForTimeout(2500);
   const over = await p.locator('#kuOver').innerText();

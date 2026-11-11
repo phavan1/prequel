@@ -1225,3 +1225,5 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .collect .rowlink span { white-space: nowrap; }
 /* v96: Days' "+ More" stays in view at the end of the tab row, even when the tabs scroll underneath */
 .tabsrow [data-addtab] { position: sticky; right: 0; z-index: 1; box-shadow: -14px 0 10px -2px var(--room), 20px 0 0 4px var(--room); }
+/* v102: Keep it up: the canvas takes every touch, so a drag never turns into a scroll or zoom (smoother pillow) */
+.screen-keepup #ku { touch-action: none; }
