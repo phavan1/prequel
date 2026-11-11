@@ -43,8 +43,16 @@ const errors = [];
   ok('going back keeps the soft day, and says so', s.heavy[T] === true && !(await p.locator('.games').count()) && /keeps its gold star/.test(await p.locator('#toast').innerText()));
   // 3. the gold star on the quilt, and removing it
   await p.goto(BASE + '#/quilt?from=home'); await p.waitForTimeout(3200);
-  const gold = () => p.evaluate(() => { const c = document.getElementById('quilt'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - 244) < 14 && Math.abs(d[i + 1] - 196) < 14 && Math.abs(d[i + 2] - 48) < 22) n++; return n; });
-  const g1 = await gold(); ok('the soft day\'s patch has a gold star', g1 > 150, g1 + ' gold pixels');
+  // v103: sturdier. The star is found by its dark-brown outline (#6B4A12) in the starred patch's own corner, a colour no
+  // fabric uses, instead of counting gold pixels over the whole quilt (some fabrics are the same gold, so the count
+  // went up and down with each day's random patterns).
+  const starInk = () => p.evaluate(t => {
+    const c = document.getElementById('quilt'), sp = document.querySelector('main').__quilt().spots.find(x => x.d.date === t); if (!sp) return -1;
+    const k = c.width / c.clientWidth, R = sp.S * 0.13, cx = (sp.x + sp.w - sp.S * 0.2) * k, cy = (sp.y + sp.S * 0.2) * k, h = Math.ceil(R * 1.3 * k);
+    const d = c.getContext('2d').getImageData(Math.round(cx - h), Math.round(cy - h), 2 * h, 2 * h).data; let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - 107) < 28 && Math.abs(d[i + 1] - 74) < 28 && Math.abs(d[i + 2] - 18) < 28) n++;
+    return n; }, T);
+  const g1 = await starInk(); ok('the soft day\'s patch has a gold star', g1 >= 12, g1 + ' outline pixels in its corner');
   await p.locator('#quilt').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/ss-quilt.png' });
   // open the starred patch: tap just below and left of its star
   const box = await p.locator('#quilt').boundingBox();
@@ -54,8 +62,8 @@ const errors = [];
   await p.screenshot({ path: OUT + '/ss-flip.png' });
   await p.click('[data-unstar]'); await p.waitForTimeout(900);
   s = await st();
-  const left = await p.evaluate(t => { const c = document.getElementById('quilt'), sp = document.querySelector('main').__quilt().spots.find(x => x.d.date === t), k = c.width / c.clientWidth, cx = Math.round((sp.x + sp.w - sp.S * 0.2) * k), cy = Math.round((sp.y + sp.S * 0.2) * k), d = c.getContext('2d').getImageData(cx - 2, cy - 2, 5, 5).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - 244) < 14 && Math.abs(d[i + 1] - 196) < 14 && d[i + 2] < 90) n++; return n; }, T);
-  ok('Remove the star: not a soft day any more, and no star in that corner', !s.heavy[T] && left === 0, left + ' gold pixels where the star was');
+  const left = await starInk();
+  ok('Remove the star: not a soft day any more, and no star in that corner', !s.heavy[T] && left === 0, left + ' outline pixels where the star was');
   // 4. Days: today's ring shows, with a pale fill
   await p.goto(BASE + '#/days'); await p.waitForTimeout(500);
   await p.click('[data-tab="move"]').catch(() => {}); await p.waitForTimeout(300);
