@@ -14,9 +14,27 @@ export function loadDB() {
   if (DB) return Promise.resolve(DB);
   if (!loading) loading = fetch('data/foods.json').then(r => r.json()).then(j => {
     DB = j.foods.map(f => ({ name: f[0], src: f[1], per100: f.slice(2, 14), measures: f[14] || [], key: f[0].toLowerCase() }));
+    addRiceNames(DB);
     return DB;
   }).catch(e => { loading = null; throw e; });
   return loading;
+}
+
+// v103: rice by the names people actually use. Cooked, these white rice varieties are nutritionally almost the same, so
+// each borrows the numbers of plain boiled rice (from the Indian Nutrient Databank) under its own name; red (matta) rice
+// borrows brown rice (USDA). "samba" now finds seeraga samba rice before sambar.
+const RICE = [
+  ['Basmati rice, cooked', 'boiled rice', 'basmati'],
+  ['Seeraga samba rice, cooked', 'boiled rice', 'seeraga samba jeeraga samba jeera samba jeerakasala'],
+  ['Sona masoori rice, cooked', 'boiled rice', 'sona masoori sona masuri sona mahsuri'],
+  ['Ponni rice, cooked', 'boiled rice', 'ponni'],
+  ['Red rice (Kerala matta), cooked', 'rice, brown, long-grain, cooked', 'red rice matta rosematta kerala']
+];
+function addRiceNames(db) {
+  RICE.forEach(([name, base, also]) => {
+    const b = db.find(f => f.key.startsWith(base)); if (!b) return;
+    db.push({ name, src: b.src, per100: b.per100.slice(), measures: [['1 cup cooked', 160], ['1 plate', 300]], key: (name + ' ' + also + ' rice').toLowerCase(), rice: true });
+  });
 }
 
 // ---------- your foods ----------
@@ -81,6 +99,7 @@ export function search(q, limit = 12) {
   const mineFrom = new Set(myFoods().map(f => f.from));
   const db = (DB || []).filter(f => hit(f.key) && !mineFrom.has(f.src + ':' + f.name)).map(f => {
     let s = 0; if (f.key.startsWith(words[0])) s -= 30; if (f.src === 'i') s -= 40; s += f.name.length / 4;
+    if (f.rice && !words.every(w => /^(rice|cooked|white)$/.test(w))) s -= 60; // v103: a rice name you typed beats sambar and rice flour (plain "rice" is unchanged)
     if (/,\s*(raw|uncooked|dry)\b/.test(f.key)) s += 8;
     return [s, f];
   }).sort((a, b) => a[0] - b[0]).slice(0, limit).map(x => x[1]);

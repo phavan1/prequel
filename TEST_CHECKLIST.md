@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v103) Food search: "seeraga samba", "sona masoori", "ponni", "basmati", "matta" each find their rice; logging keeps the name.
 - [ ] (v102) Keep it up on the iPhone: slower, the pillow glides with your finger from anywhere, no page wobble; on a laptop: the mouse, and holding ← → or A D.
 - [ ] (v101) Settings → Make it yours: switch an area off and on (its tab/tiles go and come back, data intact); everything off: Home and Me only, the sky "resting". On a fresh install, "What would you like Prequel for?" appears once.
 - [ ] (v99) Move → Move report → Everything: the dates start at your first log; the PDF has Month by month, My lifts over time, the weight line (if 2+ weigh-ins) and the list by month.

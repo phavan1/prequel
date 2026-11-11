@@ -243,7 +243,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 | A weather row in the sleep diary under "Hours each day" | After v36 | Offered |
 | A richer goal celebration: count-up and confetti, gold shooting star, trophy on the shelf, note to future you, share card, optional chime | Earlier conversation | Offered; "loud or quiet?" never answered |
 | Mind page redesign | His own idea ("keep it in mind") | **Not designed yet** |
-| Recognise Indian rice names (seeraga samba, sona masoori, ponni) in food search | v34 conversation | Offered |
+| Recognise Indian rice names (seeraga samba, sona masoori, ponni) in food search | v34 conversation | **Done in v103**, with basmati and red/matta rice too |
 | A whole-app soft-day look | Earlier | Offered, no answer |
 | A one-time "You've already filled N jars!" moment | Jar work | Offered |
 | Light motion lines on dark share cards | v23 | Offered |
@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v103: rice varieties are their own search entries with cooked rice's numbers under your name (white varieties are nutritionally almost the same cooked); red/matta rice uses brown rice.
 - v102: Keep it up is slower and gentler, the pillow glides and is dragged from anywhere, and it plays on a laptop (mouse, or hold ← → / A D).
 - v101: Make it yours: 8 big areas can be switched off (hidden everywhere, never deleted). Finer switches only if people ask. Brand-new people are asked once on first open, everything ticked; current users keep everything. A switched-off area's tab disappears (Days only when all its areas are off). The sky stays while it has stars (resting line when nothing can feed it); the quilt while it has patches (the hoop goes with Rest).
 - v100: pictures with him in them grow to fit him; his head is never cut off.
