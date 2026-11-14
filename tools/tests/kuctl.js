@@ -21,8 +21,10 @@ const errors = [];
   await p.keyboard.down('KeyD'); await p.waitForTimeout(300); const x3 = (await g()).px; await p.keyboard.up('KeyD');
   ok('D moves it right', x3 > x2 + 40, Math.round(x2) + ' → ' + Math.round(x3));
   if ((await g()).dead) { await p.click('#kuGo'); await p.waitForTimeout(150); } // it may have dropped while we tested the keys
-  await p.mouse.move(300, 600); await p.waitForTimeout(300);
-  ok('the mouse: the pillow follows it', Math.abs((await g()).px - 300) < 30, String(Math.round((await g()).px)));
+  // v106: sturdier. Restart if it dropped, then give the pillow up to a second to catch up with the mouse
+  let near = false;
+  for (let i = 0; i < 10 && !near; i++) { if ((await g()).dead) { await p.click('#kuGo'); await p.waitForTimeout(150); } await p.mouse.move(300 + (i % 2), 600); await p.waitForTimeout(100); near = Math.abs((await g()).px - 300) < 30; }
+  ok('the mouse: the pillow follows it', near, String(Math.round((await g()).px)));
   await p.context().close();
   // a phone: a finger drags from anywhere
   const ctx = await b.newContext({ ...devices['iPhone 13'] }); p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));

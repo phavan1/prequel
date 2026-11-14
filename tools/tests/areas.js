@@ -34,16 +34,21 @@ const tabs = p => p.locator('.tabbar a').allInnerTexts();
   ok('all on: five tabs and four tiles on Home', JSON.stringify(await tabs(p)) === '["Home","Days","Move","Mind","Me"]' && await p.locator('.quick a').count() === 4 && await p.locator('.room .hoop').count() === 1 && await p.locator('.room .window').count() === 1);
   // 2. Settings: Make it yours
   await go(p, 'settings');
+  ok('Settings shows one Make it yours card, all eight on', /All 8 areas are on/.test(await p.locator('[data-areas]').innerText()));
+  await p.click('[data-areas]'); await p.waitForTimeout(300); // v106: the area cards open in a sheet
   ok('Settings lists the eight areas, all on', await p.locator('[data-area]').count() === 8 && await p.locator('[data-area][aria-pressed="true"]').count() === 8);
-  await p.click('[data-area="food"]'); await p.waitForTimeout(300);
+  await p.click('#sheet [data-area="food"]'); await p.waitForTimeout(300);
   ok('switching Food off says nothing is deleted', /Food is hidden\. Nothing is deleted\./.test(await p.locator('.toast').innerText().catch(() => '')));
-  await p.locator('.areas').screenshot({ path: OUT + '/ar-settings.png' });
+  await p.locator('#sheet .sheet').screenshot({ path: OUT + '/ar-settings.png' });
+  ok('…the card in the sheet goes dashed and says Off', /Off/.test(await p.locator('#sheet [data-area="food"]').innerText()) && (await p.locator('#sheet [data-area="food"]').getAttribute('aria-pressed')) === 'false');
+  await p.click('#sheet [data-close]'); await p.waitForTimeout(300);
+  ok('…and the Make it yours card says Food is off', /7 of 8 areas on · Food is off/.test(await p.locator('[data-areas]').innerText()));
   await go(p, 'home');
   ok('Food off: three tiles, spread evenly', await p.locator('.quick a').count() === 3 && !/Food/.test(await p.locator('.quick').innerText()) && /repeat\(3/.test(await p.locator('.quick').getAttribute('style')));
   await go(p, 'food'); ok('…and the Food page sends you Home', /#\/home$/.test(p.url()));
   const kept = await p.evaluate(async () => (await import('./js/store.js')).get().foods.length);
   ok('…with every food log kept', kept === 30, String(kept));
-  await go(p, 'settings'); await p.click('[data-area="food"]'); await p.waitForTimeout(200); await go(p, 'home');
+  await go(p, 'settings'); await p.click('[data-areas]'); await p.waitForTimeout(300); await p.click('#sheet [data-area="food"]'); await p.waitForTimeout(200); await go(p, 'home');
   ok('switching it back on brings it all back', await p.locator('.quick a').count() === 4);
   await p.context().close();
   // 3. each area off on its own

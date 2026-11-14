@@ -30,11 +30,11 @@ const errors = [];
   // Settings: switches
   await p.goto(BASE + '#/settings'); await p.waitForTimeout(500);
   const names = await p.locator('[data-dtab]').allInnerTexts();
-  ok('Settings lists the extra Days tabs with what each is', names.length === 4 && names.some(n => /Cycle/.test(n) && /private period tracker/.test(n)) && names.some(n => /On repeat/.test(n)), names.map(n => n.split('\n')[0]).join(', '));
+  ok('Settings lists the extra Days tabs, and says what Cycle is', names.length === 4 && names.some(n => /Cycle/.test(n)) && names.some(n => /On repeat/.test(n)) && /private period tracker/.test(await p.locator('main').innerText()), names.join(', '));
   await p.click('[data-dtab="cycle"]'); await p.waitForTimeout(300);
   const st1 = await p.evaluate(async () => (await import('./js/store.js')).get().settings.dayTabs);
-  ok('turning Cycle on adds its tab', st1.includes('cycle') && /Shown/.test(await p.locator('[data-dtab="cycle"]').innerText()));
-  await p.locator('.dtabs:not(.areas)').scrollIntoViewIfNeeded(); await p.locator('.dtabs:not(.areas)').screenshot({ path: OUT + '/fd-settings.png' });
+  ok('turning Cycle on adds its tab', st1.includes('cycle') && (await p.locator('[data-dtab="cycle"]').getAttribute('aria-pressed')) === 'true' && /✓/.test(await p.locator('[data-dtab="cycle"]').innerText()));
+  await p.locator('.tchips').scrollIntoViewIfNeeded(); await p.locator('.tchips').screenshot({ path: OUT + '/fd-settings.png' });
   await p.goto(BASE + '#/days'); await p.waitForTimeout(400);
   ok('…and Days shows the Cycle tab', await p.locator('[data-tab="cycle"]').count() === 1);
   await p.goto(BASE + '#/settings'); await p.waitForTimeout(300); await p.click('[data-dtab="cycle"]'); await p.waitForTimeout(300);

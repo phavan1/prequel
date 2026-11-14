@@ -1,6 +1,6 @@
 // Settings: everything that isn't about you. Your name and words, the look, your data, starting fresh.
 import { get, save, exportJSON, isPersisted, today, reset, backupDue, dateKey, checkBackup, BACKUP_PROBLEMS, restoreBackup, hasData, undoInfo, undoRestore } from '../store.js';
-import { esc, nav, backLink, toast, openSheet, closeSheet, downloadFile } from '../ui.js';
+import { esc, nav, backLink, toast, openSheet, closeSheet, downloadFile, him } from '../ui.js';
 import { dayDate, clock } from '../pdf.js';
 import { NEWS, LATEST, openNews } from '../news.js';
 import { wu, setUnit, askLb } from '../units.js';
@@ -14,7 +14,7 @@ export function mount(root) {
     if (t.closest('[data-export]')) { backup(root); return; }
     if (t.closest('[data-fresh]')) { startFresh(root); return; }
     if ((b = t.closest('[data-wunit]'))) { if (b.dataset.wunit !== wu()) { setUnit(b.dataset.wunit); render(root); if (!askLb()) toast('Weights are now in ' + (wu() === 'lb' ? 'pounds' : 'kilograms') + '.'); } return; }
-    if ((b = t.closest('[data-area]'))) { const k = b.dataset.area, yes = !on(k); setOn(k, yes); render(root); const a = AREAS.find(x => x[0] === k); toast(yes ? a[1] + ' is back, with everything you had.' : a[1] + ' is hidden. Nothing is deleted.'); return; } // v101
+    if (t.closest('[data-areas]')) { areasSheet(root); return; } // v106: the eight areas live in a sheet
     if ((b = t.closest('[data-dtab]'))) { const s = get().settings, k = b.dataset.dtab; s.dayTabs = s.dayTabs || []; s.dayTabs = s.dayTabs.includes(k) ? s.dayTabs.filter(x => x !== k) : s.dayTabs.concat(k); save(); render(root); toast(s.dayTabs.includes(k) ? 'It\'s on Days now.' : 'Taken off Days. Nothing you logged is lost.'); return; } // v96
     if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
@@ -123,33 +123,64 @@ function wordsSheet(root) {
   });
 }
 
+// ---------- v106: the page, redesigned (B1): a hello, your backup up top, Make it yours behind one card ----------
+const ICON = {
+  food: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3"/>',
+  move: '<path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/>',
+  rest: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  mind: '<path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4"/>',
+  weather: '<path d="M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A3 3 0 0 0 7 18z"/>',
+  wins: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+  goals: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  wall: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  shield: '<path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>'
+};
+const TINT = { food: '#E5893D', move: '#1F55D0', rest: '#C99A00', mind: '#3E9E6E', weather: '#4F8FC0', wins: '#D6698C', goals: '#7A5BC7', wall: '#E2402F', shield: '#3E9E6E' };
+const ico = (k, off) => '<span class="sico' + (off ? ' offi' : '') + '" style="--c:' + TINT[k] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + '</svg></span>';
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const dm = ts => { const d = new Date(ts); return d.getDate() + ' ' + MONTHS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : ''); };
+
+function areaTiles() {
+  return '<div class="atiles">' + AREAS.map(a => { const yes = on(a[0]); return '<button type="button" class="atile' + (yes ? '' : ' off') + '" data-area="' + a[0] + '" aria-pressed="' + yes + '">' + ico(a[0], !yes) + '<b>' + esc(a[1]) + '</b><small>' + esc(a[2].replace(/\.$/, '')) + '</small><span class="ck">' + (yes ? '✓' : 'Off') + '</span></button>'; }).join('') + '</div>';
+}
+function areasSheet(root) {
+  const draw = () => '<div class="areasheet"><h2>Make it yours</h2><p class="muted" style="margin:0;font-size:14px">Tap to switch an area off. It\'s only hidden, never deleted: switch it back on and everything is still there.</p>' + areaTiles() + '<button type="button" class="btn" data-close>Done</button></div>';
+  const sheet = openSheet(draw(), ev => {
+    const b = ev.target.closest('[data-area]'); if (!b) return;
+    const k = b.dataset.area, yes = !on(k); setOn(k, yes);
+    sheet.querySelector('.sheet').innerHTML = draw(); render(root);
+    const a = AREAS.find(x => x[0] === k); toast(yes ? a[1] + ' is back, with everything you had.' : a[1] + ' is hidden. Nothing is deleted.');
+  });
+}
+
 function render(root) {
   const st = get(), s = st.settings;
+  const off = AREAS.filter(a => !on(a[0]));
+  const due = backupDue();
   root.innerHTML =
     '<div class="top">' + backLink('#/me', 'Me') + '</div>' +
     '<h1>Settings</h1>' +
-    '<div class="lbl">Make it yours</div>' +
-    // v101: what you use Prequel for; a switched-off area is hidden everywhere, never deleted
-    '<p class="muted" style="margin:-4px 0 2px;font-size:13px">Switch off what you don\'t use. It\'s only hidden: switch it back on and everything is still there.</p>' +
-    '<div class="dtabs areas">' + AREAS.map(a => { const yes = on(a[0]); return '<button type="button" class="mgrow" data-area="' + a[0] + '" aria-pressed="' + yes + '" style="width:100%;text-align:left"><span>' + esc(a[1]) + '<small>' + esc(a[2]) + '</small></span><b>' + (yes ? 'On ✓' : 'Off') + '</b></button>'; }).join('') + '</div>' +
-    '<button type="button" class="rowlink" data-words style="width:100%"><span>Your name, kind words and tiny wins<small class="rowsub">' + (s.name ? 'He calls you ' + esc(s.name) : 'Tell him what to call you') + '</small></span><b>›</b></button>' +
-    '<div class="lbl">Weights in</div>' + // v71: kg or lb, for lifts and body weight
-    '<div class="seg3 two">' + [['kg', 'kg · kilograms'], ['lb', 'lb · pounds']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
-    // v96: the optional Days tabs, where people look for things to turn on (also on Days under + More)
-    '<div class="lbl">Extra tabs on Days</div>' +
-    '<div class="dtabs">' + OPTIONAL.filter(o => o[0] === 'win' ? on('wins') : o[0] === 'weather' ? on('weather') : true).map(o => { const shown = (s.dayTabs || []).includes(o[0]); return '<button type="button" class="mgrow" data-dtab="' + o[0] + '" aria-pressed="' + shown + '" style="width:100%;text-align:left"><span>' + esc(o[1]) + (o[2] ? '<small>' + esc(o[2]) + '</small>' : '') + '</span><b>' + (shown ? 'Shown ✓' : 'Show') + '</b></button>'; }).join('') + '</div>' +
-    '<div class="lbl">Look</div>' +
-    '<div class="seg3">' + [['light', 'Light'], ['dark', 'Cosy dark'], ['auto', 'Match my phone']].map(o => '<button type="button" data-look="' + o[0] + '" aria-pressed="' + ((s.theme || 'light') === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
-    '<div class="lbl">Your data</div>' +
+    '<button type="button" class="hiya" data-words>' + him('waving', '', 'Your character waving') + '<span class="ht"><span class="hh">' + (s.name ? 'Hi, ' + esc(s.name) : 'Hi there') + '</span><small>' + (s.name ? 'He calls you ' + esc(s.name) : 'Tell him what to call you') + '</small><span class="hl">Your name, kind words and tiny wins ›</span></span></button>' +
     (undoInfo() ? '<div class="card undocard"><b>Your data from before the restore is safe</b><p class="muted" style="font-size:14px;margin:0">When you restored a backup on ' + esc(words(undoInfo().at)) + ', Prequel stored the app\'s data from just before, just in case. Want to undo the restore and put it back? This copy stays until ' + esc(words(undoInfo().until)) + '.</p><button type="button" class="btn alt" data-undo>Undo the restore…</button></div>' : '') +
-    (backupDue() ? '<div class="card nudgecard"><b>It\'s been a while since your last backup.</b><p class="muted" style="font-size:14px;margin:0">No rush. Whenever you\'ve got a minute, it keeps everything safe.</p></div>' : '') +
-    '<div class="card"><p class="muted" style="font-size:14px;line-height:1.45;margin:0">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive), especially before changing phones.</p><p class="muted" style="font-size:12px;margin:0" id="persist"></p>' +
-      '<div class="grid2"><button type="button" class="btn" data-export>Save a backup</button><button type="button" class="btn alt" data-import>Restore</button></div><input type="file" id="importFile" accept="application/json,.json" hidden>' +
-      '<p class="muted" style="font-size:12px;margin:0">' + (st.lastBackup ? 'Last backup: ' + new Date(st.lastBackup).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'No backup saved yet.') + '</p></div>' +
-    '<div class="lbl">About</div>' +
-    '<button type="button" class="rowlink" data-news style="width:100%"><span>What\'s new<small class="rowsub">Every update, in plain words · this is version ' + LATEST + '</small></span><b>›</b></button>' +
-    '<div class="lbl">Reset</div>' +
-    '<div class="card"><b>Start fresh</b><p class="muted" style="font-size:13px;margin:0">Clears everything in the app and takes it back to day one. It asks twice, and offers a backup first.</p><button type="button" class="btn danger wide" data-fresh>Start fresh…</button></div>' +
+    // your backup, up top: everything lives only on this phone
+    '<div class="safe' + (st.lastBackup && !due ? '' : ' due') + '">' + ico('shield') + '<span class="st"><b>' + (st.lastBackup ? 'Backed up ' + esc(dm(st.lastBackup)) : 'No backup saved yet') + '</b><small>' + (due && st.lastBackup ? 'It\'s been a while. No rush, whenever you\'ve a minute.' : 'Everything lives only on this phone') + '</small></span><button type="button" class="btn" data-export>Save</button></div>' +
+    '<p class="muted persist" id="persist"></p>' +
+    '<div class="slbl">Areas of the app</div>' +
+    '<button type="button" class="micard" data-areas><span class="mitop"><span class="st"><b>Make it yours</b><small>' + (off.length ? (AREAS.length - off.length) + ' of ' + AREAS.length + ' areas on · ' + esc(off.map(a => a[1]).join(', ')) + (off.length === 1 ? ' is off' : ' are off') : 'All ' + AREAS.length + ' areas are on') + '</small></span><span class="sgo" aria-hidden="true">›</span></span>' +
+      '<span class="mistrip">' + AREAS.map(a => ico(a[0], !on(a[0]))).join('') + '</span></button>' +
+    // v96: the optional Days tabs (also on Days under + More)
+    '<div class="slbl">Extra tabs on Days</div>' +
+    '<div class="tchips">' + OPTIONAL.filter(o => o[0] === 'win' ? on('wins') : o[0] === 'weather' ? on('weather') : true).map(o => { const shown = (s.dayTabs || []).includes(o[0]); return '<button type="button" class="tchip' + (shown ? ' on' : '') + '" data-dtab="' + o[0] + '" aria-pressed="' + shown + '">' + (shown ? '✓ ' : '+ ') + esc(o[1]) + '</button>'; }).join('') + '</div>' +
+    (OPTIONAL.some(o => o[0] === 'cycle') ? '<p class="shint">Cycle is a private period tracker, just for you.</p>' : '') +
+    '<div class="slbl">Look</div>' +
+    '<div class="looks">' + [['light', 'Light', 'l'], ['dark', 'Cosy dark', 'd'], ['auto', 'Match my phone', 'a']].map(o => '<button type="button" class="lk" data-look="' + o[0] + '" aria-pressed="' + ((s.theme || 'light') === o[0]) + '"><span class="' + o[2] + '" aria-hidden="true"><i></i><i></i><i></i></span>' + o[1] + '</button>').join('') + '</div>' +
+    '<div class="slbl">Weights in</div>' + // v71: kg or lb, for lifts and body weight
+    '<div class="sseg">' + [['kg', 'kg · kilograms'], ['lb', 'lb · pounds']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
+    '<div class="slbl">More</div>' +
+    '<div class="sgroup"><button type="button" class="srow" data-import><span class="st"><b>Restore a backup</b><small>From a file you saved before</small></span><span class="sgo" aria-hidden="true">›</span></button>' +
+      '<button type="button" class="srow" data-news><span class="st"><b>What\'s new</b><small>Every update, in plain words · this is version ' + LATEST + '</small></span><span class="sgo" aria-hidden="true">›</span></button></div>' +
+    '<input type="file" id="importFile" accept="application/json,.json" hidden>' +
+    '<button type="button" class="sfresh" data-fresh>Start fresh…<small>Clears everything, after asking twice and offering a backup</small></button>' +
     nav('me');
-  isPersisted().then(p => { const el = root.querySelector('#persist'); if (el) el.textContent = p ? 'This phone has promised to keep your data.' : 'Tip: adding the app to your home screen helps the phone keep your data.'; });
+  isPersisted().then(p => { const el = root.querySelector('#persist'); if (el) el.textContent = p ? '' : 'Tip: adding the app to your home screen helps the phone keep your data.'; });
 }
