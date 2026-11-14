@@ -1198,8 +1198,8 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
   .dcol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
   .screen-home .dcol.ca { position: sticky; top: 24px; }
   /* Me: goals and your journey, with Looking back under them, on the left; your wall and the rest on the right */
-  .dcols.me3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: 'a b' 'c b'; grid-template-rows: auto 1fr; }
-  .dcols.me3 .ca { grid-area: a; } .dcols.me3 .cb { grid-area: b; } .dcols.me3 .cc { grid-area: c; }
+  .dcols.me3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: 'a b'; } /* v105: Looking back moved to its own page */
+  .dcols.me3 .ca { grid-area: a; } .dcols.me3 .cb { grid-area: b; }
   .screen-me .hero { margin-top: 8px; }
   .screen-me .gear { top: 28px; }
   .wallstack.two { padding-top: 44px; }
@@ -1227,3 +1227,29 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
 .tabsrow [data-addtab] { position: sticky; right: 0; z-index: 1; box-shadow: -14px 0 10px -2px var(--room), 20px 0 0 4px var(--room); }
 /* v102: Keep it up: the canvas takes every touch, so a drag never turns into a scroll or zoom (smoother pillow) */
 .screen-keepup #ku { touch-action: none; }
+
+/* v105: the slimmer Me. A share button in the hero, goals still at the start on one line, and a shelf of picture tiles */
+.sharepill { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 7px 12px; min-height: 36px; border-radius: 999px; background: var(--blue); color: #FFFFFF; font-weight: 800; font-size: 13px; width: max-content; text-decoration: none; }
+.sharepill svg { width: 14px; height: 14px; }
+.readyline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--ink-soft); }
+.rchip { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 7px 11px; min-height: 34px; font: inherit; font-weight: 700; font-size: 13px; }
+.rchip.new { color: var(--blue); border-style: dashed; }
+.jst .jlift1 { color: var(--blue); font-weight: 800; }
+.tiles { gap: 10px; }
+.ttile { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-height: 150px; border-radius: 20px; padding: 10px 12px 12px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); overflow: hidden; text-decoration: none; }
+.ttile .tart { width: 100%; height: auto; display: block; }
+.ttile .tt { padding-right: 16px; display: flex; flex-direction: column; gap: 1px; }
+.ttile .tt b { font-size: 15px; font-weight: 900; }
+.ttile .tt small { font-size: 12px; font-weight: 700; color: var(--ink-soft); line-height: 1.25; }
+.ttile .tgo { position: absolute; right: 12px; bottom: 12px; color: var(--blue); font-weight: 900; font-size: 18px; }
+.ttile.sky { background: linear-gradient(170deg, #141A3A, #2E2A63); border-color: #2E2A63; color: #FFFFFF; }
+.ttile.sky .tt small { color: #C9CFF2; } .ttile.sky .tgo { color: #FFE27A; }
+.ttile.rep { background: #FFF4CC; border-color: #EFD98A; color: #2A2A2A; } .ttile.rep .tt small { color: #6B5A2A; }
+.mtape { background: #F4C430; border: 3px solid #2A2A2A; border-radius: 10px; padding: 6px 7px 7px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 3px 0 #2A2A2A; }
+.mt-lab { background: #FFFCF3; color: #2A2A2A; border-radius: 4px; padding: 3px 6px; display: flex; align-items: center; gap: 6px; font: 700 15px var(--font-hand); line-height: 1; white-space: nowrap; overflow: hidden; }
+.mt-lab > span { overflow: hidden; text-overflow: ellipsis; }
+.mt-lab i { width: 14px; height: 14px; border-radius: 3px; flex: none; background: repeating-conic-gradient(#E5893D 0 15deg, #2A2A2A 15deg 30deg); }
+.mt-win { align-self: center; display: flex; align-items: center; gap: 4px; background: #5A4632; border-radius: 999px; padding: 3px 6px; }
+.mt-win b { width: 13px; height: 13px; border-radius: 50%; background: #FFFCF3; border: 3px solid #2A2A2A; }
+.mt-win em { width: 34px; height: 5px; background: #3A2C20; border-radius: 3px; }
+html[data-theme="dark"] .ttile.rep { background: #3A3220; border-color: #5A4C2A; color: var(--ink); } html[data-theme="dark"] .ttile.rep .tt small { color: var(--ink-soft); }

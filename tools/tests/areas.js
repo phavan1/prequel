@@ -49,10 +49,10 @@ const tabs = p => p.locator('.tabbar a').allInnerTexts();
   // 3. each area off on its own
   const checks = {
     move: async p => { await go(p, 'home'); const t = await tabs(p); await go(p, 'me'); return !t.includes('Move') && t.length === 4 && await p.locator('.jscene').count() === 0; },
-    mind: async p => { await go(p, 'home'); const t = await tabs(p); await go(p, 'me'); const me = await p.locator('main').innerText(); await go(p, 'sky'); return !t.includes('Mind') && !/lanterns let go|letter\b/.test(me) && await p.locator('#letBtn').count() === 0; },
-    rest: async p => { await go(p, 'home'); const h = await p.locator('.room .hoop').count(), q = await p.locator('.quick').innerText(); await go(p, 'me'); const me = await p.locator('main').innerText(); return h === 0 && !/Rest/.test(q) && !/two weeks of nights/.test(me) && /Your quilt/.test(me); },
-    weather: async p => { await go(p, 'home'); const w = await p.locator('a[href="#/weather"]').count(); await go(p, 'me'); return w === 0 && !/weather ribbon/.test(await p.locator('main').innerText()); },
-    wins: async p => { await go(p, 'home'); const q = await p.locator('.quick').innerText(); await go(p, 'me'); return !/Jar/.test(q) && !/tiny wins/.test(await p.locator('main').innerText()); },
+    mind: async p => { await go(p, 'home'); const t = await tabs(p); await go(p, 'me'); const me = await p.locator('main').innerText(); await go(p, 'lookback'); const lb = await p.locator('main').innerText(); await go(p, 'sky'); return !t.includes('Mind') && !/lantern|letter\b/.test(me + lb) && await p.locator('#letBtn').count() === 0; },
+    rest: async p => { await go(p, 'home'); const h = await p.locator('.room .hoop').count(), q = await p.locator('.quick').innerText(); await go(p, 'me'); const me = await p.locator('main').innerText(); await go(p, 'lookback'); const lb = await p.locator('main').innerText(); return h === 0 && !/Rest/.test(q) && !/nights/.test(me.replace(/\d+ nights? sewn/, '')) && !/two weeks of nights/.test(lb) && /Your quilt/.test(me); },
+    weather: async p => { await go(p, 'home'); const w = await p.locator('a[href="#/weather"]').count(); await go(p, 'me'); const me = await p.locator('main').innerText(); await go(p, 'lookback'); return w === 0 && !/Weather/.test(me) && !/weather ribbon/.test(await p.locator('main').innerText()); },
+    wins: async p => { await go(p, 'home'); const q = await p.locator('.quick').innerText(); await go(p, 'me'); const me = await p.locator('main').innerText(); await go(p, 'lookback'); return !/Jar/.test(q) && !/tiny win/.test(me + await p.locator('main').innerText()); },
     goals: async p => { await go(p, 'home'); const q = await p.locator('.quick').innerText(); await go(p, 'me'); return !/Goals/.test(q) && !/Your goals/.test(await p.locator('main').innerText()); },
     wall: async p => { await go(p, 'me'); const w = await p.locator('.wallstack').count(); await go(p, 'wall'); return w === 0 && /#\/home$/.test(p.url()); }
   };
@@ -65,7 +65,7 @@ const tabs = p => p.locator('.tabbar a').allInnerTexts();
   await p.screenshot({ path: OUT + '/ar-home-min.png' });
   await go(p, 'sky'); ok('…the sky rests, with a line instead of a count', /Your sky is resting/.test(await p.locator('#stats').innerText()));
   await go(p, 'me'); await p.screenshot({ path: OUT + '/ar-me-min.png', fullPage: true });
-  ok('…Me has no goals, journey, wall, counts or Looking back', !/Your goals|Looking back/.test(await p.locator('main').innerText()) && await p.locator('.jscene, .wallstack, .count').count() === 0);
+  ok('…Me has no goals, journey, wall, counts or Looking back', !/Your goals|Looking back/.test(await p.locator('main').innerText()) && await p.locator('.jscene, .wallstack, .count, .ttile.look').count() === 0);
   await go(p, 'days'); ok('…Days sends you Home', /#\/home$/.test(p.url()));
   const rc = await p.evaluate(async () => { const R = await import('./js/recap.js'), d = R.recapData('2026-10'); R.drawRecap('2026-10', 'X', {}); return { tiles: d.tiles.length, w: d.weather.length, q: d.quilt.length }; });
   ok('…the recap leaves them out and still draws', rc.tiles === 0 && rc.w === 0 && rc.q === 0, JSON.stringify(rc));

@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 105, date: '2026-11-14', items: [
+    'Me is shorter and calmer. Your sky, your quilt, On repeat and Looking back are four picture tiles, and Share your story is a small button at the top.',
+    'Your weather ribbon and your last two weeks of nights now live on their own Looking back page, one tap from Me.',
+    'Goals you haven\'t started yet sit on one line, and Your moving journey shows how your main lift has gone.'
+  ] },
   { v: 104, date: '2026-11-12', items: [
     'Food reports only talk about vitamin B12 and vitamin D when most of what you logged has a number for them. Most packs and Indian dishes leave them blank, so a guess from a few foods could look low when it isn\'t.'
   ] },

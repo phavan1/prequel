@@ -34,7 +34,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.goto(BASE + '#/me'); await p.waitForTimeout(500);
   ok('Me has the Your moving journey scene card', await p.locator('a.jscene').count() === 1 && /Your moving journey/.test(await p.locator('a.jscene').innerText()));
   ok('…with him on the hill and one line', /\d+ days moved in October · you just passed 10!/.test(await p.locator('a.jscene').innerText()) && /flagplant\.webp/.test(await p.locator('a.jscene image').getAttribute('href')), await p.locator('a.jscene').innerText());
-  ok('…right after your goals', await p.evaluate(() => { const a = document.querySelector('a.jscene'), g = document.querySelector('[data-newgoal]'); return !!(g.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) && !(document.querySelector('.sharecta').compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING); }));
+  ok('…right after your goals', await p.evaluate(() => { const a = document.querySelector('a.jscene'), g = document.querySelector('[data-newgoal]'); return !!(g.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) && !(document.querySelector('.tiles').compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING); }));
   ok('the old hill and "heaviest" cards are gone from Me', !/Your hill/.test(await p.locator('main').innerText()) && !/heaviest you've ever/.test(await p.locator('main').innerText()));
   await p.locator('a.jscene').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/jo-me.png' });
 

@@ -15,8 +15,8 @@ const SAMPLE = path.join(__dirname, 'sample-backup.json'); const OUT = process.e
     m.save();
   });
   await p.goto(base + '#/home'); await p.waitForTimeout(400); await p.screenshot({ path: OUT + '/sh-home.png' });
-  await p.goto(base + '#/me'); await p.waitForTimeout(400); await p.locator('.sharecta').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/sh-me.png' });
-  await p.click('.sharecta'); await p.waitForTimeout(1200);
+  await p.goto(base + '#/me'); await p.waitForTimeout(400); await p.locator('.sharepill').scrollIntoViewIfNeeded(); await p.screenshot({ path: OUT + '/sh-me.png' });
+  await p.click('.sharepill'); await p.waitForTimeout(1200);
   await p.screenshot({ path: OUT + '/sh-screen.png', fullPage: true });
   const kinds = await p.locator('[data-kind]').evaluateAll(els => els.map(e => e.dataset.kind));
   console.log('kinds', kinds, 'miles', await p.locator('[data-mile]').allTextContents());

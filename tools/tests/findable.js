@@ -16,10 +16,10 @@ const errors = [];
     S.save(); document.querySelectorAll('.hello').forEach(e => e.remove()); });
   // Me → On repeat
   await p.goto(BASE + '#/days'); await p.goto(BASE + '#/me'); await p.waitForTimeout(600);
-  const row = await p.locator('.collect').innerText().catch(() => '');
+  const row = await p.locator('.tiles').innerText().catch(() => '');
   ok('Me: Your sky, Your quilt and On repeat side by side', /Your sky/.test(row) && /Your quilt/.test(row) && /On repeat/.test(row), row.replace(/\n/g, ' '));
-  await p.locator('.collect').scrollIntoViewIfNeeded(); await p.locator('.collect').screenshot({ path: OUT + '/fd-me-row.png' });
-  await p.click('.collect a[href^="#/repeat"]'); await p.waitForTimeout(700);
+  await p.locator('.tiles').scrollIntoViewIfNeeded(); await p.locator('.tiles').screenshot({ path: OUT + '/fd-me-row.png' });
+  await p.click('.tiles a[href^="#/repeat"]'); await p.waitForTimeout(700);
   ok('On repeat opens as its own page, with the song on the cassette', /On repeat/.test(await p.locator('main h1').innerText()) && await p.locator('.ontape .cassette').count() >= 1 && /Golden Hour/.test(await p.locator('.ontape').innerText()));
   ok('it keeps Me lit, and Back goes to Me', await p.locator('.tabbar a[aria-current="page"][href="#/me"]').count() === 1 && /Me/.test(await p.locator('.back').innerText()));
   await p.screenshot({ path: OUT + '/fd-repeat.png' });

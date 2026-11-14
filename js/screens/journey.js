@@ -227,11 +227,16 @@ function onClick(e) {
 }
 
 // ---------- the scene card on Me (v67): a little hillside with him on it, a title you can't miss, one line ----------
+// v105: on Me's journey card, one line for the lift you've done most that has gone up (Me no longer lists lifts)
+function liftLine(st) {
+  const L = lifts(st).find(x => x.pts.length > 1 && wLabel(st, x.k, x.pts[0].z) !== wLabel(st, x.k, x.pts[x.pts.length - 1].z));
+  return L ? '<small class="jlift1">' + esc(L.name) + ' ' + esc(wLabel(st, L.k, L.pts[0].z)) + ' → ' + esc(wLabel(st, L.k, L.pts[L.pts.length - 1].z)) + '</small>' : '';
+}
 export function previewCard() {
   const st = get(), list = entries('all', st); if (!list.length) return '';
   const t = today(), month = LONG[Number(t.slice(5, 7)) - 1], days = new Set(list.filter(e => e.date.startsWith(t.slice(0, 7))).map(e => e.date)).size, h = hillState('all');
   const line = (days ? days + (days === 1 ? ' day' : ' days') + ' moved in ' + month : list.length + (list.length === 1 ? ' time' : ' times') + ' so far') + (h.planted ? ' · you just passed ' + h.planted + '!' : h.next > h.n ? ' · next flag at ' + h.next : '');
   return '<a class="jscene" href="#/journey?from=me" aria-label="Your moving journey: ' + esc(line) + '">' +
-    '<span class="jsthead"><span class="jst"><b>Your moving journey</b><small>' + esc(line) + '</small></span><span class="jgo2" aria-hidden="true">›</span></span>' +
+    '<span class="jsthead"><span class="jst"><b>Your moving journey</b><small>' + esc(line) + '</small>' + liftLine(st) + '</span><span class="jgo2" aria-hidden="true">›</span></span>' +
     hillSvg('all', { W: 340, H: 150, cls: 'jhill jscenehill', left: 18, right: 46, top: 96, him: 64, flag: 22 }) + '</a>';
 }

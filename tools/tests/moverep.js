@@ -39,8 +39,8 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
     S.save();
   });
 
-  // 1. Me: the nights chart
-  await p.goto(BASE + '#/me'); await p.waitForTimeout(600);
+  // 1. Looking back (from Me): the nights chart
+  await p.goto(BASE + '#/lookback?from=me'); await p.waitForTimeout(600);
   ok('the rest clock is gone, "Your last two weeks of nights" is there', await p.locator('.restclock').count() === 0 && await p.locator('svg.nights').count() === 1);
   ok('one row per day for two weeks', await p.locator('svg.nights .nday').count() === 14);
   const sum = await p.locator('.nsum').innerText();
