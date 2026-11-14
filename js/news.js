@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 110, date: '2026-11-15', items: [
+    'The Move report can be made for any month now: pick one under "Or pick a month".',
+    'The 4-week and month reports also draw your lifts as lines, for the ones you did 3 or more times.'
+  ] },
   { v: 109, date: '2026-11-15', items: [
     'Your lifts on Your moving journey now draw every session, from your very first. The little lines used to show only your last ten, so they could look flatter than your real progress.'
   ] },

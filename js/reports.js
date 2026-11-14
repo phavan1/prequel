@@ -382,7 +382,7 @@ function lineCard(g, x, y, w, h, title, pts, fmt) {
   txt(g, shortDay(pts[pts.length - 1].d).replace(/^\w+, /, ''), cx1, y + h - 16, '700 15px ' + BODY, SOFT, 'right');
 }
 // your lifts over time: the heaviest set each time, for the exercises you've done most (weights only; plates are counted in pins)
-function liftCharts(doc, sessions, st) {
+function liftCharts(doc, sessions, st, min = 2) {
   const ex = {};
   sessions.forEach(x => (x.exercises || []).forEach(e => {
     const top = topSet(e.sets || []); if (!top || !(setWeight(top) > 0)) return;
@@ -391,7 +391,7 @@ function liftCharts(doc, sessions, st) {
     const last = r.pts[r.pts.length - 1], v = setWeight(top), p = { d: x.date, v, bar };
     if (last && last.d === x.date) { if (v > last.v) r.pts[r.pts.length - 1] = p; } else r.pts.push(p);
   }));
-  const list = Object.values(ex).filter(r => r.pts.length >= 2).sort((a, b) => b.pts.length - a.pts.length || a.name.localeCompare(b.name)).slice(0, 6);
+  const list = Object.values(ex).filter(r => r.pts.length >= min).sort((a, b) => b.pts.length - a.pts.length || a.name.localeCompare(b.name)).slice(0, 6);
   if (!list.length) return;
   const cw = (PW - 2 * M - 24) / 2, chh = 270;
   doc.heading('My lifts over time', 'the heaviest set each time, for the exercises I did most', chh + 80);
@@ -501,6 +501,8 @@ export async function moveReport(from, to, mode) {
       rows.map(r => ({ cells: [r.name, String(r.n), setText(r.first, r.k, st), r.n > 1 ? setText(r.last, r.k, st) : 'same day', setText(r.best, r.k, st)] })), { boldFirst: true, fs: 19 });
     doc.para('“First” and “latest” are the heaviest set on the first and the latest day I did that exercise in these dates.', '600 19px ' + BODY, SOFT);
   } else if (sessions.length) doc.para('Rep days in these dates were logged without sets.', '600 22px ' + BODY, SOFT);
+  // v110: the 4-week and month reports also draw the lifts as lines (3 or more times in those dates); 2 weeks stays a table
+  if (!whole && nDays >= 27) liftCharts(doc, sessions, st, 3);
 
   // other activities: totals per kind
   const kinds = [...new Set(acts.map(a => a.type))];
@@ -594,5 +596,6 @@ export function openMoveReport() {
   const first = dates.reduce((m, d) => d < m ? d : m, t);
   const opts = [['Last 2 weeks', from, t], ['Last 4 weeks', addDays(t, -27), t], ['Everything', first, t, 'all']]; // v62: 4 weeks too; v99: everything
   markEmpty(opts, dates);
-  rangeSheet('Move report', 'How you\'ve moved, as a PDF for you, your doctor or a coach. Highlights and notes stay private.', opts, [], (a, b, mode) => build(() => moveReport(a, b, mode), 'Move report'));
+  const months = monthsWith(dates); // v110: Or pick a month, like the food report and sleep diary
+  rangeSheet('Move report', 'How you\'ve moved, as a PDF for you, your doctor or a coach. Highlights and notes stay private.', opts, months, (a, b, mode) => build(() => moveReport(a, b, mode === 'all' ? 'all' : ''), 'Move report'));
 }
