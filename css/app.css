@@ -1305,3 +1305,10 @@ html[data-theme="dark"] .ttile.rep { background: #3A3220; border-color: #5A4C2A;
 .atile.off { border: 2px dashed var(--line); background: transparent; opacity: .75; } .atile.off .ck { background: none; color: var(--ink-soft); width: auto; font-size: 11px; }
 html[data-theme="dark"] .safe { background: #20321F; border-color: #36502F; color: var(--ink); } html[data-theme="dark"] .safe .st small { color: var(--ink-soft) !important; }
 html[data-theme="dark"] .safe.due { background: #3A3220; border-color: #5A4C2A; }
+
+/* v107: dark mode fixes. Things drawn on paper keep their paper colours, so their words stay dark */
+.paper { color: #23262F; } .paper .lbl, .paper .btn.ghost { color: #7A6E58; }
+.envelope .cap { color: #23262F; }
+.sleepbtns .btn.alt { color: #E8ECFF; border: 1px solid rgba(232, 236, 255, .3); } /* Rest's Cancel: it was navy on navy */
+html[data-theme="dark"] .sharepill, html[data-theme="dark"] .atile .ck { background: #3D66E0; }
+.wallnudge { color: #1E1E24; } .wallnudge b { color: #1F55D0; } /* v107: the month-start nudge keeps its light card in dark mode, so its words stay dark */

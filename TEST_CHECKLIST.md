@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v107) Cosy dark on the iPhone: open a letter (words dark on the paper), Rest while asleep (Cancel readable), Me's Share button, Settings' area cards.
 - [ ] (v106) Settings on the iPhone: Hi card opens your name; Backed up date and Save; Make it yours card opens the area cards, tapping one switches it; Days chips; Look pictures; kg / lb; Restore and What's new rows.
 - [ ] (v105) Me on the iPhone: four tiles (sky, quilt, On repeat with your song, Looking back), goals at zero as chips, Share button in the hero; Looking back opens with the ribbon and nights, and Back returns to Me.
 - [ ] (v104) Food report for a week of mostly Indian dishes: no Vitamin B12 or Vitamin D tile or idea; Protein and Fibre still there.
