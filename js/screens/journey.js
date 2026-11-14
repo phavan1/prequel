@@ -111,11 +111,12 @@ export function lifts(st = get()) {
   return Object.values(ex).sort((a, b) => b.pts.length - a.pts.length || a.name.localeCompare(b.name));
 }
 function spark(st, L) {
-  const W = 150, H = 54, P = 12, pts = L.pts.slice(-10), vs = pts.map(p => setW(p.z)), lo = Math.min(...vs), hi = Math.max(...vs);
+  const W = 150, H = 54, P = 12, pts = L.pts, // v109: every session, so the line starts where the heading says (it drew only the last 10)
+    n = pts.length, R = n <= 12 ? 3.4 : n <= 30 ? 2.6 : 2, vs = pts.map(p => setW(p.z)), lo = Math.min(...vs), hi = Math.max(...vs);
   const X = i => pts.length === 1 ? W / 2 : P + i * (W - 2 * P) / (pts.length - 1), Y = v => hi === lo ? H / 2 + 6 : H - 10 - (v - lo) / (hi - lo) * (H - 28);
   let s = '<svg class="jspark" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><polyline fill="none" stroke="#1F55D0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" points="' + pts.map((p, i) => X(i).toFixed(1) + ',' + Y(vs[i]).toFixed(1)).join(' ') + '"/>';
   const labelled = new Set([0, pts.length - 1]); if (vs[vs.length - 1] !== hi && vs[0] !== hi) labelled.add(vs.indexOf(hi));
-  pts.forEach((p, i) => { s += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(vs[i]).toFixed(1) + '" r="3.4" fill="#1F55D0" stroke="#FFFDF6" stroke-width="1.4"/>'; if (labelled.has(i)) s += '<text x="' + X(i).toFixed(1) + '" y="' + (Y(vs[i]) - 7).toFixed(1) + '" class="jslbl" text-anchor="middle">' + esc(wShort(st, L.k, p.z)) + '</text>'; });
+  pts.forEach((p, i) => { if (n > 40 && !labelled.has(i)) return; s += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(vs[i]).toFixed(1) + '" r="' + (labelled.has(i) ? Math.max(R, 2.8) : R) + '" fill="#1F55D0" stroke="#FFFDF6" stroke-width="1.4"/>'; if (labelled.has(i)) s += '<text x="' + X(i).toFixed(1) + '" y="' + (Y(vs[i]) - 7).toFixed(1) + '" class="jslbl" text-anchor="middle">' + esc(wShort(st, L.k, p.z)) + '</text>'; });
   return s + '</svg>';
 }
 
