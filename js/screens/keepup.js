@@ -117,7 +117,7 @@ export function mount(root) {
   function draw() {
     const d = dims(), dk = dark();
     const bg = g.createLinearGradient(0, 0, 0, d.H);
-    if (dk) { bg.addColorStop(0, '#1C1815'); bg.addColorStop(1, '#2E241C'); } else { bg.addColorStop(0, '#FFF6CF'); bg.addColorStop(1, '#FFE6C4'); }
+    if (dk) { const cs = getComputedStyle(document.documentElement); bg.addColorStop(0, cs.getPropertyValue('--room').trim() || '#1C1815'); bg.addColorStop(1, cs.getPropertyValue('--room-2').trim() || '#2E241C'); } else { bg.addColorStop(0, '#FFF6CF'); bg.addColorStop(1, '#FFE6C4'); }
     g.fillStyle = bg; g.fillRect(0, 0, d.W, d.H);
     s.stars.forEach(a => { const tw = 0.75 + 0.25 * Math.sin((s.t - a.born) * 3 + a.x); paperStar(g, a.x, a.y, a.r * Math.min(1, (s.t - a.born) * 3) * tw, dk ? '#F4C430' : '#FFD45A', 0, 'rgba(0,0,0,.12)'); });
     if (s.n > 0) { g.font = '900 ' + Math.round(Math.min(170, d.W * 0.42)) + 'px Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = dk ? 'rgba(243,238,223,.13)' : 'rgba(35,38,47,.12)'; g.fillText(String(s.n), d.W / 2, d.H * 0.45); }

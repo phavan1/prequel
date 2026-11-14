@@ -1,6 +1,7 @@
 // v107: dark mode, checked by contrast. Every visible word on the main pages (and a few opened states: a letter, a
 // sealed envelope, Rest while asleep, the month-start recap nudge, Settings' area sheet) must stand out from what's
 // actually behind it (contrast 3 or more). Faded-on-purpose things (future days, disabled buttons) are skipped.
+// v108: run once per Cosy dark colour (Cocoa, Midnight, Plum).
 // Throwaway profile. Run: PREQUEL_URL=http://localhost:8765/ node tools/tests/darkmode.js
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs'); const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';
@@ -26,27 +27,29 @@ const AUDIT = () => {
     if (cr < 3) out.push({ cr: +cr.toFixed(2), text: n.textContent.trim().slice(0, 40), cls: (el.className && el.className.baseVal === undefined ? el.className : '') + ' <' + el.tagName.toLowerCase() + '> in ' + ((el.closest('[class]') || {}).className || '').toString().slice(0, 40), fg: cs.color, bg: 'rgb(' + [bg.r, bg.g, bg.b].map(Math.round) + ')' }); }
   return out;
 };
-async function setup(b, when) {
+async function setup(b, when, tone) {
   const p = await b.newPage({ viewport: { width: 390, height: 844 } }); p.on('pageerror', e => errors.push(e.message));
   await p.clock.install({ time: new Date(when) });
   await p.goto(BASE + '#/settings'); await p.waitForTimeout(1500); await p.mouse.click(5, 5); await p.waitForTimeout(300);
   await p.setInputFiles('#importFile', SAMPLE); await p.click('[data-yes]'); await p.waitForTimeout(2500);
-  await p.evaluate(async () => { const S = await import('./js/store.js'), st = S.get(); st.newsSeen = 999; st.settings.theme = 'dark'; st.settings.dayTabs = ['win', 'weather', 'cycle', 'music'];
-    st.letters.push({ id: 'lt1', ts: new Date('2026-10-27T10:00:00').getTime(), text: 'Everything is gonna be alright.', weather: 'Clear sun' }); S.save(); });
+  await p.evaluate(async TONE => { const S = await import('./js/store.js'), st = S.get(); st.newsSeen = 999; st.settings.theme = 'dark'; st.settings.darkTone = TONE; st.settings.dayTabs = ['win', 'weather', 'cycle', 'music'];
+    st.letters.push({ id: 'lt1', ts: new Date('2026-10-27T10:00:00').getTime(), text: 'Everything is gonna be alright.', weather: 'Clear sun' }); S.save(); }, tone);
   return p;
 }
 async function check(p, label, url, act) {
   await p.goto(BASE + '#/me'); await p.goto(BASE + url); await p.waitForTimeout(800);
   await p.evaluate(() => { window.dispatchEvent(new Event('prequel-theme')); document.querySelectorAll('.hello').forEach(e => e.remove()); }); await p.waitForTimeout(150);
   if (act) { await act(p); await p.waitForTimeout(500); }
-  const dark = await p.evaluate(() => document.documentElement.dataset.theme) === 'dark';
+  const dark = await p.evaluate(t => document.documentElement.dataset.theme === 'dark' && document.documentElement.dataset.tone === t, TONE_NOW);
   const bad = await p.evaluate(AUDIT);
-  ok(label + ': every word readable in Cosy dark', dark && bad.length === 0, dark ? bad.slice(0, 3).map(x => x.cr + ' "' + x.text + '"').join(' | ') : 'not dark');
+  ok(TONE_NOW + ', ' + label + ': every word readable in Cosy dark', dark && bad.length === 0, dark ? bad.slice(0, 3).map(x => x.cr + ' "' + x.text + '"').join(' | ') : 'not dark');
   if (bad.length) await p.screenshot({ path: OUT + '/dm-' + label.replace(/\W+/g, '-') + '.png', fullPage: true });
 }
+let TONE_NOW = 'cocoa';
 (async () => {
   const b = await chromium.launch();
-  let p = await setup(b, '2026-11-14T20:30:00');
+  for (TONE_NOW of ['cocoa', 'midnight', 'plum']) {
+  let p = await setup(b, '2026-11-14T20:30:00', TONE_NOW);
   for (const r of ['home', 'weather', 'move', 'food', 'rest', 'mind', 'days', 'me', 'quilt', 'journey', 'wall', 'settings', 'share', 'repeat', 'lookback', 'sky'])
     await check(p, r, '#/' + r + '?from=me');
   await check(p, 'letters, sealed', '#/letters');
@@ -55,8 +58,10 @@ async function check(p, label, url, act) {
   await check(p, 'Settings, Make it yours sheet', '#/settings', p => p.click('[data-areas]'));
   await check(p, 'the recap', '#/wall?from=me&back=2026-10');
   await p.close();
-  p = await setup(b, '2026-11-03T10:00:00');
+  p = await setup(b, '2026-11-03T10:00:00', TONE_NOW);
   await check(p, 'Home in the first week (recap nudge)', '#/home');
+  await p.close();
+  }
   await b.close();
   results.forEach(x => console.log(x.join('  ')));
   console.log('darkmode: ' + results.filter(x => x[0] === 'FAIL').length + ' failed of ' + results.length + (errors.length ? ' ERRORS: ' + errors.join(' | ') : ' no errors'));

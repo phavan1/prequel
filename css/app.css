@@ -451,7 +451,7 @@ button.goal { text-align: left; font: inherit; color: inherit; }
 .games svg { width: 54px; height: 46px; }
 .games b { font-size: 14px; font-weight: 900; line-height: 1.15; }
 .games small { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); line-height: 1.2; }
-html[data-theme="dark"] .games a { background: linear-gradient(160deg, #23304F, #3A2E22); }
+html[data-theme="dark"] .games a { background: linear-gradient(160deg, #23304F, var(--room-2)); }
 .screen-keepup, .screen-stack, .screen-road { touch-action: none; }
 .sk-hud .gbest { font-size: 13px; opacity: .7; margin-left: auto; }
 .sk-hud .gnow + .gbest { margin-left: 0; }
@@ -462,7 +462,7 @@ html[data-theme="dark"] .games a { background: linear-gradient(160deg, #23304F, 
 .emopick button[aria-pressed="true"] { border: 2px solid var(--blue); background: var(--blue-soft); }
 .emopick .pstar { width: 24px; height: 24px; background: #F4C430; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
 .emoown { min-height: 42px; border-radius: 14px; border: 1px solid var(--line); padding: 0 12px; font: inherit; font-size: 15px; text-align: center; background: #FFFDF6; color: #23262F; }
-html[data-theme="dark"] .emopick button, html[data-theme="dark"] .emoown { background: #2F2822; color: var(--ink); }
+html[data-theme="dark"] .emopick button, html[data-theme="dark"] .emoown { background: var(--paper); color: var(--ink); }
 .game .go { padding: 10px 16px; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 900; font-size: 14px; }
 .screen-skate, .screen-keepup, .screen-stack, .screen-road { padding: 0; max-width: none; position: relative; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 body:has(.screen-skate), body:has(.screen-keepup), body:has(.screen-stack), body:has(.screen-road) { overflow: hidden; overscroll-behavior: none; }
@@ -551,14 +551,15 @@ details.more summary { font-weight: 800; font-size: 13px; color: var(--ink-soft)
 html[data-theme="dark"] {
   --room: #1C1815; --room-2: #27211C; --paper: #2F2822; --ink: #F2E8DA; --ink-soft: #BCAD9A; --line: #45392F;
   --blue: #7B9DFF; --blue-soft: #283253; --red: #F0907B; --green: #6CC08F; color-scheme: dark;
+  --field: #241E19; --floor: #352B23; /* v108: text boxes and the room's floor follow the dark colour */
 }
 html[data-theme="dark"] body { background: var(--room); }
-html[data-theme="dark"] input[type="text"], html[data-theme="dark"] input[type="search"], html[data-theme="dark"] input[type="time"], html[data-theme="dark"] input[type="date"], html[data-theme="dark"] textarea, html[data-theme="dark"] select, html[data-theme="dark"] .ingrow select { background: #241E19; border-color: var(--line); color: var(--ink); }
-html[data-theme="dark"] .light[aria-pressed="true"], html[data-theme="dark"] .field[aria-pressed="true"] { background: #241E19; }
+html[data-theme="dark"] input[type="text"], html[data-theme="dark"] input[type="search"], html[data-theme="dark"] input[type="time"], html[data-theme="dark"] input[type="date"], html[data-theme="dark"] textarea, html[data-theme="dark"] select, html[data-theme="dark"] .ingrow select { background: var(--field); border-color: var(--line); color: var(--ink); }
+html[data-theme="dark"] .light[aria-pressed="true"], html[data-theme="dark"] .field[aria-pressed="true"] { background: var(--field); }
 /* things drawn light-on-dark in the day become dark-on-light here */
-html[data-theme="dark"] .chip[aria-pressed="true"], html[data-theme="dark"] .seg button[aria-pressed="true"], html[data-theme="dark"] .exs button[aria-pressed="true"], html[data-theme="dark"] .unit span.on, html[data-theme="dark"] .fin, html[data-theme="dark"] .toast { color: #1C1815; }
+html[data-theme="dark"] .chip[aria-pressed="true"], html[data-theme="dark"] .seg button[aria-pressed="true"], html[data-theme="dark"] .exs button[aria-pressed="true"], html[data-theme="dark"] .unit span.on, html[data-theme="dark"] .fin, html[data-theme="dark"] .toast { color: var(--room); }
 html[data-theme="dark"] .btn:not(.alt):not(.ghost):not(.danger), html[data-theme="dark"] .next, html[data-theme="dark"] .qty button[aria-pressed="true"], html[data-theme="dark"] .game .go, html[data-theme="dark"] .cal .d[aria-pressed="true"] { background: #3D66E0; border-color: #3D66E0; color: #fff; }
-html[data-theme="dark"] .room .floor { background: #352B23; }
+html[data-theme="dark"] .room .floor { background: var(--floor); }
 html[data-theme="dark"] .room .rug ellipse:first-child { fill: #2B3350; }
 html[data-theme="dark"] .room .rug ellipse:last-child { stroke: #4D5B8A; }
 html[data-theme="dark"] .room .note { color: #23262F; }
@@ -566,10 +567,10 @@ html[data-theme="dark"] .room .note { color: #23262F; }
 html[data-theme="dark"] .lookback, html[data-theme="dark"] [style*="background:#FFF1C4"]:not(.sticky), html[data-theme="dark"] [style*="background:#DFF0DC"]:not(.sticky) { background: var(--paper) !important; border: 1px solid var(--line); color: var(--ink); }
 html[data-theme="dark"] .nudgecard { background: #3A2F1C; border-color: #6B5626; }
 html[data-theme="dark"] .trophy { background: #33291A; border-color: #6B5626; }
-html[data-theme="dark"] .game { background: linear-gradient(120deg, #23304F, #3A2E22); }
+html[data-theme="dark"] .game { background: linear-gradient(120deg, #23304F, var(--room-2)); }
 html[data-theme="dark"] .hello { background: var(--room); }
 html[data-theme="dark"] .res i { color: #E9A36B; }
-html[data-theme="dark"] .sk-back, html[data-theme="dark"] .sk-over { background: rgba(47,40,34,.95); color: var(--ink); }
+html[data-theme="dark"] .sk-back, html[data-theme="dark"] .sk-over { background: rgba(47,40,34,.95); background: color-mix(in srgb, var(--paper) 95%, transparent); color: var(--ink); }
 html[data-theme="dark"] .sk-over p, html[data-theme="dark"] .sk-over .big { color: var(--ink); }
 html[data-theme="dark"] .screen-home.heavy { --room: #241B16; --room-2: #2E221B; --paper: #33271F; --line: #4A372B; }
 html[data-theme="dark"] body.heavy-day { background: linear-gradient(180deg, #261C16 0%, #1E1612 100%) fixed; }
@@ -1312,3 +1313,20 @@ html[data-theme="dark"] .safe.due { background: #3A3220; border-color: #5A4C2A; 
 .sleepbtns .btn.alt { color: #E8ECFF; border: 1px solid rgba(232, 236, 255, .3); } /* Rest's Cancel: it was navy on navy */
 html[data-theme="dark"] .sharepill, html[data-theme="dark"] .atile .ck { background: #3D66E0; }
 .wallnudge { color: #1E1E24; } .wallnudge b { color: #1F55D0; } /* v107: the month-start nudge keeps its light card in dark mode, so its words stay dark */
+
+/* v108: Cosy dark comes in three colours (Settings → Look). Cocoa is the original warm brown-black (the variables above);
+   Midnight is deep navy, like the night window and his hoodie; Plum is a dusky purple. The soft day keeps its own amber. */
+html[data-theme="dark"][data-tone="midnight"] { --room: #11151F; --room-2: #181E2C; --paper: #202839; --ink: #E9EDF7; --ink-soft: #A7B0C8; --line: #323C55; --field: #161B27; --floor: #1E2538; }
+html[data-theme="dark"][data-tone="plum"] { --room: #18131D; --room-2: #211A28; --paper: #2A2133; --ink: #F0E7F3; --ink-soft: #BAA9C6; --line: #41344F; --field: #1E1824; --floor: #2C2236; }
+html[data-theme="dark"][data-tone] body { background: var(--room); }
+.tones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 2px; }
+.tones .tlab { width: 100%; font-size: 12.5px; font-weight: 800; color: var(--ink-soft); margin: 0 4px; }
+.tone { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 13px 6px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; font-weight: 800; font-size: 13px; }
+.tone i { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); }
+.tone .td-cocoa { background: linear-gradient(135deg, #2F2822 50%, #1C1815 50%); }
+.tone .td-midnight { background: linear-gradient(135deg, #202839 50%, #11151F 50%); }
+.tone .td-plum { background: linear-gradient(135deg, #2A2133 50%, #18131D 50%); }
+.tone[aria-pressed="true"] { border: 2px solid var(--blue); padding: 5px 12px 5px 6px; }
+.tone[aria-pressed="true"]::after { content: '✓'; color: var(--blue); font-weight: 900; }
+html[data-tone="midnight"] .lk .d { background: #11151F; } html[data-tone="midnight"] .lk .a { background: linear-gradient(135deg, #FAF3DC 50%, #11151F 50%); }
+html[data-tone="plum"] .lk .d { background: #18131D; } html[data-tone="plum"] .lk .a { background: linear-gradient(135deg, #FAF3DC 50%, #18131D 50%); }

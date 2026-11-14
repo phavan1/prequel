@@ -52,12 +52,16 @@ function route() {
 }
 
 // light, dark, or follow the phone
+export const TONES = { cocoa: '#1C1815', midnight: '#11151F', plum: '#18131D' }; // each dark colour's background, for the phone's status bar
 const darkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 export function applyTheme() {
   const pref = (get() && get().settings.theme) || 'light';
   const dark = pref === 'dark' || (pref === 'auto' && darkQuery && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = dark ? '#1C1815' : '#FAF3DC';
+  // v108: three colours for Cosy dark (Cocoa, Midnight, Plum); used whenever the app is dark, Match my phone included
+  const tone = TONES[(get() && get().settings.darkTone)] ? get().settings.darkTone : 'cocoa';
+  document.documentElement.dataset.tone = tone;
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = dark ? TONES[tone] : '#FAF3DC';
 }
 if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', () => { if (get()) applyTheme(); });
 window.addEventListener('prequel-theme', applyTheme);

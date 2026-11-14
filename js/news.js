@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 108, date: '2026-11-15', items: [
+    'Cosy dark comes in three colours now: Cocoa (the warm brown you know), Midnight (deep navy) and Plum (dusky purple). Pick one in Settings, under Look.'
+  ] },
   { v: 107, date: '2026-11-14', items: [
     'Cosy dark is easier to read: an opened letter, the sealed envelope, Cancel on Rest while you\'re asleep, the recap reminder on Home, and a couple of blue buttons.'
   ] },

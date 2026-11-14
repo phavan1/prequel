@@ -16,6 +16,7 @@ export function mount(root) {
     if ((b = t.closest('[data-wunit]'))) { if (b.dataset.wunit !== wu()) { setUnit(b.dataset.wunit); render(root); if (!askLb()) toast('Weights are now in ' + (wu() === 'lb' ? 'pounds' : 'kilograms') + '.'); } return; }
     if (t.closest('[data-areas]')) { areasSheet(root); return; } // v106: the eight areas live in a sheet
     if ((b = t.closest('[data-dtab]'))) { const s = get().settings, k = b.dataset.dtab; s.dayTabs = s.dayTabs || []; s.dayTabs = s.dayTabs.includes(k) ? s.dayTabs.filter(x => x !== k) : s.dayTabs.concat(k); save(); render(root); toast(s.dayTabs.includes(k) ? 'It\'s on Days now.' : 'Taken off Days. Nothing you logged is lost.'); return; } // v96
+    if ((b = t.closest('button[data-darktone]'))) { get().settings.darkTone = b.dataset.darktone; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; } // v108
     if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
     if (t.closest('[data-words]')) { wordsSheet(root); return; }
@@ -174,6 +175,7 @@ function render(root) {
     (OPTIONAL.some(o => o[0] === 'cycle') ? '<p class="shint">Cycle is a private period tracker, just for you.</p>' : '') +
     '<div class="slbl">Look</div>' +
     '<div class="looks">' + [['light', 'Light', 'l'], ['dark', 'Cosy dark', 'd'], ['auto', 'Match my phone', 'a']].map(o => '<button type="button" class="lk" data-look="' + o[0] + '" aria-pressed="' + ((s.theme || 'light') === o[0]) + '"><span class="' + o[2] + '" aria-hidden="true"><i></i><i></i><i></i></span>' + o[1] + '</button>').join('') + '</div>' +
+    ((s.theme === 'dark' || s.theme === 'auto') ? '<div class="tones" role="group" aria-label="Cosy dark colour"><span class="tlab">Cosy dark colour</span>' + [['cocoa', 'Cocoa'], ['midnight', 'Midnight'], ['plum', 'Plum']].map(o => '<button type="button" class="tone" data-darktone="' + o[0] + '" aria-pressed="' + ((s.darkTone || 'cocoa') === o[0]) + '"><i class="td-' + o[0] + '" aria-hidden="true"></i>' + o[1] + '</button>').join('') + '</div>' : '') + // v108
     '<div class="slbl">Weights in</div>' + // v71: kg or lb, for lifts and body weight
     '<div class="sseg">' + [['kg', 'kg · kilograms'], ['lb', 'lb · pounds']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
     '<div class="slbl">More</div>' +
