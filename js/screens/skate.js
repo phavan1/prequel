@@ -31,7 +31,7 @@ export function mount(root) {
   const PH = Math.min(118, Math.max(90, H * 0.14)), PW = PH * 640 / 605;
   let s; // the run
   function reset() {
-    s = { t: 0, speed: 270, dist: 0, bonus: 0, y: 0, vy: 0, jumps: 0, obs: [], stars: [], pops: [], nextGap: 380, scroll: 0, dead: false };
+    s = { t: 0, speed: skateSpeed(0), dist: 0, bonus: 0, y: 0, vy: 0, jumps: 0, obs: [], stars: [], pops: [], nextGap: 380, scroll: 0, dead: false };
   }
   reset();
   const px = () => Math.round(W * 0.16);
@@ -59,7 +59,7 @@ export function mount(root) {
 
   function step(dt) {
     s.t += dt;
-    s.speed = Math.min(760, 270 + s.t * 9);
+    s.speed = skateSpeed(s.t);
     const dx = s.speed * dt;
     s.dist += dx; s.scroll += dx;
     s.vy += 2500 * dt; s.y = Math.min(0, s.y + s.vy * dt);
@@ -189,3 +189,8 @@ export function mount(root) {
   draw();
   if (reduceMotion) { /* the game is opt-in, so it still runs; nothing flashes */ }
 }
+
+// v112: a gentler climb. It used to start at 270 and add 9 a second up to 760 (full speed in under a minute).
+// Now it starts a little slower and adds 4 a second up to 600: half a minute in it's 360 (was 540),
+// and it reaches its top speed after about 90 seconds.
+export const skateSpeed = t => Math.min(600, 240 + t * 4);
