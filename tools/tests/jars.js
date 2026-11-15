@@ -72,9 +72,8 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   s = await st();
   ok('"Bring it back" right after letting go returns the note and its star', !s.mind.find(n => n.id === 'n3').letGo && !s.moments.some(m => m.ref === 'n3'));
   await p.click('[data-letgo="n1"]'); await p.waitForTimeout(300);
-  await p.evaluate(() => document.querySelector('.letgo').open = true); await p.waitForTimeout(200);
-  await p.evaluate(() => document.querySelector('.letgo').scrollIntoView({ block: 'center' })); await p.screenshot({ path: OUT + '/mind-lanterns.png' });
-  await p.click('[data-recall="n1"]'); await p.waitForTimeout(300);
+  await p.click('[data-lanterns]'); await p.waitForTimeout(300); await p.screenshot({ path: OUT + '/mind-lanterns.png' }); // v114: the Lanterns tile
+  await p.click('#sheet [data-recall="n1"]'); await p.waitForTimeout(300);
   s = await st();
   ok('"Bring back" in the lantern list works later too', !s.mind.find(n => n.id === 'n1').letGo);
 

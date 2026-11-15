@@ -22,8 +22,9 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   });
   await p.goto(BASE + '#/mind'); await p.waitForTimeout(500);
   ok('every note has a ×', await p.locator('.sticky [data-rmnote]').count() === 2);
-  await p.locator('details.letgo summary').click(); await p.waitForTimeout(200);
-  ok('every lantern has a × too', await p.locator('.item.lantern [data-rmnote]').count() === 1);
+  await p.click('[data-lanterns]'); await p.waitForTimeout(300); // v114: lanterns open from the Lanterns tile
+  ok('every lantern has a × too', await p.locator('#sheet .item.lantern [data-rmnote]').count() === 1);
+  await p.click('#sheet [data-close]'); await p.waitForTimeout(250);
   await p.screenshot({ path: OUT + '/nt-mind.png' });
 
   // a note: × asks once; Keep it keeps it
@@ -36,9 +37,8 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('Remove it removes the note', !(await st()).mind.some(n => n.id === 'n1') && (await st()).mind.some(n => n.id === 'n2'));
 
   // a lantern: removed, and its star leaves the sky
-  await p.locator('details.letgo summary').click().catch(() => {}); await p.waitForTimeout(200);
-  if (!(await p.locator('.item.lantern [data-rmnote]').isVisible())) { await p.locator('details.letgo summary').click(); await p.waitForTimeout(200); }
-  await p.click('.item.lantern [data-rmnote="l1"]'); await p.waitForTimeout(250);
+  await p.click('[data-lanterns]'); await p.waitForTimeout(300);
+  await p.click('#sheet .item.lantern [data-rmnote="l1"]'); await p.waitForTimeout(250);
   ok('a lantern says it will leave your sky', /leave your sky/.test(await p.locator('#sheet').innerText()));
   await p.click('#sheet [data-o="del"]'); await p.waitForTimeout(300);
   const s = await st();

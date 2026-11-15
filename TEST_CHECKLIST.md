@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v114) Mind on the iPhone: type a note, the reminder choices appear, + puts it down; Let it go, then the Lanterns tile lists it and Bring back works; the Letters tile opens Letters; the keyboard doesn't hide the + button.
 - [ ] (v113) Settings → More → Guide opens the wiki in Safari; the README shows "Read the guide".
 - [ ] (v112) Skate home on the iPhone: the first half minute feels relaxed, and it still gets lively later.
 - [ ] (v111) Move report: a Bar + set shows whole in The gym (wraps); Everything with weigh-ins from two places shows two lines with a key; "What I did: N rep days"; Week by week says Rep days.

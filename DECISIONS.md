@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v114: Mind keeps writing a note one step away (a slim bar, reminder choices only once you type); lanterns and letters get pictures (tiles, like Me's); the lantern list lives in a pop-up.
 - v113: help for friends lives on the GitHub wiki (public, read-only for others, no personal details), linked from Settings → More → Guide and the README. The repo docs (START_HERE, HANDOVER…) stay in the code for building the app.
 - v112: Skate home ramps up gently (top speed lower and reached later), like Keep it up: the soft-day games stay calm.
 - v111: report tables wrap long cells rather than cutting them; body weight from different scales is never joined into one line; the report counts the gym in rep days everywhere.
@@ -345,3 +346,4 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 ## I. Future ideas (his, not yet planned in detail)
 
  Stage 3, a uni planner from his Canvas calendar feed as a comic-style planner. Stage 4, a printable A4 monthly showcase. Cloud sync with a login (leaning Firebase). A cookbook with photos.
+- **Mind ideas, saved for later (16 Nov 2026, Phavan: "remember them, don't build yet"):** (a) **lists you reuse**: groceries, gym bag, packing; tick things off, then reset, with usual items remembered; (b) **birthdays and people**: a gentle heads-up on Home a few days before a birthday, and a gift-ideas note per person; (c) **a someday shelf**: films, places to eat, books, things to try, with one suggested at random on a soft day. From a brainstorm; he passed on the wellbeing ones (brain dump, "is this mine to do?", kept words, grounding, letters for a chosen day, a line a day, Done it → jar star, noticing) and on repeating nudges, photo notes and search.

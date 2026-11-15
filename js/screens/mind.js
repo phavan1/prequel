@@ -1,5 +1,5 @@
 import { get, save, uid, addMoment, removeById, today, addDays, parseKey } from '../store.js';
-import { esc, nav, toast, prettyDate, openSheet, closeSheet } from '../ui.js';
+import { esc, nav, toast, prettyDate, openSheet, closeSheet, him } from '../ui.js';
 
 const COLOURS = ['#FFF1A8', '#DCE7FF', '#FFD9CC', '#DFF0DC', '#EBDDF2'];
 let when = '', recallTimer = null;
@@ -8,9 +8,12 @@ function weekendFrom(d) { const dow = parseKey(d).getDay(); return addDays(d, do
 
 export function mount(root) {
   render(root);
+  // v114: the reminder choices show once there's something typed
+  root.addEventListener('input', e => { if (e.target.id === 'jot') { const r = root.querySelector('.remind'); if (r) r.hidden = !e.target.value.trim() && !when; } });
   root.addEventListener('click', e => { const b = e.target.closest('[data-recall]'); if (b) { e.stopPropagation(); recall(root, b.dataset.recall); } }, true);
   root.addEventListener('click', e => {
     const t = e.target, st = get(); let b;
+    if (t.closest('[data-lanterns]')) { lanternSheet(root); return; } // v114
     if ((b = t.closest('[data-when]'))) { when = when === b.dataset.when ? '' : b.dataset.when; render(root, true); return; }
     if (t.closest('[data-jot]')) {
       const text = (root.querySelector('#jot').value || '').trim(); if (!text) { root.querySelector('#jot').focus(); return; }
@@ -79,30 +82,49 @@ function editNote(root, id) {
   });
 }
 
+// v114: the lanterns you've let go, in a pop-up from the Lanterns tile (they used to be a list you could expand)
+function lanternSheet(root) {
+  const draw = () => { const L = get().mind.filter(n => n.letGo).sort((a, b) => b.letGo - a.letGo);
+    return '<h2>Lanterns you\'ve let go</h2><p class="muted" style="margin:0">Doing it or not doing it, both count as letting go. Call one back any time.</p>' +
+      (L.length ? '<div class="lanterns">' + L.map(n => '<div class="item lantern"><i style="background:#3E9E6E"></i><button type="button" class="tap" data-editnote="' + n.id + '">' + esc(n.text) + '</button><button type="button" class="recall" data-recall="' + n.id + '">Bring back</button><button type="button" class="rmx" data-rmnote="' + n.id + '" aria-label="Remove this lantern">×</button></div>').join('') + '</div>' : '<p class="empty">No lanterns yet. Tap "Let it go" on a note and it floats up here.</p>') +
+      '<button type="button" class="btn ghost" data-close>Close</button>'; };
+  openSheet(draw(), ev => {
+    let b;
+    if ((b = ev.target.closest('[data-recall]'))) { closeSheet(); recall(root, b.dataset.recall); return; }
+    if ((b = ev.target.closest('[data-rmnote]'))) { closeSheet(); confirmRemove(root, b.dataset.rmnote); return; }
+    if ((b = ev.target.closest('[data-editnote]'))) { closeSheet(); editNote(root, b.dataset.editnote); }
+  });
+}
+const STARS = (() => { let seed = 5; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647; let s = '';
+  for (let i = 0; i < 26; i++) s += '<circle cx="' + (4 + r() * 152).toFixed(1) + '" cy="' + (4 + r() * 66).toFixed(1) + '" r="' + [0.6, 0.9, 1.2][Math.floor(r() * 3)] + '" fill="#FFF6D8" opacity="' + (0.4 + r() * 0.5).toFixed(2) + '"/>'; return s; })();
+const LANTERN = (x, y, k, o) => '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')" opacity="' + o + '"><ellipse cx="0" cy="6" rx="16" ry="20" fill="#F4C430" opacity=".18"/><path d="M-7 -6 Q0 -10 7 -6 L5 12 Q0 14 -5 12 Z" fill="#F4B740"/><path d="M-5 12 Q0 14 5 12 L4 15 L-4 15 Z" fill="#C8792A"/><path d="M-3 -3 L-2 9" stroke="#FFE7A0" stroke-width="1.5" opacity=".7"/></g>';
+const LANTERN_ART = '<svg viewBox="0 0 160 74" class="tart" aria-hidden="true">' + STARS + LANTERN(40, 40, 0.9, 1) + LANTERN(84, 24, 0.7, 0.85) + LANTERN(124, 46, 0.55, 0.7) + '</svg>';
+const ENVELOPE_ART = '<svg viewBox="0 0 160 74" class="tart" aria-hidden="true"><rect x="22" y="8" width="116" height="60" rx="6" fill="#FFF6DA" stroke="#E2CF9E" stroke-width="1.5"/><path d="M22 12 L80 44 L138 12" fill="none" stroke="#E2CF9E" stroke-width="1.5"/><circle cx="80" cy="42" r="8" fill="#D9573F"/></svg>';
+
 function render(root, keep) {
   const st = get(), d = today();
   const jot = keep && root.querySelector('#jot') ? root.querySelector('#jot').value : '';
   const open = st.mind.filter(n => !n.letGo).sort((a, b) => (a.remindOn || '9999').localeCompare(b.remindOn || '9999'));
-  const lanterns = st.mind.filter(n => n.letGo).length;
+  const lanterns = st.mind.filter(n => n.letGo).length, letters = st.letters.length;
+  // v114 (design A): a hello with him, a slim jot bar (reminders appear once you type), notes on a corkboard,
+  // and Lanterns and Letters as picture tiles, like Me's
   root.innerHTML =
-    '<div><h1>Things on my mind</h1><p class="sub">No due dates. No overdue. Just a place to put things down. Tap a note to change it.</p></div>' +
-    '<div class="card">' +
-      '<label class="field-label" for="jot">JOT SOMETHING DOWN</label><input id="jot" type="text" placeholder="e.g. check that email from uni" autocomplete="off" value="' + esc(jot) + '" enterkeyhint="done">' +
-      '<div class="lbl">Remind me around</div>' +
+    '<div class="mhero"><div class="mtx"><h1>Mind</h1><p class="sub">A place to put things down. No due dates, no overdue. Tap a note to change it.</p></div>' + him('stickynote', '', 'Him with a sticky note') + '</div>' +
+    '<div class="jotwrap"><div class="jotbar"><label class="sr" for="jot">Jot something down</label><input id="jot" type="text" placeholder="Put something down…" autocomplete="off" value="' + esc(jot) + '" enterkeyhint="done"><button type="button" class="jotgo" data-jot aria-label="Put it down">+</button></div>' +
+      '<div class="remind"' + (jot.trim() || when ? '' : ' hidden') + '><div class="lbl">Remind me around</div>' +
       '<div class="chips">' + [['tomorrow', 'Tomorrow'], ['weekend', 'The weekend'], ['week', 'Next week'], ['pick', 'Pick a day']].map(w => '<button type="button" class="chip small" data-when="' + w[0] + '" aria-pressed="' + (when === w[0]) + '">' + w[1] + '</button>').join('') + '</div>' +
-      (when === 'pick' ? '<label class="sr" for="pickDate">Day to bring it up</label><input id="pickDate" type="date" min="' + d + '" value="' + addDays(d, 3) + '">' : '') +
-      '<button type="button" class="btn" data-jot>Put it down</button>' +
-    '</div>' +
+      (when === 'pick' ? '<label class="sr" for="pickDate">Day to bring it up</label><input id="pickDate" type="date" min="' + d + '" value="' + addDays(d, 3) + '">' : '') + '</div></div>' +
+    '<div class="board"><div class="blbl">On your mind' + (open.length ? ' · ' + open.length : '') + '</div>' +
     (open.length
       ? '<div class="notes">' + open.map((n, i) => {
           const due = n.remindOn && n.remindOn <= d;
           const meta = !n.remindOn ? 'no nudge' : due ? 'hey, this one' : 'around ' + prettyDate(n.remindOn).toLowerCase();
           return '<div class="sticky" style="background:' + COLOURS[i % COLOURS.length] + ';transform:rotate(' + ((i % 3) - 1) * 1.5 + 'deg)"><button type="button" class="tx" data-editnote="' + n.id + '" aria-label="Change this note">' + esc(n.text) + '</button><span class="mt">' + esc(meta) + '</span><button type="button" data-letgo="' + n.id + '">Let it go</button><button type="button" class="rmx" data-rmnote="' + n.id + '" aria-label="Remove this note">×</button></div>';
         }).join('') + '</div>'
-      : '<p class="empty">Nothing on your mind here right now. That\'s a nice kind of empty.</p>') +
-    (lanterns ? '<details class="letgo"><summary>Lanterns you\'ve let go · call one back any time</summary>' + st.mind.filter(n => n.letGo).sort((a, b) => b.letGo - a.letGo).map(n => '<div class="item lantern"><i style="background:#3E9E6E"></i><button type="button" class="tap" data-editnote="' + n.id + '">' + esc(n.text) + '</button><button type="button" class="recall" data-recall="' + n.id + '">Bring back</button><button type="button" class="rmx" data-rmnote="' + n.id + '" aria-label="Remove this lantern">×</button></div>').join('') + '</details>' : '') +
-    // never a zero: the count only shows once there's a lantern
-    '<p class="muted" style="font-size:13px">' + (lanterns ? lanterns + (lanterns === 1 ? ' lantern' : ' lanterns') + ' let go so far. ' : '') + 'Doing it or not doing it, both count as letting go.</p>' +
-    '<a class="rowlink" href="#/letters"><span>Letters from good-day you</span><b>' + (st.letters.length ? st.letters.length + ' ›' : '›') + '</b></a>' +
+      : '<p class="bempty">Nothing on your mind here right now. That\'s a nice kind of empty.</p>') + '</div>' +
+    '<div class="grid2 tiles">' +
+      '<button type="button" class="ttile sky" data-lanterns>' + LANTERN_ART + '<span class="tt"><b>Lanterns</b><small>' + (lanterns ? lanterns + (lanterns === 1 ? ' let go' : ' let go') + ' · call one back' : 'Let a note go and it floats up here') + '</small></span><span class="tgo" aria-hidden="true">›</span></button>' +
+      '<a class="ttile lett" href="#/letters?from=mind">' + ENVELOPE_ART + '<span class="tt"><b>Letters</b><small>' + (letters ? letters + (letters === 1 ? ' sealed' : ' sealed') + ', for a stormy day' : 'From good-day you, for a stormy day') + '</small></span><span class="tgo" aria-hidden="true">›</span></a>' +
+    '</div>' +
     nav('mind');
 }

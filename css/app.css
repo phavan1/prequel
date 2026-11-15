@@ -1331,3 +1331,22 @@ html[data-theme="dark"][data-tone] body { background: var(--room); }
 html[data-tone="midnight"] .lk .d { background: #11151F; } html[data-tone="midnight"] .lk .a { background: linear-gradient(135deg, #FAF3DC 50%, #11151F 50%); }
 html[data-tone="plum"] .lk .d { background: #18131D; } html[data-tone="plum"] .lk .a { background: linear-gradient(135deg, #FAF3DC 50%, #18131D 50%); }
 .sgroup a.srow { text-decoration: none; } /* v113: the Guide row is a link */
+
+/* v114: Mind, redesigned (design A). A hello with him, a slim jot bar, notes on a corkboard, Lanterns and Letters tiles */
+.mhero { display: flex; align-items: flex-end; gap: 8px; border-radius: 24px; background: var(--room-2); padding: 14px 4px 0 16px; overflow: hidden; min-height: 130px; }
+.mhero .mtx { flex: 1; align-self: center; padding-bottom: 12px; } .mhero h1 { margin: 0; } .mhero .sub { margin: 4px 0 0; }
+.mhero .him { height: 132px; width: auto; flex: none; }
+.jotwrap { display: flex; flex-direction: column; gap: 8px; }
+.jotbar { display: flex; gap: 8px; align-items: center; }
+.jotbar input { flex: 1; min-height: 50px; border-radius: 16px; margin: 0; }
+.jotgo { width: 50px; height: 50px; flex: none; border-radius: 16px; border: 0; background: var(--blue); color: #FFFFFF; font: inherit; font-size: 26px; font-weight: 800; line-height: 1; }
+html[data-theme="dark"] .jotgo { background: #3D66E0; }
+.remind[hidden] { display: none; } .remind .lbl { margin: 2px 4px 6px; }
+.board { border-radius: 22px; padding: 14px; background: #E9D3AE radial-gradient(rgba(120, 80, 40, .10) 1px, transparent 1.5px); background-size: 9px 9px; border: 1px solid #D9BE90; }
+.board .blbl { font-size: 12.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #6E4F24; margin: 0 2px 10px; }
+.board .bempty { color: #5E4520; font-weight: 700; margin: 4px 2px; }
+html[data-theme="dark"] .board { background-color: #4A3A28; border-color: #5E4A32; } html[data-theme="dark"] .board .blbl { color: #EED9B0; } html[data-theme="dark"] .board .bempty { color: #EED9B0; }
+button.ttile { font: inherit; text-align: left; width: 100%; cursor: pointer; }
+.ttile.lett { background: #FFF9EA; border-color: #E2CF9E; color: #23262F; } .ttile.lett .tt small { color: #6B5A2A; }
+html[data-theme="dark"] .ttile.lett { background: #3A3220; border-color: #5A4C2A; color: var(--ink); } html[data-theme="dark"] .ttile.lett .tt small { color: var(--ink-soft); }
+.lanterns { display: flex; flex-direction: column; gap: 6px; margin: 4px 0; }
