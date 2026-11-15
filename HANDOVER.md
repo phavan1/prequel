@@ -476,7 +476,7 @@ All art is ChatGPT-generated from Phavan's prompts, cut out by Claude's scripts 
 
 **Waiting for his decision (don't build until he chooses):**
 1. ~~Night chips on Rest~~ **Done in v42:** replaced by one night-only "Awake for a bit" button that logs the time and length.
-2. **Weather in the sleep diary:** a weather row under "Hours each day". Offered.
+2. ~~**Weather in the sleep diary**~~ **Dropped 15 Nov** after a mockup (mostly empty when weather isn't logged most days).
 3. **Goal-completion celebration:** count-up and confetti screen, gold shooting star in the sky, trophy landing on the shelf, optional note to future you, "Share this" milestone card, optional chime. Also: loud or quiet and warm? Never answered.
 4. **Mind page redesign:** he asked to keep it in mind; not started.
 5. **Indian rice names in food search:** offered.

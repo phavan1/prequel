@@ -240,7 +240,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 
 | Proposal | Where it came from | State |
 |---|---|---|
-| A weather row in the sleep diary under "Hours each day" | After v36 | Offered |
+| A weather row in the sleep diary under "Hours each day" | After v36 | **Dropped 15 Nov** (mocked: with weather on only a few days the row is mostly empty; Looking back already shows the ribbon beside the nights) |
 | A richer goal celebration: count-up and confetti, gold shooting star, trophy on the shelf, note to future you, share card, optional chime | Earlier conversation | Offered; "loud or quiet?" never answered |
 | Mind page redesign | His own idea ("keep it in mind") | **Not designed yet** |
 | Recognise Indian rice names (seeraga samba, sona masoori, ponni) in food search | v34 conversation | **Done in v103**, with basmati and red/matta rice too |
