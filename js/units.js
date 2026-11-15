@@ -23,24 +23,25 @@ export function setUnit(u) { get().weightUnit = u === 'lb' ? 'lb' : 'kg'; save()
 // a machine's pin number is a plate, not a weight
 export const isPlate = k => ((get().units || {})[k] || (k === 'legpress' ? 'plate' : 'kg')) === 'plate';
 
-// numbers: kg (as saved) <-> your unit (as shown and typed). What was shown remembers where it came from,
-// so a number you didn't change goes back exactly as it was (no 12.5 kg → 27.6 lb → 12.52 kg creep).
-const memo = { kg: new Map(), lb: new Map() };
+// numbers: kg (as saved) <-> your unit (as shown and typed). A number you didn't change goes back exactly as it was
+// (no 12.5 kg → 27.6 lb → 12.52 kg creep). v116: each box passes its OWN saved number (`orig`) back in; if what's in
+// the box is still exactly how that number shows, the original is kept. (Before v116 one shared lookup did this, so
+// two saved numbers that look the same, 12.5 and 12.52 kg → 27.6 lb, could be swapped.)
 const isNum = s => /^\d*\.?\d+$|^\d+\.$/.test(s);
 export function showNum(kg) {
   const s = String(kg == null ? '' : kg).trim(); if (!isNum(s)) return s;
-  const n = parseFloat(s), u = wu();
-  const out = u === 'lb' ? String(Math.round(n * LB * 10) / 10) : String(Math.round(n * 100) / 100);
-  memo[u].set(out, s); return out;
+  const n = parseFloat(s);
+  return wu() === 'lb' ? String(Math.round(n * LB * 10) / 10) : String(Math.round(n * 100) / 100);
 }
-export function toKg(shown) {
+export function toKg(shown, orig) {
   const s = String(shown == null ? '' : shown).trim(); if (!isNum(s)) return s;
-  const u = wu(); if (memo[u].has(s)) return memo[u].get(s);
-  return u === 'kg' ? s : String(Math.round(parseFloat(s) / LB * 10000) / 10000);
+  const o = orig == null ? '' : String(orig).trim(); if (isNum(o) && showNum(o) === s) return o;
+  return wu() === 'kg' ? s : String(Math.round(parseFloat(s) / LB * 10000) / 10000);
 }
 // a set's weight: a number, "b+N" (N on each side of a bar) or a word (nn, bar, bw)
 export const showA = a => { const s = String(a == null ? '' : a); return s.startsWith('b+') ? 'b+' + showNum(s.slice(2)) : showNum(s); };
-export const kgA = a => { const s = String(a == null ? '' : a); return s.startsWith('b+') ? 'b+' + toKg(s.slice(2)) : toKg(s); };
+export const kgA = (a, orig) => { const s = String(a == null ? '' : a), o = orig == null ? '' : String(orig);
+  return s.startsWith('b+') ? 'b+' + toKg(s.slice(2), o.startsWith('b+') ? o.slice(2) : null) : toKg(s, o.startsWith('b+') ? null : o); };
 export const withUnit = kg => showNum(kg) + ' ' + wu();
 // body weight: typed in your unit, saved in kg (to 2 places, so 150 lb stays 150 lb)
 export const bodyRange = () => wu() === 'lb' ? [44, 880] : [20, 400];
@@ -61,7 +62,6 @@ export function oldWereLb() {
   const st = get(), conv = v => String(Math.round(parseFloat(v) / LB * 10000) / 10000);
   eachWeight(st, z => { const s = String(z.a); z.a = s.startsWith('b+') ? 'b+' + conv(s.slice(2)) : conv(s); });
   (st.weights || []).forEach(w => { w.kg = Math.round(w.kg / LB * 100) / 100; });
-  memo.kg.clear(); memo.lb.clear();
 }
 export function askLb(done) {
   if (!needsLbAsk()) return false;
@@ -102,17 +102,17 @@ export function setDistUnit(u) {
 }
 export const isDist = k => !!DIST[k];
 export const distLabel = (k, fallback) => DIST[k] ? DIST[k][du() === 'mi' ? 1 : 0] : fallback;
-const dmemo = new Map();
 // a saved number (km or m) as you see it
 export function distShow(k, saved) {
   if (!DIST[k] || saved == null || saved === '' || isNaN(Number(saved))) return saved;
   if (du() === 'km') return String(Math.round(Number(saved) * DIST[k][3]) / DIST[k][3]);
-  const out = String(Math.round(Number(saved) * DIST[k][2] * DIST[k][3]) / DIST[k][3]); dmemo.set(k + '|' + out, Number(saved)); return out;
+  return String(Math.round(Number(saved) * DIST[k][2] * DIST[k][3]) / DIST[k][3]);
 }
-// what you typed (in your unit) as it's saved; a number you didn't change goes back exactly as it was
-export function distSave(k, n) {
+// what you typed (in your unit) as it's saved. v116: `orig` is that box's own saved number; a number you didn't change
+// goes back exactly as it was (no shared lookup, so two runs that both read 3.11 mi can't be mixed up)
+export function distSave(k, n, orig) {
+  if (orig != null && orig !== '' && !isNaN(Number(orig)) && Number(distShow(k, orig)) === n) return Number(orig);
   if (!DIST[k] || du() === 'km') return Math.round(n * 100) / 100;
-  const back = dmemo.get(k + '|' + String(n)); if (back != null) return back;
   return Math.round(n / DIST[k][2] * 1000) / 1000;
 }
 // a total, rounded for reading

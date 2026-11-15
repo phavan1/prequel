@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 116, date: '2026-11-16', items: [
+    'A small fix: in lb or miles, a number you don\'t change is always saved exactly as it was. Before, two weights that looked the same in lb (like 12.5 and 12.52 kg) could swap when you saved Fix this workout.'
+  ] },
   { v: 115, date: '2026-11-16', items: [
     'Distances can be in miles now. Settings, under "Distances in": walks, runs, rides and hikes, your pace and the Slow ride all switch (a hike\'s climb goes into feet). Nothing you logged changes.',
     'After you let something go, tap "Watch it rise" to see its lantern float up in your sky. And the sky now opens on a new lantern, so it never rises off-screen.',

@@ -116,7 +116,8 @@ const top = range => { const m = /(\d+)-(\d+)/.exec(range); return m ? Number(m[
 const baseSets = it => Number(String(it[1]).split('-')[0]);
 const maxSets = it => Number(String(it[1]).split('-').pop());
 const unitOf = k => get().units[k] || (k === 'legpress' ? 'plate' : 'kg'); // 'kg' here means "a weight" (shown in kg or lb), 'plate' a machine's pin
-const e2show = a => unitOf(item()[0]) === 'plate' || (EX()[item()[0]] || {}).t !== 'wr' ? a : showA(a); // a saved set's weight, the way you'd type it (seconds, minutes and plates stay as they are)
+let Aorig = null; // v116: the saved weight the box was last filled from, so saving it unchanged keeps it exactly
+const e2show = a => { if (unitOf(item()[0]) === 'plate' || (EX()[item()[0]] || {}).t !== 'wr') return a; Aorig = a; return showA(a); }; // a saved set's weight, the way you'd type it (seconds, minutes and plates stay as they are)
 // "Last time" for one exercise (v57): read from your saved workouts, so fixing an old workout in Days fixes it here too.
 // The newest session on or before this workout's day that has it (a swap matches by what you swapped to).
 function lastTime(i) {
@@ -243,7 +244,7 @@ function commit() {
   const reps = e.t === 'wr' || e.t === 'bw';
   if (A === 'b+') { field = 'a'; renderWk(); toast('Type the ' + wu() + ' on each side of the bar'); return; }
   if (!A || (reps && !B)) { toast(e.t === 'wr' ? 'Type the weight and reps first' : e.t === 'bw' ? 'Type the reps first' : 'Type a number first'); return; }
-  const set = { a: e.t === 'wr' && unitOf(it[0]) !== 'plate' ? kgA(A) : A, b: reps ? B : '' }; // v71: saved in kg
+  const set = { a: e.t === 'wr' && unitOf(it[0]) !== 'plate' ? kgA(A, Aorig) : A, b: reps ? B : '' }; // v71: saved in kg
   const L = (a.log[a.i] = a.log[a.i] || []);
   if (edit >= 0) { L[edit] = set; say = 'Fixed. Set ' + (edit + 1) + ' is right now.'; save(); prefill(); renderWk(); return; }
   L.push(set); a.lastAt = Date.now(); justLogged = true;

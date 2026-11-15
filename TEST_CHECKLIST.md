@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v116) In lb: Fix this workout on an old session and Save without changing anything; the numbers read the same afterwards.
 - [ ] (v115) Settings → Weights and distances → miles: a run's distance and pace show in miles, a hike's climb in feet, the Slow ride in mi; back to km and everything reads as before. Let a note go → Watch it rise → the lantern floats up on screen; Back goes to Mind. Cosy dark: Quick session is a deeper blue.
 - [ ] (v114) Mind on the iPhone: type a note, the reminder choices appear, + puts it down; Let it go, then the Lanterns tile lists it and Bring back works; the Letters tile opens Letters; the keyboard doesn't hide the + button.
 - [ ] (v113) Settings → More → Guide opens the wiki in Safari; the README shows "Read the guide".

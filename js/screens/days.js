@@ -155,7 +155,7 @@ export function editSession(root, id, done) {
   const typeOf = x => (EXERCISES[x.key] || st.customExercises[x.key] || {}).t || (x.sets.some(z => z.b !== '' && z.b != null) ? 'wr' : 'hold');
   const removed = new Set(), w = JSON.parse(JSON.stringify(s.exercises)); // a working copy, so Cancel changes nothing
   const weighed = x => typeOf(x) === 'wr' && !isPlate(x.key); // v71: these weights are shown and typed in kg or lb, and saved in kg
-  w.forEach(x => { if (weighed(x)) x.sets.forEach(z => { z.a = showA(z.a); }); });
+  w.forEach(x => { if (weighed(x)) x.sets.forEach(z => { z.o = z.a; z.a = showA(z.a); }); }); // v116: each set keeps its own saved weight (z.o) while you edit
   let mins = s.mins ? String(s.mins) : '';
   // a weight can be a number or a word (v43): Not noted, Bar only, Body weight
   const KIND = k => '<option value="">' + (isPlate(k) ? 'plate' : wu()) + '</option>' + Object.keys(SPECIAL).map(v => '<option value="' + v + '">' + SPECIAL[v] + '</option>').join('') + '<option value="b+">Bar +</option>';
@@ -173,7 +173,7 @@ export function editSession(root, id, done) {
   const redraw = () => { const sh = sheet.querySelector('.sheet'), y = sh.scrollTop; sh.innerHTML = draw(); sh.scrollTop = y; };
   const sheet = openSheet(draw(), ev => {
     const ad = ev.target.closest('[data-addset]');
-    if (ad) { keepTyped(); const x = w[Number(ad.dataset.addset)], kept = x.sets.filter((z, j) => !removed.has(ad.dataset.addset + ':' + j)), last = kept[kept.length - 1]; x.sets.push(last ? { a: last.a, b: last.b } : { a: '', b: '' }); redraw(); return; } // a copy of the last set, ready to change
+    if (ad) { keepTyped(); const x = w[Number(ad.dataset.addset)], kept = x.sets.filter((z, j) => !removed.has(ad.dataset.addset + ':' + j)), last = kept[kept.length - 1]; x.sets.push(last ? { a: last.a, b: last.b, o: last.o } : { a: '', b: '' }); redraw(); return; } // a copy of the last set, ready to change
     const b = ev.target.closest('[data-rmset]');
     if (b) { keepTyped(); removed.add(b.dataset.rmset); redraw(); return; }
     // move an exercise earlier or later (the sets it had marked for removal move with it)
@@ -189,7 +189,7 @@ export function editSession(root, id, done) {
     keepTyped();
     // only × removes a set: an empty weight on a weight exercise means "Not noted" (v43)
     w.forEach((x, i) => { const wr = ['wr', 'bw'].includes(typeOf(x)); x.sets = x.sets.filter((z, j) => !removed.has(i + ':' + j)).map(z => (z.a === 'b+' ? Object.assign(z, { a: 'bar' }) : z)).map(z => (wr && String(z.a).trim() === '' && String(z.b).trim() !== '' ? Object.assign(z, { a: 'nn' }) : z)).filter(z => String(z.a).trim() !== ''); });
-    w.forEach(x => { if (weighed(x)) x.sets.forEach(z => { z.a = kgA(z.a); }); });
+    w.forEach(x => x.sets.forEach(z => { if (weighed(x)) z.a = kgA(z.a, z.o); delete z.o; }));
     s.exercises = w.filter(x => x.sets.length);
     const mn = Math.round(Number(mins)); if (mn > 0 && mn <= 600) s.mins = mn; else delete s.mins; // v66: how long
     const n = s.exercises.reduce((a, x) => a + x.sets.length, 0);
