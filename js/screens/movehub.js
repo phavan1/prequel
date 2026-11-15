@@ -7,7 +7,7 @@ import { count, unitOf, checkFinished, openEditGoal, ensureGoals } from '../goal
 import { weights } from '../nutrition.js';
 import { weightSheet } from '../weight.js';
 import { openMoveReport } from '../reports.js';
-import { wu, withUnit, setUnit } from '../units.js';
+import { wu, withUnit, setUnit, isDist, distShow, distSave, distLabel } from '../units.js';
 
 // the milestone an activity has right now (gym's old "road to 100" is a sessions goal, so it counts too)
 export function milestoneOf(id) {
@@ -65,12 +65,13 @@ function logSheet(type, opts, done) {
   // opts.edit: change a log you already saved (v50); everything starts filled in
   const ed = opts && opts.edit, d = actDef(type), day = ed ? ed.date : (opts && opts.date) || logDate();
   const v = ed ? { mins: ed.mins || null, feel: ed.feel || '', f: Object.assign({}, ed.f || {}), hl: ed.hl || '', note: ed.note || '' } : { mins: opts && opts.mins ? opts.mins : null, feel: '', f: {} };
+  Object.keys(v.f).forEach(k => { if (isDist(k)) v.f[k] = distShow(k, v.f[k]); }); // v115: distances are typed in your unit (km or mi)
   const seg = (k, opts2) => '<div class="chips">' + opts2.map(o => '<button type="button" class="chip small" data-seg="' + k + '" data-v="' + esc(o) + '" aria-pressed="' + (v.f[k] === o) + '">' + esc(o) + '</button>').join('') + '</div>';
   const draw = () => '<h2><span aria-hidden="true">' + d.e + '</span> ' + esc(d.n) + '</h2><p class="muted">' + esc(prettyDate(day, { weekday: 'long', day: 'numeric', month: 'long' })) + '. Everything here is optional.</p>' +
     '<div class="lbl">How long</div><div class="chips">' + MINS.map(m => '<button type="button" class="chip small" data-mins="' + m + '" aria-pressed="' + (v.mins === m) + '">' + (m < 60 ? m + ' min' : m === 60 ? '1 hour' : '1½ hours') + '</button>').join('') + '</div>' +
     '<input id="alMins" type="text" inputmode="numeric" placeholder="Or type minutes" value="' + (v.mins && !MINS.includes(v.mins) ? v.mins : '') + '" aria-label="How many minutes">' +
     '<div class="lbl">How did it feel</div><div class="seg">' + FEELS_MOVE.map(f => '<button type="button" data-feel="' + f + '" aria-pressed="' + (v.feel === f) + '">' + f + '</button>').join('') + '</div>' +
-    d.f.map(x => '<div class="lbl">' + esc(x.l) + '</div>' + (x.seg ? seg(x.k, x.seg) : '<input type="text" data-fld="' + x.k + '"' + (x.num ? ' inputmode="decimal" placeholder="' + esc(x.u) + '"' : ' placeholder="' + esc(x.text) + '"') + ' value="' + esc(v.f[x.k] || '') + '" aria-label="' + esc(x.l) + '">')).join('') +
+    d.f.map(x => '<div class="lbl">' + esc(x.l) + '</div>' + (x.seg ? seg(x.k, x.seg) : '<input type="text" data-fld="' + x.k + '"' + (x.num ? ' inputmode="decimal" placeholder="' + esc(distLabel(x.k, x.u)) + '"' : ' placeholder="' + esc(x.text) + '"') + ' value="' + esc(v.f[x.k] || '') + '" aria-label="' + esc(x.l) + '">')).join('') +
     '<label class="field-label" for="alHl">HIGHLIGHT OF THE DAY</label><input id="alHl" type="text" maxlength="80" placeholder="' + esc(type === 'badminton' ? 'that cross-court smash…' : type === 'football' ? 'first goal in months…' : 'a moment you want to keep…') + '">' +
     '<label class="field-label" for="alNote">A NOTE</label><textarea id="alNote" rows="2" maxlength="500"></textarea>' +
     '<button type="button" class="btn" data-alsave>' + (ed ? 'Save changes' : 'Save') + '</button><button type="button" class="btn alt" data-close>Cancel</button>';
@@ -83,7 +84,7 @@ function logSheet(type, opts, done) {
     if ((b = t.closest('[data-seg]'))) { keep(sheet); v.f[b.dataset.seg] = v.f[b.dataset.seg] === b.dataset.v ? '' : b.dataset.v; redraw(sheet); return; }
     if (!t.closest('[data-alsave]')) return;
     keep(sheet);
-    const f = {}; d.f.forEach(x => { const val = v.f[x.k]; if (val == null || val === '') return; if (x.num) { const n = parseFloat(String(val).replace(',', '.')); if (n > 0) f[x.k] = Math.round(n * 100) / 100; } else f[x.k] = val; });
+    const f = {}; d.f.forEach(x => { const val = v.f[x.k]; if (val == null || val === '') return; if (x.num) { const n = parseFloat(String(val).replace(',', '.')); if (n > 0) f[x.k] = isDist(x.k) ? distSave(x.k, n) : Math.round(n * 100) / 100; } else f[x.k] = val; });
     const data = { f }; if (v.mins > 0) data.mins = v.mins; if (v.feel) data.feel = v.feel; if (v.hl && v.hl.trim()) data.hl = v.hl.trim(); if (v.note && v.note.trim()) data.note = v.note.trim();
     if (ed) { updateActivity(ed.id, data); closeSheet(); toast('Saved.'); if (done) done(); checkFinished(); return; }
     logActivity(type, day, data);

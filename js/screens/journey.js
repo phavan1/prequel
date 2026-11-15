@@ -8,7 +8,7 @@ import { get, today, addDays, parseKey, dateKey } from '../store.js';
 import { esc, nav, backLink, prettyDate } from '../ui.js';
 import { EXERCISES } from '../data.js';
 import { actDef } from '../activities.js';
-import { wu, showNum } from '../units.js';
+import { wu, showNum, distNum, distLabel } from '../units.js';
 
 let filter = 'all', year = null, root = null;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -90,7 +90,7 @@ export function cardsFor(f, st = get()) {
   }
   if (f !== 'all' && f !== 'gym') {
     const d = actDef(f);
-    d.f.filter(x => x.num).forEach(x => { const v = list.reduce((n, e) => n + (Number((e.ref.f || {})[x.k]) || 0), 0); if (v > 0) out.push(['route', fmtNum(v), x.u, 'all together']); });
+    d.f.filter(x => x.num).forEach(x => { const v = list.reduce((n, e) => n + (Number((e.ref.f || {})[x.k]) || 0), 0); if (v > 0) out.push(['route', fmtNum(distNum(x.k, v)), distLabel(x.k, x.u), 'all together']); });
   }
   // weeks with no moving since you started, not counting this one
   const rest = (() => { let n = 0; for (let w = mondayOf(dates[0]); w < mondayOf(t); w = addDays(w, 7)) if (!dates.some(d => d >= w && d < addDays(w, 7))) n++; return n; })();

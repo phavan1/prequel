@@ -1,6 +1,6 @@
 import { load, get, save, today, dateKey, hasData } from './store.js';
 import { NEWS, LATEST, openNews } from './news.js';
-import { settleUnits } from './units.js';
+import { settleUnits, settleDist } from './units.js';
 import { pageAllowed, needsAreasAsk, markAsked, AREAS, on, setOn } from './features.js';
 import * as home from './screens/home.js';
 import * as weather from './screens/weather.js';
@@ -141,6 +141,7 @@ document.addEventListener('click', e => {
 
 load().then(() => {
   settleUnits(); // v71: kg or lb
+  settleDist(); // v115: km or miles
   window.addEventListener('hashchange', route);
   applyTheme();
   route();

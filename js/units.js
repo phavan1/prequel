@@ -83,3 +83,45 @@ export function settleUnits() {
   if (!st.lbAsked && !hasOldWeights(st)) { st.lbAsked = true; ch = true; }
   if (ch) save();
 }
+
+// ---------- v115: km or miles for distances ----------
+// Same idea as kg / lb: everything is still SAVED in km (and a hike's climb in metres); only what you see and type is
+// in your unit. Miles also turns a climb into feet. Swimming pools stay in metres (25 m and 50 m are how pools come).
+// The guess is miles only where the weight guess is lb (the US). Someone who logged distances before this keeps km.
+export const MI = 0.621371192, FT = 3.2808399;
+const DIST = { dist: ['km', 'mi', MI, 100], climb: ['m', 'ft', FT, 1] }; // saved unit, the other unit, per saved unit, rounding
+export const du = () => (get().distUnit === 'mi' || get().distUnit === 'km') ? get().distUnit : (guessUnit() === 'lb' ? 'mi' : 'km');
+export function setDistUnit(u) {
+  const st = get(), to = u === 'mi' ? 'mi' : 'km', from = du(); st.distUnit = to;
+  // a milestone counting distance or climb was set in what you saw, so it follows: 100 km becomes 62.1 mi (and back to exactly 100)
+  if (from !== to) (st.goals || []).forEach(g => { const m = g.kind === 'linked' && /^act:[^:]+:(dist|climb)$/.exec(g.source || ''); if (!m) return;
+    const f = DIST[m[1]][2];
+    if (to === 'mi') { g.metricTarget = g.target; g.target = Math.round(g.target * f * 10) / 10; }
+    else { g.target = g.metricTarget != null ? g.metricTarget : Math.round(g.target / f * 10) / 10; delete g.metricTarget; } });
+  save();
+}
+export const isDist = k => !!DIST[k];
+export const distLabel = (k, fallback) => DIST[k] ? DIST[k][du() === 'mi' ? 1 : 0] : fallback;
+const dmemo = new Map();
+// a saved number (km or m) as you see it
+export function distShow(k, saved) {
+  if (!DIST[k] || saved == null || saved === '' || isNaN(Number(saved))) return saved;
+  if (du() === 'km') return String(Math.round(Number(saved) * DIST[k][3]) / DIST[k][3]);
+  const out = String(Math.round(Number(saved) * DIST[k][2] * DIST[k][3]) / DIST[k][3]); dmemo.set(k + '|' + out, Number(saved)); return out;
+}
+// what you typed (in your unit) as it's saved; a number you didn't change goes back exactly as it was
+export function distSave(k, n) {
+  if (!DIST[k] || du() === 'km') return Math.round(n * 100) / 100;
+  const back = dmemo.get(k + '|' + String(n)); if (back != null) return back;
+  return Math.round(n / DIST[k][2] * 1000) / 1000;
+}
+// a total, rounded for reading
+export const distNum = (k, saved) => DIST[k] && du() === 'mi' ? Math.round(saved * DIST[k][2] * 10) / 10 : Math.round(saved * 10) / 10;
+// the Slow ride's metres as km or mi, one decimal
+export const rideDist = m => (du() === 'mi' ? (m / 1000 * MI) : m / 1000).toFixed(1) + ' ' + du();
+// once at start-up: anyone who already logged a distance (or a distance milestone) keeps km, whatever the guess
+export function settleDist() {
+  const st = get(); if (st.distUnit) return;
+  const has = (st.activities || []).some(a => a.f && (a.f.dist || a.f.climb)) || (st.goals || []).some(g => /^act:[^:]+:(dist|climb)$/.test(g.source || '')) || ((st.games || {}).road || {}).m > 0;
+  if (has) { st.distUnit = 'km'; save(); }
+}

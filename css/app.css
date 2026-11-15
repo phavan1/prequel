@@ -372,7 +372,7 @@ body:has(.screen-sky) { background: #0B1026; overflow: hidden; }
 .wsp { display: flex; gap: 6px; padding: 8px 16px 0; flex-wrap: wrap; }
 .wsp button { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); font-size: 12.5px; font-weight: 800; }
 .wsp button[aria-pressed="true"] { background: var(--ink); color: #FFFFFF; border-color: var(--ink); }
-html[data-theme="dark"] .wsp button[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); }
+html[data-theme="dark"] .wsp button[aria-pressed="true"] { background: #3D66E0; border-color: #3D66E0; } /* v115: the deeper blue, so white words show */
 .field .v.word { font-size: 22px; line-height: 1.6; }
 .infobtns { display: flex; gap: 6px; flex: none; }
 .busy.more { width: 44px; padding: 0; font-size: 20px; font-weight: 900; letter-spacing: 1px; }
@@ -510,6 +510,9 @@ body:has(.screen-skate), body:has(.screen-keepup), body:has(.screen-stack), body
 .snack.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .snack span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .snack button { min-height: 38px; padding: 0 14px; border-radius: 12px; border: 0; background: #FFF1A8; color: #23262F; font-weight: 900; }
+.snack button.soft { background: transparent; color: #FFF1A8; border: 1px solid rgba(255,241,168,.55); padding: 0 10px; } /* v115: Bring back sits beside Watch it rise */
+.snack button { flex: none; white-space: nowrap; }
+.snack.two { flex-wrap: wrap; gap: 8px 10px; padding: 12px 12px 12px 16px; } .snack.two span { flex-basis: 100%; white-space: normal; } .snack.two [data-watch] { flex: 1; }
 .labelgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .labelgrid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
 .labelgrid input { min-height: 44px; }
@@ -672,6 +675,7 @@ html[data-theme="dark"] .cal2 .d[aria-pressed="true"] { background: #2E3B66; col
 
 .amtlog { display: flex; gap: 6px; flex: none !important; }
 .amtlog input { width: 84px; min-height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 0 10px; font: 800 15px var(--font-body); }
+.plus1 { min-width: 64px; background: var(--blue); color: #fff; border-color: var(--blue); } /* v115: was an inline style */
 .amtlog button { min-width: 58px; background: var(--blue); color: #fff; border: 1px solid var(--blue); border-radius: 12px; font-weight: 900; }
 
 /* the jar */
@@ -1350,3 +1354,8 @@ button.ttile { font: inherit; text-align: left; width: 100%; cursor: pointer; }
 .ttile.lett { background: #FFF9EA; border-color: #E2CF9E; color: #23262F; } .ttile.lett .tt small { color: #6B5A2A; }
 html[data-theme="dark"] .ttile.lett { background: #3A3220; border-color: #5A4C2A; color: var(--ink); } html[data-theme="dark"] .ttile.lett .tt small { color: var(--ink-soft); }
 .lanterns { display: flex; flex-direction: column; gap: 6px; margin: 4px 0; }
+
+/* v115: in Cosy dark, the pale blue (#7B9DFF) washed out white words on filled buttons. Quick session, Home's main
+   shortcut, the "last time" tag, and the goal +1 / Add buttons use the same deeper blue as Start and the other buttons. */
+html[data-theme="dark"] .quickgo, html[data-theme="dark"] .quick a.primary, html[data-theme="dark"] .lastpick, html[data-theme="dark"] .amtlog button, html[data-theme="dark"] .plus1 { background: #3D66E0; border-color: #3D66E0; color: #fff; }
+.units2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } /* v115: kg / lb and km / miles side by side */

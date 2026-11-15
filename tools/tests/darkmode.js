@@ -2,6 +2,7 @@
 // sealed envelope, Rest while asleep, the month-start recap nudge, Settings' area sheet) must stand out from what's
 // actually behind it (contrast 3 or more). Faded-on-purpose things (future days, disabled buttons) are skipped.
 // v108: run once per Cosy dark colour (Cocoa, Midnight, Plum).
+// v115: also the gym session picker, where Quick session's white words sat on a pale blue.
 // Throwaway profile. Run: PREQUEL_URL=http://localhost:8765/ node tools/tests/darkmode.js
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs'); const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';
@@ -52,6 +53,7 @@ let TONE_NOW = 'cocoa';
   let p = await setup(b, '2026-11-14T20:30:00', TONE_NOW);
   for (const r of ['home', 'weather', 'move', 'food', 'rest', 'mind', 'days', 'me', 'quilt', 'journey', 'wall', 'settings', 'share', 'repeat', 'lookback', 'sky'])
     await check(p, r, '#/' + r + '?from=me');
+  await check(p, 'Move, picking a gym session (Quick session)', '#/move', async p => { if (await p.locator('.picker [data-picksave]').count()) { await p.click('[data-pick="gym"]'); await p.click('[data-picksave]'); await p.waitForTimeout(300); } await p.click('[data-act="gym"]'); }); // v115
   await check(p, 'letters, sealed', '#/letters');
   await check(p, 'letters, a letter open', '#/letters', p => p.click('[data-open]'));
   await check(p, 'Rest, asleep', '#/rest', async p => { await p.click('[data-sleep]'); await p.waitForTimeout(2600); });

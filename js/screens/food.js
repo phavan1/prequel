@@ -137,6 +137,7 @@ function onClick(e) {
 function snack(text, mealId) {
   let s = document.getElementById('snack');
   if (!s) { s = document.createElement('div'); s.id = 'snack'; s.className = 'snack'; document.body.appendChild(s); }
+  s.classList.remove('two');
   s.innerHTML = '<span>' + esc(text) + '</span><button type="button">Change</button>';
   s.querySelector('button').onclick = () => { s.classList.remove('show'); portionSheet(mealId); };
   s.classList.add('show'); clearTimeout(snackTimer); snackTimer = setTimeout(() => s.classList.remove('show'), 5000);

@@ -44,13 +44,14 @@ function recall(root, id) {
   n.letGo = null; st.moments = st.moments.filter(m => m.ref !== id);
   save(); unmount(); render(root); toast('Called it back. It\'s on your board again.');
 }
-// right after letting go: a few seconds to change your mind
+// right after letting go: a few seconds to change your mind, or (v115) to go and watch it float up in your sky
 function recallBar(root, id) {
   let s = document.getElementById('snack');
   if (!s) { s = document.createElement('div'); s.id = 'snack'; s.className = 'snack'; document.body.appendChild(s); }
-  s.innerHTML = '<span>Folded into a lantern. It\'s floating up.</span><button type="button">Bring it back</button>';
-  s.querySelector('button').onclick = () => recall(root, id);
-  s.classList.add('show'); clearTimeout(recallTimer); recallTimer = setTimeout(() => s.classList.remove('show'), 7000);
+  s.innerHTML = '<span>Folded into a lantern.</span><button type="button" data-watch>Watch it rise</button><button type="button" class="soft" data-back>Bring back</button>';
+  s.querySelector('[data-back]').onclick = () => recall(root, id);
+  s.querySelector('[data-watch]').onclick = () => { s.classList.remove('show'); clearTimeout(recallTimer); location.hash = '#/sky?from=mind&lantern=' + encodeURIComponent(id); };
+  s.classList.add('two', 'show'); clearTimeout(recallTimer); recallTimer = setTimeout(() => s.classList.remove('show'), 9000);
 }
 
 // the × on a note or a lantern (v60): asks once, then it's gone (its star leaves the sky too)

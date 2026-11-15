@@ -7,6 +7,7 @@ import { AREAS, weatherByName } from '../data.js';
 import { fromJar } from './wins.js';
 import { recapNudge, monthWord } from './wall.js';
 import { esc, him, nav, pop, pick, setLogDate, toast } from '../ui.js';
+import { rideDist } from '../units.js'; // v115
 
 const ICONS = {
   move: '<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>',
@@ -186,6 +187,6 @@ function gamesShelf(st) {
     card('skate', '#/skate', 'Skate home', best('skate') ? 'Best ' + best('skate') + ' m' : 'Jump the bumps') +
     card('stack', '#/stack', 'Stack the stars', best('stack') ? 'Best ' + best('stack') + ' high' : 'Up to the moon') +
     card('keepup', '#/keepup', 'Keep it up', best('keepup') ? 'Best ' + best('keepup') + (best('keepup') === 1 ? ' bounce' : ' bounces') : 'Don\'t let it drop') +
-    card('road', '#/road?from=home', 'Slow ride', gm.road && gm.road.m >= 100 ? (gm.road.m / 1000).toFixed(1) + ' km ridden' : 'An endless calm road') + // v68
+    card('road', '#/road?from=home', 'Slow ride', gm.road && gm.road.m >= 100 ? rideDist(gm.road.m) + ' ridden' : 'An endless calm road') + // v68
     '</div>';
 }

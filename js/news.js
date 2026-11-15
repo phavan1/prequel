@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 115, date: '2026-11-16', items: [
+    'Distances can be in miles now. Settings, under "Distances in": walks, runs, rides and hikes, your pace and the Slow ride all switch (a hike\'s climb goes into feet). Nothing you logged changes.',
+    'After you let something go, tap "Watch it rise" to see its lantern float up in your sky. And the sky now opens on a new lantern, so it never rises off-screen.',
+    'In Cosy dark, Quick session and a few other blue buttons are a deeper blue, so the words stand out.'
+  ] },
   { v: 114, date: '2026-11-16', items: [
     'Mind has a fresh look: a hello at the top, a slim bar to put something down (the reminder choices appear once you type), your notes on a corkboard, and Lanterns and Letters as little pictures.',
     'Tap Lanterns to see the ones you\'ve let go and call one back.'

@@ -16,7 +16,7 @@ export function mount(root, params = {}) {
 
   root.innerHTML =
     '<canvas id="sky" aria-label="Your sky. Each star is a moment you logged."></canvas>' +
-    '<div class="sky-top"><a class="back" href="' + (params.from === 'me' ? '#/me">‹ Me' : '#/home">‹ Home') + '</a><h1>Your sky</h1><div class="stats" id="stats"></div><div class="legend">' +
+    '<div class="sky-top"><a class="back" href="' + (params.from === 'me' ? '#/me">‹ Me' : params.from === 'mind' ? '#/mind">‹ Mind' : '#/home">‹ Home') + '</a><h1>Your sky</h1><div class="stats" id="stats"></div><div class="legend">' +
       Object.keys(AREAS).map(k => '<span><i style="background:' + AREAS[k].colour + '"></i>' + AREAS[k].name + '</span>').join('') + '</div></div>' +
     '<div class="sky-bar">' + (on('mind') ? '<button type="button" class="btn alt" id="letBtn">Let something go</button>' : '') + '<button type="button" class="btn alt" id="zoomBtn">Year view</button></div>' +
     '<div class="sky-card" id="card" hidden><button type="button" class="x" id="cardClose" aria-label="Close">×</button><div class="lbl" id="cardK"></div><div class="t" id="cardT"></div><div class="m" id="cardM"></div><div class="say" id="cardH" style="color:var(--blue)"></div></div>' +
@@ -46,7 +46,9 @@ export function mount(root, params = {}) {
     const ref = st.moments.find(m => m.ref === n.id);
     const k = ref && sky.placed[ref.id] !== undefined ? sky.placed[ref.id] : 0;
     const c = clusterCenter(k), r = mulberry32(hashStr(n.id));
-    return { x: c.x + (r() - 0.5) * 220, y: c.y + (r() - 0.5) * 220, text: n.text, phase: r() * 6, born: n.letGo > lastVisit && lastVisit ? performance.now() : -1e9 };
+    // v115: "Watch it rise" asks for one lantern by name, so it rises even on a first visit; it waits a moment for the sky to settle
+    const asked = params.lantern === n.id, isNew = asked || (n.letGo > lastVisit && !!lastVisit);
+    return { id: n.id, letGo: n.letGo, isNew, x: c.x + (r() - 0.5) * 220, y: c.y + (r() - 0.5) * 220, text: n.text, phase: r() * 6, born: isNew ? performance.now() + 500 : -1e9 };
   });
   const dust = []; const dr = mulberry32(5);
   for (let i = 0; i < 260; i++) dust.push({ x: dr(), y: dr(), a: 0.15 + dr() * 0.35, s: 0.4 + dr() * 0.8 });
@@ -76,6 +78,9 @@ export function mount(root, params = {}) {
   const cam = { x: 0, y: 0, s: 1.25 }, target = { x: 0, y: 0, s: 1.25 };
   // open on a brand-new constellation if there is one, otherwise on your most recent stars
   const latest = () => {
+    // v115: a lantern let go since you last looked (or the one you asked to watch) comes first, so you see it rise
+    const lan = lanterns.find(l => l.id === params.lantern) || lanterns.filter(l => l.isNew).sort((a, b) => b.letGo - a.letGo)[0];
+    if (lan) { target.x = lan.x; target.y = lan.y + 150; target.s = 1.15; return; }
     const newest = cons.filter(c => c.isNew).pop();
     if (newest) { target.x = newest.lx; target.y = newest.ly - 60; target.s = 1.3; return; }
     const recent = stars.slice().sort((a, b) => b.m.ts - a.m.ts).slice(0, 24);
@@ -137,7 +142,7 @@ export function mount(root, params = {}) {
     ctx.globalAlpha = 1;
     lanterns.forEach(l => {
       let x = l.x, y = l.y; const age = now - l.born;
-      if (age < 5200) { const t = age / 5200, e = 1 - Math.pow(1 - t, 3); x = l.x + Math.sin(t * 9) * 14 * (1 - t); y = l.y + 420 * (1 - e); }
+      if (age < 5200) { const t = Math.max(0, age) / 5200, e = 1 - Math.pow(1 - t, 3); x = l.x + Math.sin(t * 9) * 14 * (1 - t); y = l.y + 420 * (1 - e); }
       const bob = reduceMotion ? 0 : Math.sin(now / 1100 + l.phase) * 3;
       const [sx, sy] = toScreen(x, y + bob);
       if (sx < -40 || sx > W + 40 || sy < -40 || sy > H + 40) return;

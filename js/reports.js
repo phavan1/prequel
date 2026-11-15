@@ -5,7 +5,7 @@ import { loadArt, fontsReady } from './cards.js';
 import { feelLabel, EXERCISES } from './data.js';
 import { actDef, summary } from './activities.js';
 import { NUTRIENTS, totalOf, sumDay, qtyLabel, myFoods } from './nutrition.js';
-import { wu, showNum, withUnit } from './units.js'; // v71: kg or lb
+import { wu, showNum, withUnit, distNum, distLabel } from './units.js'; // v71: kg or lb, v115: km or mi
 import { Doc, PW, PH, M, INK, SOFT, LINE, CARD, BLUE, SUN, HAND, BODY, txt, rr, wrap, longDate, dayDate, shortDay, range, clock, dur, shareFile } from './pdf.js';
 
 const days = (from, to) => { const out = []; for (let d = from; d <= to; d = addDays(d, 1)) out.push(d); return out; };
@@ -537,7 +537,7 @@ export async function moveReport(from, to, mode) {
     doc.heading('Other activities', 'totals for these dates', 160);
     doc.table([{ label: 'Activity', w: 300 }, { label: 'Times', w: 120 }, { label: 'Time noted', w: 200 }, { label: 'Totals', w: 428 }], kinds.map(t => {
       const L = acts.filter(a => a.type === t), d = actDef(t), m = L.reduce((n, a) => n + (Number(a.mins) || 0), 0);
-      const tot = d.f.filter(f => f.num).map(f => [f, L.reduce((n, a) => n + (Number((a.f || {})[f.k]) || 0), 0)]).filter(x => x[1] > 0).map(([f, v]) => (Math.round(v * 10) / 10) + ' ' + f.u);
+      const tot = d.f.filter(f => f.num).map(f => [f, L.reduce((n, a) => n + (Number((a.f || {})[f.k]) || 0), 0)]).filter(x => x[1] > 0).map(([f, v]) => distNum(f.k, v) + ' ' + distLabel(f.k, f.u));
       return { cells: [d.n, String(L.length), m ? dur(m) : '–', tot.join(', ')] };
     }), { boldFirst: true });
   }

@@ -3,6 +3,7 @@
 import { get, save, uid, addMoment, today, dateKey } from './store.js';
 import { esc, him, openSheet, closeSheet, toast, prettyDate } from './ui.js';
 import { actDef, measures, measureTotal } from './activities.js';
+import { du } from './units.js'; // v115
 import { on, goalArea } from './features.js';
 
 const tsOfDay = rests => { const m = {}; rests.forEach(r => { if (!m[r.date] || r.end < m[r.date]) m[r.date] = r.end || r.start; }); return Object.values(m); };
@@ -44,7 +45,7 @@ export function ensureGoals() {
   return st.goals;
 }
 // units for your own goals. Counting units add 1 per log; amount units ask "how many?" each time
-export const UNITS = [['times', 0], ['sessions', 0], ['hours', 1], ['minutes', 1], ['km', 1], ['laps', 0], ['pages', 0], ['days', 0]];
+export const UNITS = [['times', 0], ['sessions', 0], ['hours', 1], ['minutes', 1], ['km', 1], ['miles', 1], ['laps', 0], ['pages', 0], ['days', 0]];
 export const isAmount = g => g.kind === 'own' && !!g.amount;
 const r1 = v => Math.round(v * 10) / 10;
 export function count(g) {
@@ -74,7 +75,7 @@ function unitPicker(d) {
     '<button type="button" class="chip small" data-unit="__own" aria-pressed="' + (!known) + '">+ My own</button></div>' +
     (!known ? '<input id="gUnit" type="text" placeholder="e.g. songs, chapters, walks" autocomplete="off" value="' + esc(d.unit === '__own' ? '' : d.unit) + '">' +
       '<div class="chips"><button type="button" class="chip small" data-amt="0" aria-pressed="' + (!d.amount) + '">Each log adds 1</button><button type="button" class="chip small" data-amt="1" aria-pressed="' + (!!d.amount) + '">I\'ll type an amount</button></div>' : '') +
-    '<p class="muted" style="font-size:13px;margin:0">' + (d.amount ? 'Each time you log it, you\'ll type how much (like 5.2 km or 1.5 hours).' : 'Each time you log it, it goes up by one.') + '</p>';
+    '<p class="muted" style="font-size:13px;margin:0">' + (d.amount ? 'Each time you log it, you\'ll type how much (like 5.2 ' + (du() === 'mi' ? 'miles' : 'km') + ' or 1.5 hours).' : 'Each time you log it, it goes up by one.') + '</p>';
 }
 function pickUnit(d, b) { const u = b.dataset.unit; if (u === '__own') { d.unit = '__own'; return; } d.unit = u; d.amount = !!(UNITS.find(x => x[0] === u) || [0, 0])[1]; }
 function readUnit(d) { const el = document.getElementById('gUnit'); if (el) d.unit = el.value.trim() || '__own'; }
@@ -154,7 +155,7 @@ export function openLog(date, onDone) {
     (own().length
       ? own().map(g => '<div class="mgrow"><span>' + esc(g.name) + '<small>' + count(g) + ' of ' + g.target + ' ' + esc(unitOf(g)) + '</small></span>' + (isAmount(g)
           ? '<span class="amtlog"><input type="text" inputmode="decimal" id="amt-' + g.id + '" placeholder="' + esc(unitOf(g)) + '" aria-label="How many ' + esc(unitOf(g)) + '"><button type="button" data-plus="' + g.id + '">Add</button></span>'
-          : '<button type="button" data-plus="' + g.id + '" style="min-width:64px;background:var(--blue);color:#fff;border-color:var(--blue)">+1</button>') + '</div>').join('')
+          : '<button type="button" class="plus1" data-plus="' + g.id + '">+1</button>') + '</div>').join('')
       : '<p class="empty">No goals of your own yet. Swimming, reading, calling home: anything you want to count.</p>') +
     '<button type="button" class="btn alt" data-new>+ A new goal</button><button type="button" class="btn ghost" data-close>Done</button>';
   const sheet = openSheet(draw(), ev => {

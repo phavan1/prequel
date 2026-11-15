@@ -3,7 +3,7 @@ import { get, save, exportJSON, isPersisted, today, reset, backupDue, dateKey, c
 import { esc, nav, backLink, toast, openSheet, closeSheet, downloadFile, him } from '../ui.js';
 import { dayDate, clock } from '../pdf.js';
 import { NEWS, LATEST, openNews } from '../news.js';
-import { wu, setUnit, askLb } from '../units.js';
+import { wu, setUnit, askLb, du, setDistUnit } from '../units.js';
 import { OPTIONAL } from './days.js';
 import { AREAS, on, setOn } from '../features.js';
 
@@ -13,6 +13,7 @@ export function mount(root) {
     const t = e.target; let b;
     if (t.closest('[data-export]')) { backup(root); return; }
     if (t.closest('[data-fresh]')) { startFresh(root); return; }
+    if ((b = t.closest('[data-dunit]'))) { if (b.dataset.dunit !== du()) { setDistUnit(b.dataset.dunit); render(root); toast('Distances are now in ' + (du() === 'mi' ? 'miles' : 'kilometres') + '.'); } return; } // v115
     if ((b = t.closest('[data-wunit]'))) { if (b.dataset.wunit !== wu()) { setUnit(b.dataset.wunit); render(root); if (!askLb()) toast('Weights are now in ' + (wu() === 'lb' ? 'pounds' : 'kilograms') + '.'); } return; }
     if (t.closest('[data-areas]')) { areasSheet(root); return; } // v106: the eight areas live in a sheet
     if ((b = t.closest('[data-dtab]'))) { const s = get().settings, k = b.dataset.dtab; s.dayTabs = s.dayTabs || []; s.dayTabs = s.dayTabs.includes(k) ? s.dayTabs.filter(x => x !== k) : s.dayTabs.concat(k); save(); render(root); toast(s.dayTabs.includes(k) ? 'It\'s on Days now.' : 'Taken off Days. Nothing you logged is lost.'); return; } // v96
@@ -178,8 +179,10 @@ function render(root) {
     '<div class="slbl">Look</div>' +
     '<div class="looks">' + [['light', 'Light', 'l'], ['dark', 'Cosy dark', 'd'], ['auto', 'Match my phone', 'a']].map(o => '<button type="button" class="lk" data-look="' + o[0] + '" aria-pressed="' + ((s.theme || 'light') === o[0]) + '"><span class="' + o[2] + '" aria-hidden="true"><i></i><i></i><i></i></span>' + o[1] + '</button>').join('') + '</div>' +
     ((s.theme === 'dark' || s.theme === 'auto') ? '<div class="tones" role="group" aria-label="Cosy dark colour"><span class="tlab">Cosy dark colour</span>' + [['cocoa', 'Cocoa'], ['midnight', 'Midnight'], ['plum', 'Plum']].map(o => '<button type="button" class="tone" data-darktone="' + o[0] + '" aria-pressed="' + ((s.darkTone || 'cocoa') === o[0]) + '"><i class="td-' + o[0] + '" aria-hidden="true"></i>' + o[1] + '</button>').join('') + '</div>' : '') + // v108
-    '<div class="slbl">Weights in</div>' + // v71: kg or lb, for lifts and body weight
-    '<div class="sseg">' + [['kg', 'kg · kilograms'], ['lb', 'lb · pounds']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
+    // v71: kg or lb, for lifts and body weight. v115: km or miles beside it, for walks, runs, rides, hikes and the Slow ride
+    '<div class="slbl">Weights and distances</div><div class="units2">' +
+    '<div class="sseg" role="group" aria-label="Weights in">' + [['kg', 'kg'], ['lb', 'lb']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
+    '<div class="sseg" role="group" aria-label="Distances in">' + [['km', 'km'], ['mi', 'miles']].map(o => '<button type="button" data-dunit="' + o[0] + '" aria-pressed="' + (du() === o[0]) + '">' + o[1] + '</button>').join('') + '</div></div>' +
     '<div class="slbl">More</div>' +
     '<div class="sgroup"><button type="button" class="srow" data-import><span class="st"><b>Restore a backup</b><small>From a file you saved before</small></span><span class="sgo" aria-hidden="true">›</span></button>' +
       '<a class="srow" href="' + GUIDE + '" target="_blank" rel="noopener" data-guide><span class="st"><b>Guide</b><small>How to install, a quick tour, backups and questions · opens online</small></span><span class="sgo" aria-hidden="true">↗</span></a>' + // v113

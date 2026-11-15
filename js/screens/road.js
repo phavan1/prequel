@@ -5,6 +5,7 @@
 // it comes from the distance, so the same kilometre always looks the same.
 // Places, ~6 km each, blending into the next: fields, forest, lakeside, hills, coast, village, then round again.
 import { get, save } from '../store.js';
+import { rideDist } from '../units.js'; // v115: km or mi
 import { esc, backLink, toast, reduceMotion } from '../ui.js';
 import { record, fullCanvas, soundOn, toggleSound, soundIcon } from '../gamekit.js';
 
@@ -155,7 +156,7 @@ export function mount(root, params) {
       if (sky.tint > 0.25) { const gr = g.createRadialGradient(0, -rh * 0.24, 0, 0, -rh * 0.24, rw * 0.35); gr.addColorStop(0, 'rgba(255,80,60,.55)'); gr.addColorStop(1, 'rgba(255,80,60,0)'); g.fillStyle = gr; g.fillRect(-rw / 2, -rh * 0.5, rw, rh * 0.5); }
       g.restore();
     }
-    const kmTxt = ((s.pos * SEG) / 1000).toFixed(1) + ' km'; if (kmEl.textContent !== kmTxt) kmEl.textContent = kmTxt; // only touch the page when the number changes
+    const kmTxt = rideDist(s.pos * SEG); if (kmEl.textContent !== kmTxt) kmEl.textContent = kmTxt; // only touch the page when the number changes
     // a soft name card as you come into a new place
     if (here.idx !== s.place) { const first = s.place === -1; s.place = here.idx; placeEl.textContent = P.name; placeEl.classList.remove('show'); void placeEl.offsetWidth; placeEl.classList.add('show'); if (first) placeEl.classList.add('first'); }
   }
@@ -204,7 +205,7 @@ export function mount(root, params) {
   cleanup = () => {
     persist(); stop(); document.removeEventListener('visibilitychange', onVis);
     if (nodes) nodes.v.gain.value = 0; if (ac) ac.close().catch(() => {});
-    const rode = rec.m - startM; if (rode >= 50) { rec.rides = (rec.rides || 0) + 1; save(); toast((rode / 1000).toFixed(1) + ' km this ride · ' + (rec.m / 1000).toFixed(1) + ' km all together'); }
+    const rode = rec.m - startM; if (rode >= 50) { rec.rides = (rec.rides || 0) + 1; save(); toast(rideDist(rode) + ' this ride · ' + rideDist(rec.m) + ' all together'); }
   };
   root.__road = s; // for the automated tests only
   setTimeout(() => hint.classList.add('gone'), 5000);

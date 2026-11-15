@@ -1,5 +1,5 @@
 // v106: Settings, redesigned. A hello (your name, kind words), your backup up top, "Make it yours" as one card whose
-// area cards open in a sheet, Days tabs as chips, Look as three little pictures, Weights in, More, Start fresh.
+// area cards open in a sheet, Days tabs as chips, Look as three little pictures, Weights in (v115: with distances beside it), More, Start fresh.
 // Throwaway profile. Run: PREQUEL_URL=http://localhost:8765/ node tools/tests/setpage.js
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs'); const BASE = process.env.PREQUEL_URL || 'http://localhost:8765/';

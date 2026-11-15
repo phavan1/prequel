@@ -4,6 +4,7 @@
 //       st.moveSetup = {picked:[ids], custom:{id:{n, e, unit}}} (missing = not chosen yet: Move asks once)
 //       st.actTimer = {type, start, date} while a "Start now" timer runs
 import { get, save, uid, addMoment } from './store.js';
+import { du, distShow, distLabel, distNum, isDist, MI } from './units.js'; // v115: km or miles
 
 const km = { k: 'dist', l: 'Distance', u: 'km', num: 1 };
 // field kinds: num (a number, with its unit), seg (pick one), text (in your own words)
@@ -43,7 +44,7 @@ export function measures(id) {
   if (id === 'gym') return [['sessions', 'Rep days', 'rep days'], ['sets', 'Sets done', 'sets'], ['days', 'Days at the gym', 'days']];
   const d = actDef(id);
   return [['times', 'Times', d.unit === 'times' ? 'times' : d.unit], ['hours', 'Total time', 'hours'], ['days', 'Days active', 'days']]
-    .concat(d.f.filter(x => x.num).map(x => [x.k, x.l, x.u]));
+    .concat(d.f.filter(x => x.num).map(x => [x.k, x.l, distLabel(x.k, x.u)]));
 }
 // the running total for a milestone (goals.js asks for this), counting only from `from` onwards
 export function measureTotal(id, m, from) {
@@ -58,7 +59,8 @@ export function measureTotal(id, m, from) {
   if (m === 'times') return L.length;
   if (m === 'days') return new Set(L.map(a => a.date)).size;
   if (m === 'hours') return r1(L.reduce((n, a) => n + (a.mins || 0), 0) / 60);
-  return r1(L.reduce((n, a) => n + (Number((a.f || {})[m]) || 0), 0));
+  const tot = L.reduce((n, a) => n + (Number((a.f || {})[m]) || 0), 0);
+  return isDist(m) ? distNum(m, tot) : r1(tot); // v115: distance and climb in your unit
 }
 
 // save one activity: a star in the sky, the day lit in Days
@@ -87,8 +89,8 @@ export function removeEntry(list, id) {
 export function summary(a) {
   const d = actDef(a.type), p = [];
   if (a.mins) p.push(a.mins + ' min');
-  d.f.forEach(x => { const v = (a.f || {})[x.k]; if (v == null || v === '') return; p.push(x.num ? v + ' ' + x.u : v); });
-  if (d.pace && a.mins && Number((a.f || {}).dist) > 0) { const pm = a.mins / Number(a.f.dist); p.push(Math.floor(pm) + ':' + String(Math.round((pm % 1) * 60)).padStart(2, '0') + ' per km'); }
+  d.f.forEach(x => { const v = (a.f || {})[x.k]; if (v == null || v === '') return; p.push(x.num ? distShow(x.k, v) + ' ' + distLabel(x.k, x.u) : v); });
+  if (d.pace && a.mins && Number((a.f || {}).dist) > 0) { const pm = a.mins / (Number(a.f.dist) * (du() === 'mi' ? MI : 1)); p.push(Math.floor(pm) + ':' + String(Math.round((pm % 1) * 60)).padStart(2, '0') + ' per ' + du()); }
   if (a.type === 'swim' && Number((a.f || {}).laps) > 0 && a.f.pool) p.push(Number(a.f.laps) * parseInt(a.f.pool, 10) + ' m');
   if (a.feel) p.push(a.feel.toLowerCase());
   return p.join(' · ');
