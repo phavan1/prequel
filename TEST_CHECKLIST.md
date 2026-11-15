@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v111) Move report: a Bar + set shows whole in The gym (wraps); Everything with weigh-ins from two places shows two lines with a key; "What I did: N rep days"; Week by week says Rep days.
 - [ ] (v110) Move → Move report: "Or pick a month" buttons; October makes a report with the calendar and My lifts over time; Last 4 weeks has the lift lines; Last 2 weeks doesn't.
 - [ ] (v109) Your moving journey → Your lifts: each line starts at your first weight (same as the heading), even for lifts done more than 10 times.
 - [ ] (v108) Settings → Look → Cosy dark: the Cosy dark colour row; pick Midnight, then Plum; the whole app changes and the phone's status bar matches; close and reopen, it's remembered; Match my phone uses it at night.

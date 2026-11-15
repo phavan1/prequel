@@ -381,6 +381,30 @@ function lineCard(g, x, y, w, h, title, pts, fmt) {
   txt(g, shortDay(pts[0].d).replace(/^\w+, /, ''), cx0, y + h - 16, '700 15px ' + BODY, SOFT);
   txt(g, shortDay(pts[pts.length - 1].d).replace(/^\w+, /, ''), cx1, y + h - 16, '700 15px ' + BODY, SOFT, 'right');
 }
+// v111: body weight with one line per place (Gym, Hospital, Other), because different scales read differently.
+// Each line has its own pattern (solid, dashed, dotted) and is named in the key, so colour is never the only signal.
+function weightLines(g, x, y, w, h, series) {
+  const STY = [[BLUE, []], ['#E5893D', [14, 8]], ['#3E9E6E', [3, 7]]];
+  series = series.filter(s => s[1].length).slice(0, 3);
+  g.fillStyle = CARD; rr(g, x, y, w, h, 20); g.fill(); g.strokeStyle = LINE; g.lineWidth = 2; g.stroke();
+  txt(g, 'Every weigh-in, one line per place', x + 20, y + 36, '800 21px ' + BODY, INK, 'left', w - 40);
+  let kx = x + 20; series.forEach(([pl, pts], i) => {
+    const [c, dash] = STY[i]; g.strokeStyle = c; g.lineWidth = 4; g.setLineDash(dash); g.beginPath(); g.moveTo(kx, y + 62); g.lineTo(kx + 40, y + 62); g.stroke(); g.setLineDash([]);
+    const label = pl + ': ' + withUnit(pts[0].v) + (pts.length > 1 ? ' → ' + withUnit(pts[pts.length - 1].v) : ''); txt(g, label, kx + 50, y + 69, '700 18px ' + BODY, INK); g.font = '700 18px ' + BODY; kx += 50 + g.measureText(label).width + 30;
+  });
+  const all = series.flatMap(s => s[1]), lo = Math.min(...all.map(p => p.v)), hi = Math.max(...all.map(p => p.v)), pad = (hi - lo) * 0.15 || 1;
+  const ds = all.map(p => parseKey(p.d).getTime()), t0 = Math.min(...ds), t1 = Math.max(...ds);
+  const cx0 = x + 24, cx1 = x + w - 24, cy0 = y + 96, cy1 = y + h - 44;
+  const X = d => t1 === t0 ? (cx0 + cx1) / 2 : cx0 + (parseKey(d).getTime() - t0) / (t1 - t0) * (cx1 - cx0), Yv = v => cy1 - (v - (lo - pad)) / ((hi + pad) - (lo - pad)) * (cy1 - cy0);
+  g.fillStyle = LINE; g.fillRect(cx0, cy1, cx1 - cx0, 1.5);
+  series.forEach(([pl, pts], i) => {
+    const [c, dash] = STY[i]; g.strokeStyle = c; g.lineWidth = 3; g.lineJoin = 'round'; g.setLineDash(dash); g.beginPath(); pts.forEach((p, k) => k ? g.lineTo(X(p.d), Yv(p.v)) : g.moveTo(X(p.d), Yv(p.v))); g.stroke(); g.setLineDash([]);
+    g.fillStyle = c; pts.forEach(p => { g.beginPath(); if (i === 1) g.rect(X(p.d) - 4, Yv(p.v) - 4, 8, 8); else if (i === 2) { g.moveTo(X(p.d), Yv(p.v) - 5); g.lineTo(X(p.d) + 5, Yv(p.v) + 4); g.lineTo(X(p.d) - 5, Yv(p.v) + 4); } else g.arc(X(p.d), Yv(p.v), 4.5, 0, 7); g.fill(); });
+  });
+  const first = all.reduce((a, b) => a.d < b.d ? a : b), last = all.reduce((a, b) => a.d > b.d ? a : b);
+  txt(g, shortDay(first.d).replace(/^\w+, /, ''), cx0, y + h - 16, '700 15px ' + BODY, SOFT);
+  txt(g, shortDay(last.d).replace(/^\w+, /, ''), cx1, y + h - 16, '700 15px ' + BODY, SOFT, 'right');
+}
 // your lifts over time: the heaviest set each time, for the exercises you've done most (weights only; plates are counted in pins)
 function liftCharts(doc, sessions, st, min = 2) {
   const ex = {};
@@ -430,8 +454,8 @@ export async function moveReport(from, to, mode) {
   const perWeek = Math.round(activeDays.length / nDays * 7 * 10) / 10;
   if (activeDays.length) doc.para('That\'s about ' + perWeek + (perWeek === 1 ? ' day' : ' days') + ' a week.', '700 24px ' + BODY, INK);
   // what I did
-  const types = {}; if (sessions.length) types.gym = sessions.length; acts.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; });
-  const did = Object.entries(types).sort((a, b) => b[1] - a[1]).map(([t, n]) => (t === 'gym' ? 'Gym' : actDef(t).n) + ' ' + plural(n, 'time', 'times'));
+  const types = {}; if (sessions.length) types.gym = new Set(sessions.map(s => s.date)).size; acts.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; }); // v111: the gym counts rep days (v87)
+  const did = Object.entries(types).sort((a, b) => b[1] - a[1]).map(([t, n]) => t === 'gym' ? plural(n, 'rep day', 'rep days') : actDef(t).n + ' ' + plural(n, 'time', 'times'));
   if (did.length) doc.para('What I did: ' + did.join(', ') + '.', '600 23px ' + BODY, INK);
   // how my body felt: the check-in before the gym, and how each activity felt
   const lights = {}; sessions.forEach(x => { if (x.light) lights[x.light] = (lights[x.light] || 0) + 1; });
@@ -442,8 +466,11 @@ export async function moveReport(from, to, mode) {
   // body weight: every weigh-in in these dates, with where (different scales read differently)
   const W = (st.weights || []).filter(w => w.date >= from && w.date <= to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts);
   if (whole && W.length > 1) { // v99: a line over a long stretch, instead of a long table
-    doc.heading('Body weight', 'from ' + withUnit(W[0].kg) + ' to ' + withUnit(W[W.length - 1].kg), 380);
-    const g = doc.need(320); lineCard(g, M, doc.y, PW - 2 * M, 300, 'Every weigh-in', W.map(w => ({ d: w.date, v: w.kg })), withUnit); doc.y += 324;
+    const places = [...new Set(W.map(w => w.where || 'Other'))];
+    doc.heading('Body weight', places.length > 1 ? 'different scales read differently, so each place has its own line' : 'from ' + withUnit(W[0].kg) + ' to ' + withUnit(W[W.length - 1].kg), 440);
+    const g = doc.need(places.length > 1 ? 380 : 320);
+    if (places.length > 1) { weightLines(g, M, doc.y, PW - 2 * M, 360, places.map(pl => [pl, W.filter(w => (w.where || 'Other') === pl).map(w => ({ d: w.date, v: w.kg }))])); doc.y += 384; } // v111: one line per place, since scales differ
+    else { lineCard(g, M, doc.y, PW - 2 * M, 300, 'Every weigh-in', W.map(w => ({ d: w.date, v: w.kg })), withUnit); doc.y += 324; }
   } else if (W.length) {
     doc.heading('Body weight', W.length > 1 ? 'from ' + withUnit(W[0].kg) + ' to ' + withUnit(W[W.length - 1].kg) : '', 120 + W.length * 46);
     doc.table([{ label: 'Day', w: 420 }, { label: 'Weight', w: 260 }, { label: 'Where', w: 368 }], W.map(w => ({ cells: [dayDate(w.date), withUnit(w.kg), w.where || ''] })), { boldFirst: true });
@@ -480,8 +507,8 @@ export async function moveReport(from, to, mode) {
   const weeks = []; for (let i = 0; i < all.length; i += 7) weeks.push(all.slice(i, i + 7));
   if (weeks.length > 1 && !whole) {
     doc.heading('Week by week', 'each row is 7 days', 140 + weeks.length * 46);
-    doc.table([{ label: 'Dates', w: 330 }, { label: 'Days I moved', w: 190 }, { label: 'Gym', w: 150 }, { label: 'Other', w: 150 }, { label: 'Time noted', w: 228 }], weeks.map(ds => {
-      const act = ds.filter(d => byDay[d].gym.length || byDay[d].acts.length).length, gy = ds.reduce((n, d) => n + byDay[d].gym.length, 0), ot = ds.reduce((n, d) => n + byDay[d].acts.length, 0), mm = ds.reduce((n, d) => n + byDay[d].acts.reduce((a, x) => a + (Number(x.mins) || 0), 0), 0);
+    doc.table([{ label: 'Dates', w: 330 }, { label: 'Days I moved', w: 190 }, { label: 'Rep days', w: 150 }, { label: 'Other', w: 150 }, { label: 'Time noted', w: 228 }], weeks.map(ds => {
+      const act = ds.filter(d => byDay[d].gym.length || byDay[d].acts.length).length, gy = ds.filter(d => byDay[d].gym.length).length /* v111: rep days, not sessions */, ot = ds.reduce((n, d) => n + byDay[d].acts.length, 0), mm = ds.reduce((n, d) => n + byDay[d].acts.reduce((a, x) => a + (Number(x.mins) || 0), 0), 0);
       return { cells: [range(ds[0], ds[ds.length - 1]).replace(/, \d{4}$/, ''), act ? act + ' of ' + ds.length : 'a rest week', gy ? String(gy) : '–', ot ? String(ot) : '–', mm ? dur(mm) : '–'] };
     }), { boldFirst: true });
   }
@@ -498,7 +525,7 @@ export async function moveReport(from, to, mode) {
   if (rows.length) {
     doc.heading('The gym', 'the heaviest set each time; best = heaviest in these dates', 200);
     doc.table([{ label: 'Exercise', w: 300 }, { label: 'Times', w: 100 }, { label: 'First', w: 216 }, { label: 'Latest', w: 216 }, { label: 'Best', w: 216 }],
-      rows.map(r => ({ cells: [r.name, String(r.n), setText(r.first, r.k, st), r.n > 1 ? setText(r.last, r.k, st) : 'same day', setText(r.best, r.k, st)] })), { boldFirst: true, fs: 19 });
+      rows.map(r => ({ cells: [r.name, String(r.n), setText(r.first, r.k, st), r.n > 1 ? setText(r.last, r.k, st) : 'same day', setText(r.best, r.k, st)] })), { boldFirst: true, fs: 19, wrap: true }); // v111: wrap, never "…"
     doc.para('“First” and “latest” are the heaviest set on the first and the latest day I did that exercise in these dates.', '600 19px ' + BODY, SOFT);
   } else if (sessions.length) doc.para('Rep days in these dates were logged without sets.', '600 22px ' + BODY, SOFT);
   // v110: the 4-week and month reports also draw the lifts as lines (3 or more times in those dates); 2 weeks stays a table

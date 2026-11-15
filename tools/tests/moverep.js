@@ -79,7 +79,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('at a glance: days moved and sessions', /6 of 14/.test(said) && /rep days?/.test(said), said.slice(0, 160));
   ok('body check-ins and how activities felt', /How my body felt before the gym: Green/.test(said) && /How the other activities felt/.test(said));
   ok('body weight is in it', /72\.4 kg/.test(said) && /71\.8 kg/.test(said));
-  ok('the gym: first, latest and best per exercise', /10 kg × 12/.test(said) && /12\.5 kg × 10/.test(said) && /bar \+ 2\.5 kg each side × 10/.test(said) && /Flat dumbbell press/.test(said));
+  ok('the gym: first, latest and best per exercise', /10 kg × 12/.test(said) && /12\.5 kg × 10/.test(said) && /bar \+ 2\.5 kg each side × 10/.test(said.replace(/ \| /g, ' ')) /* v111: long sets may wrap */ && /Flat dumbbell press/.test(said));
   ok('older sessions stay out of it', !/50 kg/.test(said));
   ok('other activities with their totals', /Badminton/.test(said) && /7\.2 km/.test(said) && /6 games/.test(said));
   ok('highlights and notes stay private', !/PRIVATE/.test(said));

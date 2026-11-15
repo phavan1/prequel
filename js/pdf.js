@@ -75,12 +75,17 @@ export class Doc {
         const g = this.g; txt(g, r.group, x0 + 4, this.y + rh * 0.95, '800 22px ' + BODY, BLUE); if (r.note) txt(g, r.note, x0 + w - 4, this.y + rh * 0.95, '700 19px ' + BODY, SOFT, 'right');
         this.y += rh * 1.15; return;
       }
-      if (this.y + rh > PH - M - 40) { this.newPage(); head(); }
+      // v111: opts.wrap lets long cells ("bar + 20 kg each side × 10") wrap onto more lines instead of ending in "…"
+      const fontOf = j => (r.total ? '900 ' : j === 0 && opts.boldFirst ? '800 ' : '600 ') + (opts.fs || 21) + 'px ' + BODY, lh = (opts.fs || 21) * 1.3;
+      const lines = opts.wrap ? cols.map((c, j) => { const v = r.cells[j]; return v == null || v === '' || c.right ? [v] : wrap(this.g, String(v), fontOf(j), (r.span === j ? x0 + w - 28 : c.w - 28)); }) : null;
+      const n = lines ? Math.max(1, ...lines.map(L => L.length)) : 1, RH = rh + (n - 1) * lh;
+      if (this.y + RH > PH - M - 40) { this.newPage(); head(); }
       const g = this.g;
-      if (r.total) { g.fillStyle = '#E4ECFF'; g.fillRect(x0, this.y, w, rh); }
-      else if (opts.byShade ? r.shade : i % 2 === 0) { g.fillStyle = CARD; g.fillRect(x0, this.y, w, rh); }
-      g.fillStyle = LINE; g.fillRect(x0, this.y + rh - 1, w, 1);
+      if (r.total) { g.fillStyle = '#E4ECFF'; g.fillRect(x0, this.y, w, RH); }
+      else if (opts.byShade ? r.shade : i % 2 === 0) { g.fillStyle = CARD; g.fillRect(x0, this.y, w, RH); }
+      g.fillStyle = LINE; g.fillRect(x0, this.y + RH - 1, w, 1);
       let x = x0 + 18;
+      if (lines) { cols.forEach((c, j) => { lines[j].forEach((l, k) => { if (l != null && l !== '') txt(g, String(l), c.right ? x + c.w - 24 : x, this.y + rh * 0.66 + k * lh, fontOf(j), r.total ? BLUE : r.soft && r.soft[j] ? SOFT : INK, c.right ? 'right' : 'left', c.w - 28); }); x += c.w; }); this.y += RH; return; }
       cols.forEach((c, j) => { const v = r.cells[j]; if (v != null && v !== '') txt(g, String(v), c.right ? x + c.w - 24 : x, this.y + rh * 0.66, (r.total ? '900 ' : j === 0 && opts.boldFirst ? '800 ' : '600 ') + (opts.fs || 21) + 'px ' + BODY, r.total ? BLUE : r.soft && r.soft[j] ? SOFT : INK, c.right ? 'right' : 'left', r.span === j ? x0 + w - x - 28 : c.w - 28); x += c.w; });
       this.y += rh;
     });

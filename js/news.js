@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 111, date: '2026-11-15', items: [
+    'Move report: long sets like "bar + 20 kg each side × 10" wrap onto a second line instead of being cut off.',
+    'In the Everything report, body weight from different places (gym, hospital, other) gets a line each, since scales read differently.',
+    'The report counts the gym in rep days, like the rest of the app.'
+  ] },
   { v: 110, date: '2026-11-15', items: [
     'The Move report can be made for any month now: pick one under "Or pick a month".',
     'The 4-week and month reports also draw your lifts as lines, for the ones you did 3 or more times.'
