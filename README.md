@@ -6,7 +6,7 @@ Prequel is a gentle, private lifestyle companion for your phone. You log the eve
 
 It has no streaks, no scores and no zeros. Everything stays on your phone.
 
-**[Open Prequel →](https://phavan1.github.io/prequel/)**
+**[Open Prequel →](https://phavan1.github.io/prequel/)** · New here? **[Read the guide](https://github.com/phavan1/prequel/wiki)**: installing, a quick tour, backups and common questions.
 
 <p align="center">
   <img src="docs/screenshots/home.jpg" width="200" alt="Home: the character in his room, with quick buttons for food, rest, the jar and goals">
@@ -71,7 +71,7 @@ Prequel is a Progressive Web App, so there's nothing to download from a store.
 - **iPhone:** open the link in Safari, tap **Share**, then **Add to Home Screen**.
 - **Android:** open the link in Chrome, tap the **⋮** menu, then **Install app** (or **Add to Home screen**).
 
-Then open it from the home screen. Back up from **Settings** every now and then: your data lives only on that phone.
+Then open it from the home screen. Back up from **Settings** every now and then: your data lives only on that phone. The [guide](https://github.com/phavan1/prequel/wiki) has step-by-step help.
 
 ## How it's built
 

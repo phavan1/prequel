@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v113: help for friends lives on the GitHub wiki (public, read-only for others, no personal details), linked from Settings → More → Guide and the README. The repo docs (START_HERE, HANDOVER…) stay in the code for building the app.
 - v112: Skate home ramps up gently (top speed lower and reached later), like Keep it up: the soft-day games stay calm.
 - v111: report tables wrap long cells rather than cutting them; body weight from different scales is never joined into one line; the report counts the gym in rep days everywhere.
 - v110: the Move report can be made for any month; 4-week and month reports draw lift lines (3+ times), 2 weeks stays tables; no body weight line outside Everything (Phavan).

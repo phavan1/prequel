@@ -4,6 +4,9 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 113, date: '2026-11-15', items: [
+    'There\'s a guide now: how to install Prequel, a quick tour, backups and common questions. Find it in Settings, under More (it opens online).'
+  ] },
   { v: 112, date: '2026-11-15', items: [
     'Skate home speeds up more gently, so a run feels calm for longer before it gets quick.'
   ] },

@@ -52,6 +52,9 @@ const errors = [];
   // more
   const [fc] = await Promise.all([p.waitForEvent('filechooser', { timeout: 3000 }).catch(() => null), p.click('[data-import]')]);
   ok('Restore a backup asks for a file', !!fc);
+  const gd = p.locator('[data-guide]');
+  ok('More has a Guide row that opens the friends\' guide (the wiki) in a new tab', await gd.count() === 1 && (await gd.getAttribute('href')) === 'https://github.com/phavan1/prequel/wiki' && (await gd.getAttribute('target')) === '_blank' && /Guide/.test(await gd.innerText()));
+  ok('…between Restore and What\'s new', JSON.stringify(await p.locator('.sgroup .srow .st b').allInnerTexts()) === '["Restore a backup","Guide","What\'s new"]', JSON.stringify(await p.locator('.sgroup .srow .st b').allInnerTexts()));
   ok('What\'s new says which version this is', /version \d+/.test(await p.locator('[data-news]').innerText()));
   await p.click('[data-words]'); await p.waitForTimeout(300);
   ok('the hello opens your name and kind words', await p.locator('#sName').count() === 1);

@@ -125,6 +125,8 @@ function wordsSheet(root) {
 }
 
 // ---------- v106: the page, redesigned (B1): a hello, your backup up top, Make it yours behind one card ----------
+// v113: the friends' guide lives on the GitHub wiki
+const GUIDE = 'https://github.com/phavan1/prequel/wiki';
 const ICON = {
   food: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3"/>',
   move: '<path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/>',
@@ -180,6 +182,7 @@ function render(root) {
     '<div class="sseg">' + [['kg', 'kg · kilograms'], ['lb', 'lb · pounds']].map(o => '<button type="button" data-wunit="' + o[0] + '" aria-pressed="' + (wu() === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' +
     '<div class="slbl">More</div>' +
     '<div class="sgroup"><button type="button" class="srow" data-import><span class="st"><b>Restore a backup</b><small>From a file you saved before</small></span><span class="sgo" aria-hidden="true">›</span></button>' +
+      '<a class="srow" href="' + GUIDE + '" target="_blank" rel="noopener" data-guide><span class="st"><b>Guide</b><small>How to install, a quick tour, backups and questions · opens online</small></span><span class="sgo" aria-hidden="true">↗</span></a>' + // v113
       '<button type="button" class="srow" data-news><span class="st"><b>What\'s new</b><small>Every update, in plain words · this is version ' + LATEST + '</small></span><span class="sgo" aria-hidden="true">›</span></button></div>' +
     '<input type="file" id="importFile" accept="application/json,.json" hidden>' +
     '<button type="button" class="sfresh" data-fresh>Start fresh…<small>Clears everything, after asking twice and offering a backup</small></button>' +

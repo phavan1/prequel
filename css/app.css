@@ -1330,3 +1330,4 @@ html[data-theme="dark"][data-tone] body { background: var(--room); }
 .tone[aria-pressed="true"]::after { content: '✓'; color: var(--blue); font-weight: 900; }
 html[data-tone="midnight"] .lk .d { background: #11151F; } html[data-tone="midnight"] .lk .a { background: linear-gradient(135deg, #FAF3DC 50%, #11151F 50%); }
 html[data-tone="plum"] .lk .d { background: #18131D; } html[data-tone="plum"] .lk .a { background: linear-gradient(135deg, #FAF3DC 50%, #18131D 50%); }
+.sgroup a.srow { text-decoration: none; } /* v113: the Guide row is a link */
