@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v119) Keep it up on the laptop: plays in the middle column, the ball stays bright after bouncing, catches when the pillow is under it. Same on the iPhone as before.
 - [ ] (v118) Food → Just say it: tap the keyboard's mic and say a meal; the list fills in; change a count, untick one, Find it for one, Log. Check the keyboard doesn't hide Log these N.
 - [ ] (v117) Me's journey card and Your moving journey: a sandy track behind him up to his feet, dotted path ahead; looks right in Cosy dark.
 - [ ] (v116) In lb: Fix this workout on an old session and Save without changing anything; the numbers read the same afterwards.

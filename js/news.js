@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 119, date: '2026-11-17', items: [
+    'Keep it up works on laptops now: it plays in a phone-sized space in the middle of the screen, so the ball no longer shoots across the whole width.',
+    'The ball stays bright after the first bounce (it was turning dark and see-through), and "Best" is easy to read in Cosy dark.'
+  ] },
   { v: 118, date: '2026-11-17', items: [
     'Just say it, on Food: tell Prequel everything you ate in one go, like "5 dosas, chicken gravy and a coffee". Type it, or tap the mic on your keyboard and talk. You get a little list to check, change the counts, and log it all with one tap.',
     'Anything it doesn\'t know, you can just log without numbers, find it, or leave out. It all stays on your phone.'

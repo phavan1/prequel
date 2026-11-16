@@ -23,7 +23,7 @@ const errors = [];
   if ((await g()).dead) { await p.click('#kuGo'); await p.waitForTimeout(150); } // it may have dropped while we tested the keys
   // v106: sturdier. Restart if it dropped, then give the pillow up to a second to catch up with the mouse
   let near = false;
-  for (let i = 0; i < 10 && !near; i++) { if ((await g()).dead) { await p.click('#kuGo'); await p.waitForTimeout(150); } await p.mouse.move(300 + (i % 2), 600); await p.waitForTimeout(100); near = Math.abs((await g()).px - 300) < 30; }
+  for (let i = 0; i < 10 && !near; i++) { if ((await g()).dead) { await p.click('#kuGo'); await p.waitForTimeout(150); } await p.mouse.move(d.L + 150 + (i % 2), 600); await p.waitForTimeout(100); near = Math.abs((await g()).px - (d.L + 150)) < 30; } // v119: inside the play column
   ok('the mouse: the pillow follows it', near, String(Math.round((await g()).px)));
   await p.context().close();
   // a phone: a finger drags from anywhere

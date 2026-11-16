@@ -27,13 +27,17 @@ export function mount(root) {
 
   let s;
   const dims = () => {
-    const W = box.W, H = box.H, py = H * 0.82, r = Math.max(24, Math.min(38, W * 0.08)), pw = Math.max(110, Math.min(170, W * 0.34));
+    // v119: on a laptop the game plays in a phone-width column in the middle (PW wide, from L to R). Across a whole wide
+    // screen the ball flew sideways about 1,800 px a second while the pillow stayed 170 px wide, so it was nearly
+    // uncatchable. Phones are narrower than the column, so nothing changes there.
+    const W = box.W, H = box.H, PW = Math.min(W, 560), L = (W - PW) / 2, R = L + PW;
+    const py = H * 0.82, r = Math.max(24, Math.min(38, PW * 0.08)), pw = Math.max(110, Math.min(170, PW * 0.34));
     const h = py - H * 0.2, tUp = 0.85, G = 2 * h / (tUp * tUp); // v102: a slower, floatier rise and fall (was 0.62 s)
-    return { W, H, py, r, pw, ph: 30, G, V0: G * tUp, VX: W * 0.95 };
+    return { W, H, PW, L, R, py, r, pw, ph: 30, G, V0: G * tUp, VX: PW * 0.95 };
   };
   function reset() {
     const d = dims();
-    s = { n: 0, ts: 1, x: d.W / 2, y: d.H * 0.26, vx: (Math.random() - 0.5) * d.W * 0.25, vy: 0, rot: 0, spin: (Math.random() - 0.5) * 2, squish: 0, px: d.W / 2, tx: d.W / 2, pillow: 0, stars: [], pops: [], t: 0, dead: false };
+    s = { n: 0, ts: 1, x: d.W / 2, y: d.H * 0.26, vx: (Math.random() - 0.5) * d.PW * 0.25, vy: 0, rot: 0, spin: (Math.random() - 0.5) * 2, squish: 0, px: d.W / 2, tx: d.W / 2, pillow: 0, stars: [], pops: [], t: 0, dead: false };
   }
   reset();
 
@@ -55,7 +59,7 @@ export function mount(root) {
     s.n++; s.ts = Math.min(1.8, 1 + s.n * 0.03); // game speed: a little quicker with every bounce (v102: gentler, and it tops out lower)
     blip(420 + (s.n % 12) * 34);
     if (s.n % 10 === 0) {
-      s.stars.push({ x: d.W * (0.1 + Math.random() * 0.8), y: d.H * (0.08 + Math.random() * 0.5), r: 5 + Math.random() * 5, born: s.t });
+      s.stars.push({ x: d.L + d.PW * (0.1 + Math.random() * 0.8), y: d.H * (0.08 + Math.random() * 0.5), r: 5 + Math.random() * 5, born: s.t });
       s.pops.push({ x: s.x, y: s.y - d.r * 1.6, text: s.n + '! ✦', life: 1 });
       blip(880, 0.12, 'triangle');
     }
@@ -63,14 +67,14 @@ export function mount(root) {
 
   function step(dt) {
     const d = dims(), sd = dt * s.ts; s.t += dt;
-    if (keys.l !== keys.r) s.tx = s.px + (keys.l ? -1 : 1) * d.W * 1.1 * dt; // v102: hold ← → (or A D) to glide
-    s.tx = Math.max(d.pw / 2, Math.min(d.W - d.pw / 2, s.tx));
+    if (keys.l !== keys.r) s.tx = s.px + (keys.l ? -1 : 1) * d.PW * 1.1 * dt; // v102: hold ← → (or A D) to glide
+    s.tx = Math.max(d.L + d.pw / 2, Math.min(d.R - d.pw / 2, s.tx));
     s.px += (s.tx - s.px) * Math.min(1, dt * 22); // a touch of smoothing, so the pillow glides instead of jumping
-    s.px = Math.max(d.pw / 2, Math.min(d.W - d.pw / 2, s.px));
+    s.px = Math.max(d.L + d.pw / 2, Math.min(d.R - d.pw / 2, s.px));
     const prevBottom = s.y + d.r;
     s.vy += d.G * sd; s.x += s.vx * sd; s.y += s.vy * sd; s.rot += s.spin * sd;
-    if (s.x < d.r) { s.x = d.r; s.vx = Math.abs(s.vx) * 0.9; }
-    if (s.x > d.W - d.r) { s.x = d.W - d.r; s.vx = -Math.abs(s.vx) * 0.9; }
+    if (s.x < d.L + d.r) { s.x = d.L + d.r; s.vx = Math.abs(s.vx) * 0.9; }
+    if (s.x > d.R - d.r) { s.x = d.R - d.r; s.vx = -Math.abs(s.vx) * 0.9; }
     if (s.y < d.r + 60 && s.vy < 0) { s.y = d.r + 60; s.vy = Math.abs(s.vy) * 0.4; }
     if (s.vy > 0 && prevBottom <= d.py + 4 && s.y + d.r >= d.py && Math.abs(s.x - s.px) <= d.pw / 2 + d.r * 0.55) bounce(d);
     s.squish = Math.max(0, s.squish - dt * 7); s.pillow = Math.max(0, s.pillow - dt * 6);
@@ -111,7 +115,9 @@ export function mount(root) {
     const sq = s.squish, sx = 1 + sq * 0.22, sy = 1 - sq * 0.22;
     g.save(); g.translate(s.x, s.y + sq * d.r * 0.15); g.scale(sx, sy);
     if (rec.emoji === 'star') paperStar(g, 0, 0, d.r * 1.08, '#F4C430', s.rot);
-    else { g.rotate(s.rot); g.font = Math.round(d.r * 1.9) + 'px ' + EMOJI_FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(rec.emoji, 0, d.r * 0.08); }
+    // v119: an opaque fill and full alpha first. The faint score number above leaves a 13% see-through fillStyle behind,
+    // and on Windows that fades the emoji itself, so after the first bounce the ball went dark and ghostly
+    else { g.rotate(s.rot); g.globalAlpha = 1; g.fillStyle = '#000'; g.font = Math.round(d.r * 1.9) + 'px ' + EMOJI_FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(rec.emoji, 0, d.r * 0.08); }
     g.restore();
   }
   function draw() {
@@ -119,8 +125,12 @@ export function mount(root) {
     const bg = g.createLinearGradient(0, 0, 0, d.H);
     if (dk) { const cs = getComputedStyle(document.documentElement); bg.addColorStop(0, cs.getPropertyValue('--room').trim() || '#1C1815'); bg.addColorStop(1, cs.getPropertyValue('--room-2').trim() || '#2E241C'); } else { bg.addColorStop(0, '#FFF6CF'); bg.addColorStop(1, '#FFE6C4'); }
     g.fillStyle = bg; g.fillRect(0, 0, d.W, d.H);
+    if (d.PW < d.W) { // v119: the column it plays in, softly marked, so the sides it bounces off make sense
+      g.fillStyle = dk ? 'rgba(255,255,255,.035)' : 'rgba(255,255,255,.45)'; g.fillRect(d.L, 0, d.PW, d.H);
+      g.strokeStyle = dk ? 'rgba(255,255,255,.10)' : 'rgba(35,38,47,.10)'; g.lineWidth = 2; g.beginPath(); g.moveTo(d.L, 0); g.lineTo(d.L, d.H); g.moveTo(d.R, 0); g.lineTo(d.R, d.H); g.stroke();
+    }
     s.stars.forEach(a => { const tw = 0.75 + 0.25 * Math.sin((s.t - a.born) * 3 + a.x); paperStar(g, a.x, a.y, a.r * Math.min(1, (s.t - a.born) * 3) * tw, dk ? '#F4C430' : '#FFD45A', 0, 'rgba(0,0,0,.12)'); });
-    if (s.n > 0) { g.font = '900 ' + Math.round(Math.min(170, d.W * 0.42)) + 'px Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = dk ? 'rgba(243,238,223,.13)' : 'rgba(35,38,47,.12)'; g.fillText(String(s.n), d.W / 2, d.H * 0.45); }
+    if (s.n > 0) { g.font = '900 ' + Math.round(Math.min(170, d.PW * 0.42)) + 'px Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = dk ? 'rgba(243,238,223,.13)' : 'rgba(35,38,47,.12)'; g.fillText(String(s.n), d.W / 2, d.H * 0.45); }
     pillow(d); ball(d);
     s.pops.forEach(p => { g.globalAlpha = Math.max(0, p.life); g.font = '900 22px Nunito, sans-serif'; g.textAlign = 'center'; g.fillStyle = dk ? '#FFE36E' : '#23262F'; g.fillText(p.text, p.x, p.y); g.globalAlpha = 1; });
   }

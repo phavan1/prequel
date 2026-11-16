@@ -573,6 +573,7 @@ html[data-theme="dark"] .trophy { background: #33291A; border-color: #6B5626; }
 html[data-theme="dark"] .game { background: linear-gradient(120deg, #23304F, var(--room-2)); }
 html[data-theme="dark"] .hello { background: var(--room); }
 html[data-theme="dark"] .res i { color: #E9A36B; }
+html[data-theme="dark"] .screen-keepup .sk-hud { color: var(--ink); } /* v119: "Best 16" was dark on dark */
 html[data-theme="dark"] .sk-back, html[data-theme="dark"] .sk-over { background: rgba(47,40,34,.95); background: color-mix(in srgb, var(--paper) 95%, transparent); color: var(--ink); }
 html[data-theme="dark"] .sk-over p, html[data-theme="dark"] .sk-over .big { color: var(--ink); }
 html[data-theme="dark"] .screen-home.heavy { --room: #241B16; --room-2: #2E221B; --paper: #33271F; --line: #4A372B; }
