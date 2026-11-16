@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v117: the hill shows the way you've come as a worn track behind him (Phavan picked B of four mockups); ahead stays a dotted path.
 - v116: a number you don't touch is saved exactly as it was, judged per box (never by a lookup shared across the app).
 - v115: distances follow one setting (km or miles) like weights, still saved in km; switching never changes a logged number. A hike's climb goes to feet with miles; pools stay in metres. You can watch a lantern rise (an offer, not automatic), and the sky shows a new lantern first. In Cosy dark, filled blue buttons use the deeper blue.
 - v114: Mind keeps writing a note one step away (a slim bar, reminder choices only once you type); lanterns and letters get pictures (tiles, like Me's); the lantern list lives in a pop-up.

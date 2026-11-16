@@ -1037,6 +1037,8 @@ html[data-theme="dark"] .nights rect[fill="#1F55D0"] { fill: #5B86F0; }
 .jspark .jslbl { font: 800 9.5px var(--font-body); fill: var(--ink); }
 .jhill .jground { fill: #E2F3E8; }
 .jhill .jpath { fill: none; stroke: #8DBF9E; stroke-width: 3; stroke-dasharray: 2 6; stroke-linecap: round; }
+.jhill .jtrod { fill: none; stroke: #D9C08F; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; } /* v117: the worn track he's already walked */
+.jhill .jtrodedge { fill: none; stroke: #B8955A; stroke-width: 2; stroke-dasharray: 1 5; stroke-linecap: round; }
 .jhill .jpole { stroke: #6B6456; stroke-width: 1.6; }
 .jhill .jflag { fill: none; stroke: #1F55D0; stroke-width: 1.6; }
 .jhill .jflag.got { fill: #1F55D0; }
