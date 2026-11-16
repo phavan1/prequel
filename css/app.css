@@ -1361,3 +1361,34 @@ html[data-theme="dark"] .ttile.lett { background: #3A3220; border-color: #5A4C2A
    shortcut, the "last time" tag, and the goal +1 / Add buttons use the same deeper blue as Start and the other buttons. */
 html[data-theme="dark"] .quickgo, html[data-theme="dark"] .quick a.primary, html[data-theme="dark"] .lastpick, html[data-theme="dark"] .amtlog button, html[data-theme="dark"] .plus1 { background: #3D66E0; border-color: #3D66E0; color: #fff; }
 .units2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } /* v115: kg / lb and km / miles side by side */
+
+/* v118: Just say it. A button above the search, and a sheet where a sentence becomes a list to tick */
+.saybtn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 62px; padding: 10px 16px; border-radius: 18px; border: 0; background: var(--blue); color: #fff; text-align: left; font: inherit; }
+.saybtn .mic { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 20px; flex: none; }
+.saybtn b { display: block; font-size: 17px; font-weight: 900; } .saybtn small { display: block; font-size: 13px; font-weight: 700; opacity: .9; }
+html[data-theme="dark"] .saybtn { background: #3D66E0; }
+.sayhead { margin: 0; }
+.saybox { width: 100%; min-height: 96px; border-radius: 18px; border: 1.5px solid var(--blue); background: var(--paper); font: inherit; font-size: 17px; font-weight: 700; padding: 14px 16px; resize: none; color: var(--ink); }
+.sayhint { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin: -2px 4px 0; }
+.sayex { font-size: 14px; margin: 0 4px; } .sayex i { font-style: normal; font-weight: 800; color: var(--ink); }
+.ticks { display: flex; flex-direction: column; gap: 6px; }
+.tick { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 10px 8px 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--paper); }
+.tick .ck { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--blue); background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 900; flex: none; padding: 0; }
+html[data-theme="dark"] .tick .ck { background: #3D66E0; border-color: #3D66E0; }
+.tick.off .ck, html[data-theme="dark"] .tick.off .ck { background: transparent; border-color: var(--line); }
+.tick.off .nm { opacity: .6; }
+.tick .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font: inherit; font-weight: 800; font-size: 15px; text-align: left; background: none; border: 0; padding: 0; color: var(--ink); }
+.tick .nm small { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.step { display: flex; align-items: center; gap: 2px; border: 1px solid var(--line); border-radius: 12px; background: var(--room); flex: none; }
+.step button { width: 34px; height: 36px; border: 0; background: transparent; font-size: 18px; font-weight: 900; color: var(--blue); }
+.step span { min-width: 22px; text-align: center; font-weight: 900; font-size: 15px; }
+.tick.unsure { border-style: dashed; background: transparent; flex-wrap: wrap; }
+.tick.unsure .ck { background: transparent; border: 2px dashed var(--ink-soft); color: var(--ink-soft); } html[data-theme="dark"] .tick.unsure .ck { background: transparent; border-color: var(--ink-soft); }
+.tick .fix { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; padding-left: 38px; }
+.tick .fix button { min-height: 36px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font: inherit; font-size: 13px; font-weight: 800; color: var(--blue); }
+.tick.out { border-style: dashed; background: transparent; min-height: 48px; } .tick.out .nm { opacity: .7; }
+.tick.finding { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px; }
+.findbox { display: flex; gap: 6px; } .findbox input { flex: 1; min-height: 44px; border-radius: 12px; border: 1.5px solid var(--blue); padding: 0 12px; font: inherit; font-size: 16px; background: var(--paper); color: var(--ink); }
+.saytot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.saytot small { font-size: 13px; font-weight: 800; color: var(--ink-soft); }
+html[data-theme="dark"] .tick .fix button, html[data-theme="dark"] .step button { color: #A9BFFF; }

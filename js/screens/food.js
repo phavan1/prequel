@@ -4,6 +4,7 @@ import { esc, nav, backLink, dateChip, logDate, him, timeOf, prettyDate, toast, 
 import { openFoodReport } from '../reports.js';
 import { weightSheet } from '../weight.js';
 import { withUnit } from '../units.js';
+import { readMeal } from '../say.js'; // v118: Just say it
 import { GRAIN, wordHit, NUTRIENTS, KINDS, loadDB, myFoods, meals, weights, fromDB, adoptDB, bestMeasure, logFood, totalOf, sumDay, qtyLabel, fmt, search, recipeTotals, ingredientSearch } from '../nutrition.js';
 
 const EMPTY = ['Eat away!', 'Snack o\'clock?', 'Feed the machine.', 'Bon appétit!', 'Tummy\'s calling.', 'Let\'s eat!', 'Fuel up, friend.'];
@@ -65,6 +66,7 @@ function render() {
     '<button type="button" class="foodhead" data-totals>' + him('eating', 'breathe', 'Your character eating with you') +
       '<span><small>' + esc(prettyDate(d)) + '</small><b>' + (mealsN ? mealsN + (mealsN === 1 ? ' thing' : ' things') + ' eaten' : EMPTY[new Date().getDate() % EMPTY.length]) + '</b>' +
       '<em>' + (S.counted ? '~' + Math.round(S.t[0]).toLocaleString() + ' cal · ' + Math.round(S.t[1]) + ' g protein ›' : 'Anything counts. A banana counts.') + '</em></span></button>' +
+    (linkTo ? '' : '<button type="button" class="saybtn" data-say><span class="mic" aria-hidden="true">🎤</span><span><b>Just say it</b><small>Tell me everything you ate, all at once</small></span></button>') + // v118
     '<div class="fsearch"><label class="sr" for="fq">What did you have?</label><input id="fq" type="search" placeholder="What did you have?" autocomplete="off" enterkeyhint="go" value="' + esc(query) + '"></div>' +
     '<div id="res"></div>' +
     (usuals.length ? '<div class="top usualshead"><div class="lbl">Your usuals · tap to log</div><button type="button" class="btn ghost" data-manage style="min-height:34px;padding:0 4px">Edit</button></div><div class="reslist usuals">' + usuals.map(usualRow).join('') +
@@ -124,6 +126,7 @@ function onClick(e) {
   if ((b = t.closest('[data-usual]'))) { const f = myFoods().find(x => x.id === b.dataset.usual); if (f) { const m = logFood(f, logDate()); finishLog(m, f); } return; }
   if ((b = t.closest('[data-meal]'))) { portionSheet(b.dataset.meal); return; }
   if ((b = t.closest('[data-delold]'))) { removeById('foods', b.dataset.delold); render(); return; }
+  if (t.closest('[data-say]')) { saySheet(); return; } // v118
   if (t.closest('[data-totals]')) { totalsSheet(); return; }
   if (t.closest('[data-label]')) { labelSheet(); return; }
   if (t.closest('[data-recipe]')) { recipeSheet(); return; }
@@ -131,6 +134,81 @@ function onClick(e) {
   if (t.closest('[data-allusuals]')) { usualsSheet(); return; }
   if (t.closest('[data-weight]')) { weightSheet(render); return; }
   if (t.closest('[data-reports]')) { openFoodReport(); }
+}
+
+// ---------- v118: Just say it. One sentence (typed, or said with the keyboard's mic) becomes a list to tick and log ----------
+const capital = s => s.charAt(0).toUpperCase() + s.slice(1);
+// the food lists' long names, shortened for the list: "Coffee, brewed from grounds, prepared with tap water" → "Coffee, brewed from grounds"
+const shortName = n => n.replace(/\s*\(.*?\)/g, '').split(',').slice(0, 2).join(',').trim();
+const showQ = v => v === 0.5 ? '½' : v === 0.25 ? '¼' : v === 1.5 ? '1½' : v === 2.5 ? '2½' : String(Math.round(v * 100) / 100);
+function saySheet() {
+  let parts = [], said = '', timer = null;
+  const keep = {}; // what you changed, by the words you said, so it survives you typing more: { qty, off, choice: 'quick'|'out', pick: {mine}|{db}, finding }
+  const st = p => keep[p.text] || (keep[p.text] = {});
+  const hitOf = p => st(p).pick || p.hit;
+  const foodInfo = h => h.mine ? { name: h.mine.name, unit: h.mine.unit, n: h.mine.n, unitG: h.mine.unitG, tag: h.mine.recipe ? 'your recipe' : 'yours' } : (() => { const s = fromDB(h.db); return { name: h.db.name, unit: s.unit, n: s.n, unitG: s.unitG, tag: h.db.src === 'i' ? 'Indian recipe' : '' }; })();
+  const qtyOf = (p, f) => st(p).qty != null ? st(p).qty : p.grams && f && f.unitG ? p.grams / f.unitG : p.qty;
+  const inList = p => { const k = st(p); return hitOf(p) ? !k.off : k.choice === 'quick' && !k.off; };
+  const row = (p, i) => {
+    const k = st(p), h = hitOf(p);
+    if (k.finding) {
+      const r = search(k.find != null ? k.find : (p.name || p.text), 5);
+      return '<div class="tick finding" data-i="' + i + '"><div class="findbox"><label class="sr" for="sf' + i + '">Find it</label><input id="sf' + i + '" class="sayfind" data-find-in="' + i + '" type="search" autocomplete="off" value="' + esc(k.find != null ? k.find : (p.name || p.text)) + '"><button type="button" class="btn ghost" data-findcancel="' + i + '">Cancel</button></div>' +
+        r.mine.map((f, j) => '<button type="button" class="res" data-use="' + i + '" data-mine="' + f.id + '"><span>' + esc(f.name) + '<small>yours · ' + esc(f.unit) + '</small></span><b>+</b></button>').join('') +
+        r.db.map((f, j) => '<button type="button" class="res" data-use="' + i + '" data-dbi="' + j + '"><span>' + esc(f.name) + '<small>' + esc(fromDB(f).unit) + (f.src === 'i' ? ' · Indian recipe' : '') + '</small></span><b>+</b></button>').join('') +
+        (r.mine.length || r.db.length ? '' : '<p class="muted" style="font-size:13px;margin:4px">' + (dbReady ? 'Nothing by that name. Try fewer words.' : 'Still loading foods…') + '</p>') + '</div>';
+    }
+    if (!h && k.choice === 'out') return '<div class="tick out" data-i="' + i + '"><span class="nm">“' + esc(p.text) + '”<small>left out</small></span><button type="button" class="chip small" data-undo="' + i + '">Undo</button></div>';
+    if (!h && !k.choice) return '<div class="tick unsure" data-i="' + i + '"><span class="ck" aria-hidden="true">?</span><span class="nm">“' + esc(p.text) + '”<small>not in your foods yet</small></span>' +
+      '<span class="fix"><button type="button" data-quick="' + i + '">Just log it</button><button type="button" data-find="' + i + '">Find it</button><button type="button" data-out="' + i + '">Leave out</button></span></div>';
+    const f = h ? foodInfo(h) : null, q = qtyOf(p, f), on = inList(p);
+    const byGrams = !!(p.grams && f && f.unitG && k.qty == null), cal = f && f.n && f.n[0] != null ? f.n[0] : null;
+    const sub = f ? [f.tag, byGrams ? Math.round(p.grams) + ' g' : f.unit, cal == null ? 'no numbers yet' : '~' + Math.round(byGrams ? cal * q : cal) + ' cal' + (!byGrams && q !== 1 ? ' each' : '')].filter(Boolean).join(' · ') : 'no numbers yet · fill them in later';
+    return '<div class="tick' + (on ? '' : ' off') + '" data-i="' + i + '"><button type="button" class="ck" data-tk="' + i + '" aria-pressed="' + on + '" aria-label="' + (on ? 'Ticked: ' : 'Not ticked: ') + esc(f ? f.name : p.text) + '">' + (on ? '✓' : '') + '</button>' +
+      '<button type="button" class="nm" data-find="' + i + '" aria-label="Change what this is: ' + esc(f ? f.name : p.text) + '">' + esc(f ? shortName(f.name) : capital(p.name || p.text)) + '<small>' + esc(sub) + '</small></button>' +
+      (byGrams ? '' : '<span class="step"><button type="button" data-dq="-1" data-qi="' + i + '" aria-label="Fewer">−</button><span>' + showQ(q) + '</span><button type="button" data-dq="1" data-qi="' + i + '" aria-label="More">+</button></span>') + '</div>';
+  };
+  const total = () => { const t = [0, 0]; let any = false; parts.forEach(p => { const h = hitOf(p); if (!h || !inList(p)) return; const f = foodInfo(h); if (!f.n) return; const q = qtyOf(p, f); if (f.n[0] != null) { t[0] += f.n[0] * q; any = true; } if (f.n[1] != null) t[1] += f.n[1] * q; }); return any ? '~' + Math.round(t[0]).toLocaleString() + ' cal · ' + Math.round(t[1]) + ' g protein' : ''; };
+  const draw = () => {
+    const box = sheet.querySelector('#sayList'); if (!box) return;
+    if (!parts.length) { box.innerHTML = '<p class="muted sayex">Like: <i>2 chapatis, dal and a glass of milk</i></p>'; return; }
+    const n = parts.filter(inList).length;
+    box.innerHTML = '<div class="lbl" style="margin:2px 4px 0">I heard ' + parts.length + (parts.length === 1 ? ' thing' : ' things') + '</div><div class="ticks">' + parts.map(row).join('') + '</div>' +
+      '<div class="saytot"><small>' + total() + '</small><button type="button" class="btn" data-saylog' + (n ? '' : ' disabled') + '>' + (n ? 'Log ' + (n === 1 ? 'this' : 'these ' + n) : 'Tick something to log') + '</button></div>';
+  };
+  const reread = () => { parts = readMeal(said); draw(); };
+  const sheet = openSheet('<h2 class="sayhead">What did you have?</h2>' +
+    '<label class="sr" for="sayIn">Everything you ate</label><textarea id="sayIn" class="saybox" rows="3" placeholder="5 dosas, chicken gravy and a coffee"></textarea>' +
+    '<p class="sayhint"><span aria-hidden="true">🎤</span> Tap the mic on your keyboard to talk. Commas or “and” between things.</p>' +
+    '<div id="sayList"></div><button type="button" class="btn ghost" data-close>Cancel</button>', ev => {
+    const t = ev.target; let b;
+    const P = el => parts[Number(el)];
+    if ((b = t.closest('[data-tk]'))) { const p = P(b.dataset.tk), k = st(p); k.off = !k.off; draw(); return; }
+    if ((b = t.closest('[data-dq]'))) { const p = P(b.dataset.qi), h = hitOf(p), f = h ? foodInfo(h) : null, k = st(p); let q = qtyOf(p, f); const d = Number(b.dataset.dq);
+      q = q < 1 || (q === 1 && d < 0) ? (d > 0 ? 1 : 0.5) : Math.floor(q) + d; k.qty = Math.max(0.5, Math.min(99, q)); draw(); return; }
+    if ((b = t.closest('[data-quick]'))) { st(P(b.dataset.quick)).choice = 'quick'; draw(); return; }
+    if ((b = t.closest('[data-out]'))) { st(P(b.dataset.out)).choice = 'out'; draw(); return; }
+    if ((b = t.closest('[data-undo]'))) { delete st(P(b.dataset.undo)).choice; draw(); return; }
+    if ((b = t.closest('[data-find]'))) { const k = st(P(b.dataset.find)); k.finding = true; k.find = null; draw(); const inp = sheet.querySelector('[data-find-in="' + b.dataset.find + '"]'); if (inp) { inp.focus(); inp.select(); } return; }
+    if ((b = t.closest('[data-findcancel]'))) { st(P(b.dataset.findcancel)).finding = false; draw(); return; }
+    if ((b = t.closest('[data-use]'))) { const p = P(b.dataset.use), k = st(p);
+      if (b.dataset.mine) k.pick = { mine: myFoods().find(f => f.id === b.dataset.mine) };
+      else k.pick = { db: search(k.find != null ? k.find : (p.name || p.text), 5).db[Number(b.dataset.dbi)] };
+      k.finding = false; k.off = false; delete k.choice; if (p.grams) delete k.qty; draw(); return; }
+    if (t.closest('[data-saylog]')) {
+      const d = logDate(); let n = 0;
+      parts.forEach(p => { if (!inList(p)) return; const h = hitOf(p), k = st(p); let m;
+        if (h) { const food = h.mine || adoptDB(h.db); m = logFood(food, d, { sure: !!h.mine }); m.qty = Math.max(0.01, qtyOf(p, food)); }
+        else m = logFood({ name: capital(p.name || p.text) }, d, { sure: false }), m.qty = k.qty != null ? k.qty : p.qty;
+        addMoment('food', m.name, m.date, { ref: m.id }); n++; });
+      save(); closeSheet(); query = ''; render(); toast('Logged ' + n + (n === 1 ? ' thing' : ' things') + '. Tap any of them to change it.'); }
+  });
+  sheet.addEventListener('input', e => {
+    if (e.target.id === 'sayIn') { said = e.target.value; clearTimeout(timer); timer = setTimeout(reread, 350); return; }
+    if (e.target.dataset.findIn != null) { const i = e.target.dataset.findIn, k = st(parts[Number(i)]); k.find = e.target.value; const pos = e.target.selectionStart; draw(); const inp = sheet.querySelector('[data-find-in="' + i + '"]'); if (inp) { inp.focus(); try { inp.setSelectionRange(pos, pos); } catch (_) {} } }
+  });
+  draw();
+  const ta = sheet.querySelector('#sayIn'); if (ta) ta.focus();
 }
 
 // a small bar that offers to change the portion for a few seconds, then goes away
