@@ -4,6 +4,12 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 120, date: '2026-11-18', items: [
+    'Just say it learns your words. When you fix a guess, it remembers: next time "chicken gravy" goes straight to your own. It also learns when in the day you usually have things. It all stays on your phone.',
+    'When it isn\'t sure (a brand name, or only part of what you said), it asks "Is this it?" instead of guessing quietly.',
+    'Every row has an × to leave it out, Find it has Leave out too, and "For tortillas" from the keyboard\'s mic now means 4.',
+    'Changed your mind? Settings → More → Forget what Just say it learned.'
+  ] },
   { v: 119, date: '2026-11-17', items: [
     'Keep it up works on laptops now: it plays in a phone-sized space in the middle of the screen, so the ball no longer shoots across the whole width.',
     'The ball stays bright after the first bounce (it was turning dark and see-through), and "Best" is easy to read in Cosy dark.'

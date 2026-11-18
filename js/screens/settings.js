@@ -6,6 +6,7 @@ import { NEWS, LATEST, openNews } from '../news.js';
 import { wu, setUnit, askLb, du, setDistUnit } from '../units.js';
 import { OPTIONAL } from './days.js';
 import { AREAS, on, setOn } from '../features.js';
+import { hasLearned, forget } from '../say.js'; // v120
 
 export function mount(root) {
   render(root);
@@ -19,6 +20,10 @@ export function mount(root) {
     if ((b = t.closest('[data-dtab]'))) { const s = get().settings, k = b.dataset.dtab; s.dayTabs = s.dayTabs || []; s.dayTabs = s.dayTabs.includes(k) ? s.dayTabs.filter(x => x !== k) : s.dayTabs.concat(k); save(); render(root); toast(s.dayTabs.includes(k) ? 'It\'s on Days now.' : 'Taken off Days. Nothing you logged is lost.'); return; } // v96
     if ((b = t.closest('button[data-darktone]'))) { get().settings.darkTone = b.dataset.darktone; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; } // v108
     if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
+    if (t.closest('[data-forget]')) { // v120
+      openSheet('<h2>Forget what it learned?</h2><p>Just say it will forget the words it picked up from you and go back to guessing from your foods\' names and your food log. Nothing you logged changes.</p><button type="button" class="btn" data-forgetyes>Forget it</button><button type="button" class="btn ghost" data-close>Keep it</button>', e => {
+        if (e.target.closest('[data-forgetyes]')) { forget(); closeSheet(); render(root); toast('Done. It\'ll learn again as you go.'); } });
+      return; }
     if (t.closest('[data-import]')) { root.querySelector('#importFile').click(); return; }
     if (t.closest('[data-words]')) { wordsSheet(root); return; }
     if (t.closest('[data-undo]')) { undoSheet(root); return; }
@@ -186,7 +191,8 @@ function render(root) {
     '<div class="slbl">More</div>' +
     '<div class="sgroup"><button type="button" class="srow" data-import><span class="st"><b>Restore a backup</b><small>From a file you saved before</small></span><span class="sgo" aria-hidden="true">›</span></button>' +
       '<a class="srow" href="' + GUIDE + '" target="_blank" rel="noopener" data-guide><span class="st"><b>Guide</b><small>How to install, a quick tour, backups and questions · opens online</small></span><span class="sgo" aria-hidden="true">↗</span></a>' + // v113
-      '<button type="button" class="srow" data-news><span class="st"><b>What\'s new</b><small>Every update, in plain words · this is version ' + LATEST + '</small></span><span class="sgo" aria-hidden="true">›</span></button></div>' +
+      '<button type="button" class="srow" data-news><span class="st"><b>What\'s new</b><small>Every update, in plain words · this is version ' + LATEST + '</small></span><span class="sgo" aria-hidden="true">›</span></button>' +
+      (hasLearned() ? '<button type="button" class="srow" data-forget><span class="st"><b>Forget what Just say it learned</b><small>The words it picked up from you · your food log stays</small></span><span class="sgo" aria-hidden="true">›</span></button>' : '') + '</div>' + // v120
     '<input type="file" id="importFile" accept="application/json,.json" hidden>' +
     '<button type="button" class="sfresh" data-fresh>Start fresh…<small>Clears everything, after asking twice and offering a backup</small></button>' +
     nav('me');

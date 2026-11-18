@@ -1393,3 +1393,8 @@ html[data-theme="dark"] .tick .ck { background: #3D66E0; border-color: #3D66E0; 
 .saytot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
 .saytot small { font-size: 13px; font-weight: 800; color: var(--ink-soft); }
 html[data-theme="dark"] .tick .fix button, html[data-theme="dark"] .step button { color: #A9BFFF; }
+
+/* v120: Just say it learns. A guess it isn't sure of asks "Is this it?"; every row has an × to leave it out */
+.tick .rm { width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-soft); font-size: 20px; font-weight: 800; flex: none; padding: 0; }
+.tick.isit .nm i { font-style: normal; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
+.findbox { flex-wrap: wrap; } .findbox input { flex: 1 1 100%; } .findbox .btn { flex: 1; min-height: 40px; }

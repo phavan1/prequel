@@ -267,6 +267,7 @@ _Written on 12 October 2026, at version **v36**; last updated 14 October 2026. T
 - The creative-collaboration style in section F.
 - v54: no character on the On repeat tab, just the cassette (Phavan); he stays on the My year in songs card.
 - v83: on the recap, tiny wins and letters stay in the app (personal; a wall is public). The bottom shows the month's soundtrack, else one proud fact ("best bit"), else nothing.
+- v120: learning models live on the phone, small and explainable, in your data and backups, and can be forgotten from Settings. Just say it is the first: it asks when it isn't sure rather than guessing quietly.
 - v119: games built for phones play in a phone-width column on laptops (Keep it up first), rather than stretching across the screen.
 - v118: Just say it: one sentence becomes a list to tick, matched on the phone with no AI (the keyboard's mic does the voice). Its own button opening a sheet (Phavan picked B: cleaner). Photo logging stays a later, optional idea (needs a cloud AI; photos would leave the phone).
 - v117: the hill shows the way you've come as a worn track behind him (Phavan picked B of four mockups); ahead stays a dotted path.
