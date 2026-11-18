@@ -1,8 +1,8 @@
 // Offline support: the app opens even with no signal. Change VERSION when you publish an update.
-const VERSION = 'prequel-v120';
+const VERSION = 'prequel-v121';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
-  'js/app.js', 'js/store.js', 'js/data.js', 'js/ui.js', 'js/sky-model.js', 'js/goals.js', 'js/charts.js', 'js/nutrition.js', 'js/say.js', 'data/foods.json',
+  'js/app.js', 'js/store.js', 'js/data.js', 'js/ui.js', 'js/sky-model.js', 'js/goals.js', 'js/charts.js', 'js/nutrition.js', 'js/say.js', 'js/coach.js', 'data/foods.json',
   'js/screens/home.js', 'js/screens/weather.js', 'js/screens/move.js', 'js/screens/food.js', 'js/screens/rest.js',
   'js/screens/wins.js', 'js/screens/mind.js', 'js/screens/letters.js', 'js/screens/days.js', 'js/screens/me.js', 'js/screens/lookback.js', 'js/screens/sky.js', 'js/screens/quilt.js', 'js/screens/skate.js', 'js/screens/keepup.js', 'js/screens/stack.js', 'js/screens/journey.js', 'js/screens/road.js', 'js/screens/wall.js', 'js/gamekit.js', 'js/weight.js', 'js/units.js', 'js/features.js', 'js/recap.js', 'js/screens/settings.js', 'js/screens/share.js', 'js/cards.js', 'js/pdf.js', 'js/reports.js', 'js/news.js', 'js/cycle.js', 'js/activities.js', 'js/screens/movehub.js', 'js/music.js', 'js/screens/ontape.js', 'js/screens/repeat.js',
   ...['nunito-latin-500', 'nunito-latin-700', 'nunito-latin-800', 'nunito-latin-900', 'gaegu-latin-700'].map(n => 'fonts/' + n + '-normal.woff2'), 'fonts/bangers-latin-400-normal.woff2',

@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 121, date: '2026-11-18', items: [
+    'Today, try… In the gym, every exercise you\'ve done at least twice now suggests a weight and reps for each set, from your own history: one more rep than last time, or a step heavier once every set reached the top of the range.',
+    'It learns how you go up (your usual jump in weight) and how much you usually drop from set to set, eases you back in after a break, and holds steady on Yellow days. Use it fills the boxes, or tap Next on an empty box.',
+    'A strong set at the top of the range? It says what to try next time, and keeps today\'s weight the same.'
+  ] },
   { v: 120, date: '2026-11-18', items: [
     'Just say it learns your words. When you fix a guess, it remembers: next time "chicken gravy" goes straight to your own. It also learns when in the day you usually have things. It all stays on your phone.',
     'When it isn\'t sure (a brand name, or only part of what you said), it asks "Is this it?" instead of guessing quietly.',

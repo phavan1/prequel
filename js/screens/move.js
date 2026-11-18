@@ -6,6 +6,7 @@ import { hubHtml, hubClick, hubTick, milestoneOf, milestoneSheet } from './moveh
 import { editSession } from './days.js';
 import { removeEntry } from '../activities.js';
 import { count as goalCount, unitOf as goalUnit } from '../goals.js';
+import { plan, nextSet, learnedStep, learnedDrop, range } from '../coach.js'; // v121: Today, try…
 import { wu, showA, kgA, showNum, askLb } from '../units.js'; // v71: kg or lb (saved in kg, shown and typed in your unit)
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
@@ -136,6 +137,50 @@ function lastWords(i) {
   const sets = L.sets.map(x => fmtSet(x, e, k));
   return sets.join(', ') + ' (' + prettyDate(L.date, { weekday: 'short', day: 'numeric', month: 'short' }) + ')';
 }
+// ---------- v121: "Today, try…" (the arithmetic lives in coach.js) ----------
+// your history with this exercise, in the numbers you see: kind is how it's measured (w: a weight, bp: Bar + kg each
+// side, plate: a machine's pin, bw: body weight); only sets measured the same way as last time count
+const kindOfSet = (x, k) => x.a === 'bw' ? 'bw' : isBP(x.a) ? 'bp' : SPECIAL[x.a] ? null : unitOf(k) === 'plate' ? 'plate' : 'w';
+const coachW = (x, kind) => kind === 'bw' ? null : kind === 'bp' ? Number(showNum(bpKg(x.a))) : kind === 'plate' ? Number(x.a) : Number(showNum(x.a));
+function coachHist(i) {
+  const a = act(), k = a.items[i][0], sw = a.swap[i] || null;
+  const list = get().sessions.filter(s => s.date <= a.date && Array.isArray(s.exercises))
+    .sort((x, y) => x.date.localeCompare(y.date) || (Number(x.ts) || 0) - (Number(y.ts) || 0));
+  const raw = list.map(s => { const x = s.exercises.find(y => (sw ? y.swap === sw : y.key === k && !y.swap) && (y.sets || []).length); return x ? { date: s.date, sets: x.sets } : null; }).filter(Boolean);
+  if (!raw.length) return null;
+  const kind = kindOfSet(raw[raw.length - 1].sets[0], k); if (!kind) return null;
+  const hist = raw.map(h => ({ date: h.date, sets: h.sets.filter(x => kindOfSet(x, k) === kind && Number(x.b) > 0).map(x => ({ w: coachW(x, kind), r: Number(x.b), a: x.a })) })).filter(h => h.sets.length && h.sets.every(x => x.w == null || isFinite(x.w)));
+  return { hist, kind };
+}
+function defStep(kind, e, w) {
+  const lb = wu() === 'lb';
+  return kind === 'plate' ? 1 : kind === 'bp' ? (lb ? 2.5 : 1.25) : e.m ? (lb ? 5 : 2.5) : lb ? 5 : (w < 10 ? 1 : 2);
+}
+function trySug() {
+  const a = act(); if (!a || edit >= 0) return null;
+  const k = item()[0], e = EX()[k] || {}; if (e.t !== 'wr' && e.t !== 'bw') return null;
+  const C = coachHist(a.i); if (!C) return null;
+  const { hist, kind } = C, bw = kind === 'bw', rng = range(item()[2]), lastW = hist.length ? hist[hist.length - 1].sets[0].w : 0;
+  const step = bw ? 0 : learnedStep(hist, defStep(kind, e, lastW));
+  const target = plan({ hist, rng, step, light: a.light, date: a.date, bw }); if (!target) return null;
+  const L = a.log[a.i] || [];
+  if (!L.length) return Object.assign({ set: 1, kind }, target);
+  const pl = L[L.length - 1]; if (kindOfSet(pl, k) !== kind || !(Number(pl.b) > 0)) return null;
+  const nx = nextSet({ target, prev: { w: coachW(pl, kind), r: Number(pl.b) }, drop: learnedDrop(hist), rng, step, bw }); if (!nx) return null;
+  return Object.assign({ set: L.length + 1, kind, prevA: pl.a }, nx);
+}
+const sugA = s => s.kind === 'bw' ? 'bw' : s.kind === 'bp' ? 'b+' + s.w : String(s.w);
+const sugW = (s, w = s.w) => s.kind === 'bw' ? 'body weight' : s.kind === 'bp' ? 'bar + ' + w + ' ' + wu() + ' each side' : s.kind === 'plate' ? 'pin ' + w : w + ' ' + wu();
+// fill the boxes with a suggestion; a weight that's the same as before keeps its exact saved number (v116)
+function useSug(s) {
+  A = sugA(s); B = String(s.r);
+  Aorig = s.base && s.base.w === s.w ? s.base.a : s.prevA != null ? s.prevA : null;
+}
+function tryLine(s) {
+  if (!s) return '';
+  return '<p class="trynow"><span><b>' + (s.set === 1 ? 'Today, try ' : 'Set ' + s.set + ': ') + esc(sugW(s)) + ' × ' + s.r + '</b> · ' + esc(s.why) + '</span>' +
+    (s.set === 1 ? '<button type="button" data-tryuse="1">Use it</button>' : '') + '</p>';
+}
 const hello = i => { const w = lastWords(i); return w ? 'Last time: ' + w + '. Same again?' : 'First time with this one. Go easy.'; };
 // a set starts from the set you just did; the first set of an exercise starts empty (v57), with last time as a hint
 function prefill() {
@@ -143,6 +188,7 @@ function prefill() {
   const k = item()[0], L = a.log[a.i] || [];
   const src = L.length ? L[L.length - 1] : { a: '', b: '' };
   A = e2show(src.a || ''); B = src.b || ''; field = 'a'; fresh = true; edit = -1;
+  if (L.length) { const sg = trySug(); if (sg && sg.set > 1) B = String(sg.r); } // v121: the next set starts from today's suggestion
   if (!L.length) { const g = (lastTime(a.i) || { sets: [] }).sets[0]; if (g && isBP(g.a)) A = 'b+'; } // last time was Bar +: open in Bar +, still empty
   if ((EX()[k] || {}).t === 'bw') { A = 'bw'; field = 'b'; }
 }
@@ -183,7 +229,12 @@ function renderWk() {
   const one = e.t !== 'wr';
   // an empty box on the first set shows last time's first set, faintly; nothing is saved until you type it or tap Same again (v57)
   const lt = !(a.log[a.i] || []).length && edit < 0 ? lastTime(a.i) : null, g0 = lt && lt.sets[0];
-  const ghost = (v, f) => (v !== '' && !(f === 'a' && v === 'b+')) || !g0 || g0[f] === '' || g0[f] == null ? '' : '<span class="v ghost">last ' + esc(f === 'a' ? (SPECIAL[g0.a] ? SPECIAL[g0.a].toLowerCase() : isBP(g0.a) ? (v === 'b+' ? showNum(bpKg(g0.a)) : 'bar+' + showNum(bpKg(g0.a))) : unitOf(k) === 'plate' ? g0.a : showNum(g0.a)) : g0.b) + '</span>';
+  const sug = trySug(), s1 = sug && sug.set === 1 ? sug : null; // v121
+  const ghost0 = (v, f) => (v !== '' && !(f === 'a' && v === 'b+')) || !g0 || g0[f] === '' || g0[f] == null ? '' : '<span class="v ghost">last ' + esc(f === 'a' ? (SPECIAL[g0.a] ? SPECIAL[g0.a].toLowerCase() : isBP(g0.a) ? (v === 'b+' ? showNum(bpKg(g0.a)) : 'bar+' + showNum(bpKg(g0.a))) : unitOf(k) === 'plate' ? g0.a : showNum(g0.a)) : g0.b) + '</span>';
+  // v121: on the first set the faint hint is today's suggestion ("try 8", "try 11"); without one, last time's as before
+  const ghost = (v, f) => { if (!s1) return ghost0(v, f);
+    if (f === 'a') { if (v !== '' && !(v === 'b+' && s1.kind === 'bp')) return ''; return '<span class="v ghost">try ' + esc(s1.kind === 'bp' ? (v === 'b+' ? String(s1.w) : 'bar+' + s1.w) : String(s1.w)) + '</span>'; }
+    return v !== '' ? '' : '<span class="v ghost">try ' + s1.r + '</span>'; };
   let fields;
   if (e.t === 'bw') {
     fields = '<div class="fields one"><button type="button" class="field" data-f="b" aria-pressed="true"><span class="l">REPS · BODY WEIGHT' + (e.each ? ' · EACH SIDE' : '') + '</span><span class="v' + (fresh ? ' fresh' : '') + '">' + esc(B) + '</span>' + ghost(B, 'b') + '</button></div>';
@@ -209,6 +260,7 @@ function renderWk() {
     '<div class="strip">' + him(pose, 'breathe', 'Your character, talking you through it').replace('class="him', 'id="him" class="him') + '<div class="say">' + esc(say) + '</div><span class="pill" id="since">' + (a.lastAt ? 'Since last set 0:00' : 'No sets yet') + '</span></div>' +
     '<div class="info"><div class="t"><b>' + esc(nameOf(a.i)) + (a.swap[a.i] ? ' <span style="font-weight:700;color:var(--ink-soft);font-size:12px">for ' + esc(e.n.toLowerCase()) + '</span>' : '') + '</b>' + [setsLabel, it[2], restTxt].filter(Boolean).map(esc).join(' · ') + '</div>' + '<div class="infobtns"><button type="button" class="busy" data-busy="1">Machine busy?</button><button type="button" class="busy more" data-exmenu="1" aria-label="More for ' + esc(nameOf(a.i)) + '">⋯</button></div></div>' +
     '<div class="hscroll" id="sets">' + setsHtml() + '</div>' +
+    tryLine(sug) + // v121
     fields +
     '<div class="pad"><div class="keys">' + ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'].map(kk => '<button type="button" class="key" data-k="' + kk + '" aria-label="' + (kk === 'del' ? 'Delete' : kk === '.' ? 'Decimal point' : kk) + '">' + (kk === 'del' ? '⌫' : kk) + '</button>').join('') + '</div>' +
     '<div class="acts"><button type="button" class="same" data-same="1">' + (edit >= 0 ? 'Cancel' : 'Same again') + '</button><button type="button" class="next" data-next="1">' + nextLabel + '</button></div></div>' +
@@ -253,6 +305,7 @@ function commit() {
   say = pick(CHEERS);
   const t = top(it[2]);
   if (e.t === 'wr' && t && L.length >= 2 && !a.hinted[a.i] && L.every(x => Number(x.b) >= t)) { a.hinted[a.i] = true; say = 'Top of the range on every set. Next time, maybe a little heavier.'; }
+  { const nx = trySug(); if (nx && nx.nextW != null) say = 'Strong today. Next time, ' + sugW(nx, nx.nextW) + '.'; if (nx && nx.set > 1 && (e.t === 'wr' || e.t === 'bw')) B = String(nx.r); } // v121: the next set starts from its suggestion
   if ((L.length >= maxSets(it) || (a.light === 'yellow' && L.length >= baseSets(it))) && a.i < a.items.length - 1) say += ' On to ' + nameOf(a.i + 1).toLowerCase() + ' when you\'re ready.';
   field = 'a'; fresh = true; save(); renderWk();
   if (!reduceMotion) pop(root.querySelector('#him'));
@@ -340,9 +393,12 @@ function onClick(e) {
   if (t.closest('[data-next]')) {
     // the first set's faint "last …" hint: Next or Log on an empty box takes it, as if you'd typed it (v59, Phavan)
     const ex = EX()[item()[0]], g0 = !(a.log[a.i] || []).length && edit < 0 ? ((lastTime(a.i) || { sets: [] }).sets[0] || null) : null;
-    if (g0) { if (field === 'a' && (A === '' || (A === 'b+' && isBP(g0.a))) && ex.t !== 'bw' && g0.a !== '' && g0.a != null) A = e2show(String(g0.a)); if ((field === 'b' || ex.t === 'bw') && B === '' && ex.t !== 'hold' && ex.t !== 'mins' && g0.b !== '' && g0.b != null) B = String(g0.b); }
+    const s1 = edit < 0 && !(a.log[a.i] || []).length ? trySug() : null; // v121: today's suggestion first
+    if (s1) { if (field === 'a' && (A === '' || (A === 'b+' && s1.kind === 'bp')) && ex.t !== 'bw') { const keepB = B; useSug(s1); B = keepB; } if ((field === 'b' || ex.t === 'bw') && B === '') B = String(s1.r); if (ex.t === 'bw') A = 'bw'; }
+    else if (g0) { if (field === 'a' && (A === '' || (A === 'b+' && isBP(g0.a))) && ex.t !== 'bw' && g0.a !== '' && g0.a != null) A = e2show(String(g0.a)); if ((field === 'b' || ex.t === 'bw') && B === '' && ex.t !== 'hold' && ex.t !== 'mins' && g0.b !== '' && g0.b != null) B = String(g0.b); }
     const one = ex.t !== 'wr'; if (!one && field === 'a') { field = 'b'; fresh = true; renderWk(); } else commit(); return;
   }
+  if (t.closest('[data-tryuse]')) { const s1 = trySug(); if (s1) { useSug(s1); field = 'b'; fresh = true; say = 'Today\'s suggestion is in. Log it when it\'s done.'; renderWk(); } return; } // v121
   if (t.closest('[data-same]')) {
     if (edit >= 0) { prefill(); say = 'Left it as it was.'; renderWk(); return; }
     const L = a.log[a.i] || [], last = lastTime(a.i);

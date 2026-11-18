@@ -1398,3 +1398,8 @@ html[data-theme="dark"] .tick .fix button, html[data-theme="dark"] .step button 
 .tick .rm { width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-soft); font-size: 20px; font-weight: 800; flex: none; padding: 0; }
 .tick.isit .nm i { font-style: normal; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
 .findbox { flex-wrap: wrap; } .findbox input { flex: 1 1 100%; } .findbox .btn { flex: 1; min-height: 40px; }
+/* v121: "Today, try…" on the gym screen: one calm line above the boxes */
+.trynow { display: flex; align-items: center; gap: 10px; margin: 8px 0 2px; padding: 8px 8px 8px 12px; border-radius: 14px; background: var(--paper); border: 1px dashed var(--line); font-size: 13px; font-weight: 700; color: var(--ink-soft); line-height: 1.3; }
+.trynow span { flex: 1; min-width: 0; } .trynow b { color: var(--ink); font-weight: 900; }
+.trynow button { flex: none; min-height: 34px; padding: 0 12px; border-radius: 10px; border: 0; background: var(--blue); color: #fff; font: inherit; font-weight: 900; }
+html[data-theme="dark"] .trynow button { background: #3D66E0; }

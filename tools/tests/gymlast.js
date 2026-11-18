@@ -34,7 +34,7 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   ok('"Last time" reads the saved workout, every set (not the old 12.5)', /Last time: 10kg × 12, 10kg × 10 \(Tue,? 13 Oct\)/.test(say), say);
   ok('a swapped curl (hammer curl) doesn\'t count as biceps curl', !/7\.5/.test(say));
   const box = await p.locator('.field[data-f="a"]').innerText();
-  ok('the weight box starts empty, with "last 10" as a faint hint', /last 10/.test(box) && !/12\.5/.test(box), box.replace(/\n/g, ' '));
+  ok('the weight box starts empty, with a faint 10 hint ("last 10", or since v121 "try 10": done twice before)', /(last|try) 10/.test(box) && !/12\.5/.test(box), box.replace(/\n/g, ' '));
   await p.screenshot({ path: OUT + '/gl-first.png' });
 
   // ± on the empty first set starts from last time's weight
