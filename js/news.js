@@ -4,6 +4,11 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 122, date: '2026-11-19', items: [
+    'Move now suggests a Green or Yellow day, with the reasons: your sleep against your usual, how you woke up, how much you\'ve moved lately, rest days and soft days. "Make it Yellow" is one tap; your choice always wins.',
+    'It learns after each gym session what actually matters for you. With less logged it says less, and with nothing logged there\'s no card. It never suggests Red.',
+    'Changed your mind? Settings → More → Forget what Move learned.'
+  ] },
   { v: 121, date: '2026-11-18', items: [
     'Today, try… In the gym, every exercise you\'ve done at least twice now suggests a weight and reps for each set, from your own history: one more rep than last time, or a step heavier once every set reached the top of the range.',
     'It learns how you go up (your usual jump in weight) and how much you usually drop from set to set, eases you back in after a break, and holds steady on Yellow days. Use it fills the boxes, or tap Next on an empty box.',

@@ -140,7 +140,7 @@ export function exportJSON() { return JSON.stringify(Object.assign({ exported: n
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const RECORDS = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'cycleDays', 'activities', 'tapes', 'mind', 'letters', 'foods', 'comfort', 'customWorkouts', 'myFoods', 'meals', 'weights', 'goals', 'goalLogs'];
 const DATED = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'cycleDays', 'activities', 'tapes', 'foods', 'meals', 'weights', 'goalLogs'];
-const MAPS = ['heavy', 'lifts', 'units', 'customExercises', 'workoutAdds', 'subsAdded', 'settings', 'sky', 'games', 'wall', 'sayModel']; // v80: Your wall too; v120: what Just say it learned
+const MAPS = ['heavy', 'lifts', 'units', 'customExercises', 'workoutAdds', 'subsAdded', 'settings', 'sky', 'games', 'wall', 'sayModel', 'readyModel', 'readyNote']; // v80: Your wall too; v120: what Just say it learned; v122: readiness
 export const BACKUP_PROBLEMS = {
   unreadable: 'That file couldn\'t be read, so Prequel can\'t use it. Nothing was changed.',
   notours: 'That doesn\'t look like a Prequel backup. Nothing was changed.',

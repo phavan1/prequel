@@ -6,7 +6,8 @@ import { hubHtml, hubClick, hubTick, milestoneOf, milestoneSheet } from './moveh
 import { editSession } from './days.js';
 import { removeEntry } from '../activities.js';
 import { count as goalCount, unitOf as goalUnit } from '../goals.js';
-import { plan, nextSet, learnedStep, learnedDrop, range } from '../coach.js'; // v121: Today, try…
+import { plan, nextSet, learnedStep, learnedDrop, range, e1rm } from '../coach.js'; // v121: Today, try…
+import { suggest, snapshot, learn as readyLearn, outcome as readyOutcome } from '../ready.js'; // v122: the readiness suggestion
 import { wu, showA, kgA, showNum, askLb } from '../units.js'; // v71: kg or lb (saved in kg, shown and typed in your unit)
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
@@ -74,21 +75,24 @@ function suggestion() {
   if (light === 'yellow') { s.k = 'YELLOW DAY'; s.note = 'Keep it to 2 sets and skip the optional extras. Or do the 20-Minute Minimum.'; s.btns.push(['min20', '20-Minute Minimum']); }
   return s;
 }
-// a gentle nudge toward Yellow (v45), only from what you told Rest: how you last woke up, and all your rest in the
-// last 24 hours (naps count, so split sleep isn't punished). Never a verdict: you still pick the light.
-function restHint() {
-  if (hintGone || light !== 'green' || logDate() !== today()) return '';
-  const now = Date.now(), since = now - 24 * 3600000;
-  const recent = get().rests.filter(r => r.end > since && r.end <= now);
-  if (!recent.length) return '';
-  const last = recent.reduce((a, b) => b.end > a.end ? b : a);
-  const hours = recent.reduce((n, r) => n + (r.end - Math.max(r.start, since)), 0) / 3600000;
-  const why = last.feel && feelFamily(last.feel) === 'groggy' ? 'You woke up ' + feelLabel(last.feel).toLowerCase() + '.' : hours < 5 ? 'Not much rest in the last day.' : '';
-  return why ? '<button type="button" class="resthint" data-light="yellow"><span aria-hidden="true">🌙</span><span>' + why + ' Yellow might be kinder today. Lighter still counts.</span></button>' : '';
+// v122: the readiness suggestion (ready.js), above the lights. It replaced v45's one rule (a groggy wake-up or under
+// 5 hours of rest). Only on today's Move, only while the light is still the Green it starts on, never Red, and it never
+// changes your choice: "Make it Yellow" is one tap.
+function readyCard() {
+  if (hintGone === today() || light !== 'green' || logDate() !== today()) return ''; // once you pick a light, it steps aside for the day
+  const s = suggest(); if (!s) return '';
+  const y = s.light === 'yellow'; let note = '';
+  if (s.partial) { // a note, a few days at most, never a request
+    const st = get(), rn = st.readyNote || (st.readyNote = { days: 0, last: '' });
+    if (rn.last !== today() && rn.days < 3) { rn.days++; rn.last = today(); save(); }
+    if (rn.last === today()) note = '<p class="why">Going on your training only. Sleep on Rest would help it guess.</p>';
+  }
+  return '<div class="readycard ' + (y ? 'y' : 'g') + '"><span class="dot" aria-hidden="true">' + (y ? '~' : '✓') + '</span><div><b>' + (y ? 'Maybe a Yellow day' : 'Looks like a Green day') + '</b><small>' + s.reasons.map(esc).join(' · ') + '</small>' +
+    (y ? '<button type="button" class="go" data-light="yellow">Make it Yellow</button>' : '') + note + '</div></div>';
 }
 // "How's the body?" lives on the hub (v48), so it covers every activity
 const L = [['green', 'Green', 'awake, normal', '#2E8B57'], ['yellow', 'Yellow', 'tired, a bit sore', '#E3B000'], ['red', 'Red', 'unwell, faint, pain', '#C2412D']];
-const lightsHtml = () => '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' + restHint() +
+const lightsHtml = () => readyCard() + '<div class="lights">' + L.map(l => '<button type="button" class="light" data-light="' + l[0] + '" aria-pressed="' + (light === l[0]) + '"><i style="background:' + l[3] + '"></i><b>' + l[1] + '</b><span>' + l[2] + '</span></button>').join('') + '</div>' +
   (light === 'red' ? '<div class="note-r">Rest is the plan today, and that is a good plan. If it is chest pain, dizziness, feeling faint or a fever, please get it checked.</div>' : light === 'yellow' ? '<div class="note-y">Go gently today. A lighter version of anything still counts.</div>' : '');
 function renderHub() { root.innerHTML = hubHtml(lightsHtml()) + nav('move'); if (get().moveSetup) setTimeout(() => { if (view === 'hub' && root && root.isConnected) askLb(() => { if (view === 'hub') renderHub(); }); }, 300); } // v71: once, for someone now in lb with weights saved before
 function renderStart() {
@@ -194,7 +198,8 @@ function prefill() {
 }
 function startWorkout(id) {
   const base = byId(id); if (!base) return;
-  get().active = { id: base.id, n: base.n, items: base.items.map(x => x.slice()), i: 0, log: {}, swap: {}, hinted: {}, light, date: logDate(), started: Date.now(), lastAt: 0 };
+  get().active = { id: base.id, n: base.n, items: base.items.map(x => x.slice()), i: 0, log: {}, swap: {}, hinted: {}, light, date: logDate(), started: Date.now(), lastAt: 0,
+    ready: logDate() === today() ? snapshot() : null }; // v122: what readiness knew at the start, to learn from at Finish
   save(); view = 'wk'; prefill();
   say = id === 'min20' ? 'Three exercises. Then we decide together.' : id === 'rec' ? 'Gentle today. Nothing to prove.' : 'Let\'s go. ' + nameOf(0) + ' first.' + (lastWords(0) ? ' Last time: ' + lastWords(0) + '.' : '');
   render(); window.scrollTo(0, 0);
@@ -311,6 +316,25 @@ function commit() {
   if (!reduceMotion) pop(root.querySelector('#him'));
 }
 
+// v122: how the session went, for the readiness model: your own Yellow / Red (only when it had suggested Green, so it
+// can't teach itself), what you lifted against "Today, try…" (best estimated one-rep max per exercise, against the
+// plan's), and stopping well short of the planned sets
+function readyAfter(a) {
+  if (!a.ready) return;
+  const EXL = EX(); let sum = 0, n = 0, planned = 0, done = 0;
+  a.items.forEach((it, j) => {
+    planned += Number(it[1]) || 0; const L = a.log[j] || []; done += L.length; if (!L.length) return;
+    const e = EXL[it[0]] || {}; if (e.t !== 'wr' && e.t !== 'bw') return;
+    const C = coachHist(j); if (!C) return; const { hist, kind } = C, bw = kind === 'bw';
+    const step = bw ? 0 : learnedStep(hist, defStep(kind, e, hist.length ? hist[hist.length - 1].sets[0].w : 0));
+    const t = plan({ hist, rng: range(it[2]), step, date: a.date, bw }); if (!t) return;
+    const got = L.filter(x => kindOfSet(x, it[0]) === kind && Number(x.b) > 0).map(x => bw ? Number(x.b) : e1rm(coachW(x, kind), Number(x.b)));
+    if (!got.length) return; const want = bw ? t.r : e1rm(t.w, t.r); if (!(want > 0)) return;
+    sum += Math.max(...got) / want; n++;
+  });
+  const y = readyOutcome({ chose: a.ready.p < 0.5 ? a.light : 'green', ratio: n ? sum / n : null, early: planned > 0 && done < planned * 0.6 });
+  if (y != null) readyLearn(a.ready, y);
+}
 function finish() {
   const st = get(), a = act();
   const ord = a.order || [], at = j => { const n = ord.indexOf(j); return n < 0 ? 999 + j : n; };
@@ -327,6 +351,7 @@ function finish() {
     if (prevMax > 0 && nowMax > prevMax) pb = true;
     st.lifts[x.key] = x.sets[x.sets.length - 1];
   });
+  readyAfter(a); // v122: learn from how it went, before this session joins your history
   const first = st.sessions.length === 0;
   const session = { id: uid(), date: a.date, ts: Date.now(), workoutId: a.id, workoutName: a.n, light: a.light, exercises };
   // how long it took (v66): from starting to your last set, plus a few minutes to cool down. Only when logged live,
@@ -352,7 +377,7 @@ function onKey(e) {
 function onClick(e) {
   const t = e.target, a = act();
   let b;
-  if ((b = t.closest('[data-light]'))) { light = b.dataset.light; hintGone = true; render(); return; }
+  if ((b = t.closest('[data-light]'))) { light = b.dataset.light; hintGone = today(); render(); return; }
   if (view === 'hub' && hubClick(e, root, render, () => { view = 'start'; render(); window.scrollTo(0, 0); }, sessionSheet)) return;
   if (t.closest('[data-hub]')) { view = 'hub'; render(); window.scrollTo(0, 0); return; }
   if (t.closest('[data-gymmile]')) { milestoneSheet('gym', render); return; }

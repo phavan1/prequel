@@ -105,9 +105,10 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p.evaluate(async () => { const S = await import('./js/store.js'); S.get().moveSetup = { picked: ['gym', 'walk'], custom: {} }; S.save(); }); // v48: the hint lives on the Move hub
   await p.goto(BASE + '#/move'); await p.waitForTimeout(400);
   await p.screenshot({ path: OUT + '/sl-movehint.png' });
-  ok('Move gently suggests Yellow after waking restless', /You woke up restless\. Yellow might be kinder today/.test(await p.locator('.resthint').innerText().catch(() => '')));
-  await p.click('.resthint'); await p.waitForTimeout(200);
-  ok('tapping it picks Yellow, and the hint steps aside', await p.locator('[data-light="yellow"][aria-pressed="true"]').count() === 1 && await p.locator('.resthint').count() === 0);
+  // v122: the one-rule hint became the readiness card (ready.js); a restless wake-up still suggests Yellow
+  ok('Move gently suggests Yellow after waking restless', /Maybe a Yellow day[\s\S]*You woke up restless/.test(await p.locator('.readycard.y').innerText().catch(() => '')));
+  await p.click('.readycard .go'); await p.waitForTimeout(200);
+  ok('Make it Yellow picks Yellow, and the card steps aside', await p.locator('.light[data-light="yellow"][aria-pressed="true"]').count() === 1 && await p.locator('.readycard').count() === 0);
 
   // 12. split sleep isn't punished: 3 h at night + a long afternoon rest, felt okay → no hint
   const p2 = await ctx.newPage(); p2.on('pageerror', e => errs.push(e.message));
@@ -116,10 +117,10 @@ const results = []; const ok = (name, pass, note = '') => results.push([pass ? '
   await p2.evaluate(async () => { const S = await import('./js/store.js'); const st = S.get(); st.moveSetup = { picked: ['gym'], custom: {} }; const d = t => new Date(t).getTime();
     st.rests = [{ id: 'a', date: '2026-10-16', start: d('2026-10-16T01:00:00'), end: d('2026-10-16T04:00:00'), feel: 'okay' }, { id: 'b', date: '2026-10-16', start: d('2026-10-16T13:00:00'), end: d('2026-10-16T16:00:00'), feel: 'okay' }]; S.save(); });
   await p2.goto(BASE + '#/home'); await p2.goto(BASE + '#/move'); await p2.waitForTimeout(400);
-  ok('no hint after 3 h + 3 h that felt okay', await p2.locator('.resthint').count() === 0);
+  ok('no Yellow after 3 h + 3 h that felt okay', await p2.locator('.readycard.y').count() === 0);
   await p2.evaluate(async () => { const S = await import('./js/store.js'); const st = S.get(); st.rests = st.rests.slice(0, 1); S.save(); });
   await p2.goto(BASE + '#/home'); await p2.goto(BASE + '#/move'); await p2.waitForTimeout(400);
-  ok('a hint after only 3 h in a day', /Not much rest in the last day/.test(await p2.locator('.resthint').innerText().catch(() => '')));
+  ok('Yellow after only 3 h in a day', /Maybe a Yellow day[\s\S]*Shorter night than usual \(3 hrs\)/.test(await p2.locator('.readycard.y').innerText().catch(() => '')));
 
   // 13. old nights keep their meaning, and backups with doctor notes are accepted
   const old = await p.evaluate(async () => { const D = await import('./js/data.js'); return [D.feelFamily('groggy'), D.feelFamily('rested'), D.feelFamily(undefined), D.feelLabel('okay')].join(','); });

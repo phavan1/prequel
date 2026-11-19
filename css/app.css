@@ -1403,3 +1403,15 @@ html[data-theme="dark"] .tick .fix button, html[data-theme="dark"] .step button 
 .trynow span { flex: 1; min-width: 0; } .trynow b { color: var(--ink); font-weight: 900; }
 .trynow button { flex: none; min-height: 34px; padding: 0 12px; border-radius: 10px; border: 0; background: var(--blue); color: #fff; font: inherit; font-weight: 900; }
 html[data-theme="dark"] .trynow button { background: #3D66E0; }
+
+/* v122: the readiness suggestion on Move (design A): a card above the lights. Colour plus a symbol and words */
+.readycard { display: flex; gap: 12px; align-items: flex-start; margin: 2px 0 10px; padding: 12px 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--paper); }
+.readycard .dot { width: 22px; height: 22px; border-radius: 50%; flex: none; margin-top: 2px; display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 900; }
+.readycard.g .dot { background: #2E8B57; } .readycard.y .dot { background: #E3B000; color: #3A2F00; }
+.readycard.y { border: 1px dashed #E3B000; background: #FFF8DD; } html[data-theme="dark"] .readycard.y { background: #3A3320; }
+.readycard b { display: block; font-size: 16px; font-weight: 900; color: var(--ink); } html[data-theme="dark"] .readycard.y b { color: #F3EEDF; }
+.readycard small { display: block; font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-top: 2px; line-height: 1.35; }
+html[data-theme="dark"] .readycard.y small, html[data-theme="dark"] .readycard.y .why { color: #D9CFB8; }
+.readycard .go { margin-top: 8px; min-height: 36px; padding: 0 14px; border-radius: 12px; border: 0; background: #E3B000; color: #2B2300; font: inherit; font-weight: 900; }
+.readycard .why { margin: 6px 0 0; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+html:not([data-theme="dark"]) .readycard.y small, html:not([data-theme="dark"]) .readycard.y .why { color: #5C5032; }
