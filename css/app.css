@@ -1415,3 +1415,13 @@ html[data-theme="dark"] .readycard.y small, html[data-theme="dark"] .readycard.y
 .readycard .go { margin-top: 8px; min-height: 36px; padding: 0 14px; border-radius: 12px; border: 0; background: #E3B000; color: #2B2300; font: inherit; font-weight: 900; }
 .readycard .why { margin: 6px 0 0; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
 html:not([data-theme="dark"]) .readycard.y small, html:not([data-theme="dark"]) .readycard.y .why { color: #5C5032; }
+/* v123: "How did it feel compared to usual?" on Session done: three quiet icons with words (design C) */
+.hf { width: 100%; text-align: center; margin: 6px 0 4px; }
+.hf .q { margin: 0 0 10px; font-size: 14px; font-weight: 800; color: var(--ink-soft); }
+.hf .opts { display: flex; justify-content: center; gap: 22px; }
+.hf .opts button { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; background: none; font: inherit; font-size: 12px; font-weight: 800; color: var(--ink-soft); padding: 0; min-width: 56px; }
+.hf .opts .c { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--line); color: var(--ink-soft); }
+.hf .opts button[aria-pressed="true"] { color: var(--ink); }
+.hf .opts button[aria-pressed="true"] .c { background: var(--blue); border-color: var(--blue); color: #fff; }
+html[data-theme="dark"] .hf .opts button[aria-pressed="true"] .c { background: #3D66E0; border-color: #3D66E0; }
+.hf .thanks { margin: 8px 0 0; font-size: 12px; font-weight: 700; color: var(--ink-soft); }

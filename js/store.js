@@ -138,7 +138,7 @@ export function exportJSON() { return JSON.stringify(Object.assign({ exported: n
 // Checking a backup before it's used. Missing parts are fine (older backups don't have newer fields, and get them
 // filled in). A part that's there but the wrong shape means the whole file is refused: no half-restores.
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
-const RECORDS = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'cycleDays', 'activities', 'tapes', 'mind', 'letters', 'foods', 'comfort', 'customWorkouts', 'myFoods', 'meals', 'weights', 'goals', 'goalLogs'];
+const RECORDS = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'cycleDays', 'activities', 'tapes', 'mind', 'letters', 'foods', 'comfort', 'customWorkouts', 'myFoods', 'meals', 'weights', 'goals', 'goalLogs', 'readyLog'];
 const DATED = ['moments', 'weather', 'sessions', 'rests', 'doctorNotes', 'cycleDays', 'activities', 'tapes', 'foods', 'meals', 'weights', 'goalLogs'];
 const MAPS = ['heavy', 'lifts', 'units', 'customExercises', 'workoutAdds', 'subsAdded', 'settings', 'sky', 'games', 'wall', 'sayModel', 'readyModel', 'readyNote']; // v80: Your wall too; v120: what Just say it learned; v122: readiness
 export const BACKUP_PROBLEMS = {

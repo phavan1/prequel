@@ -11,10 +11,17 @@
 //   load   days you moved in the last 4, against your usual        (more → tougher)
 //   rest   a rest day since you last trained                       (rested → easier)
 //   soft   yesterday was a soft day                                (→ tougher)
-// It starts from sensible weights and learns after each gym session (one small step of gradient descent) from how
-// the session actually went: you chose Yellow or Red yourself, you lifted under what "Today, try…" planned, or you
-// stopped early = tough; a Green session at or above plan = fine. Unclear sessions teach it nothing. It only learns
-// from the factors it actually had that day. Settings → More → "Forget what Move learned" starts it over.
+// v123: what it predicts, exactly: "Will today's normal (Green) session feel unusually hard?"
+// It starts from sensible weights and learns (one small step of gradient descent) only from sessions that test that:
+//   • trained on Green, and it had at least one real signal at the start (an informed prediction);
+//   • the label comes from you first ("How did it feel compared to usual?" on Session done: Harder = hard, Usual or
+//     Easier = not), else from your lifts against "Today, try…" (well under plan, or stopping well short = hard; at or
+//     above plan = not); anything in between teaches nothing.
+// Yellow and Red sessions are recorded but never trained on: the plan was changed, so whether Green would have been
+// too much can't be known. Your light choice is context, never an outcome. It only learns from the factors it had.
+// Every session is kept in a small private record (st.readyLog) with the model version and what the untrained starting
+// model would have said, so we can check later whether learning actually helps. Settings → More → "Forget what Move
+// learned" clears the model and the record.
 import { get, save, today, addDays, dateKey } from './store.js';
 import { feelFamily, feelLabel } from './data.js';
 
@@ -23,7 +30,8 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const sig = z => 1 / (1 + Math.exp(-z));
 export function model() { const st = get(); const m = st.readyModel; return m && m.v === 1 && m.w ? m : { v: 1, b: START.b, w: Object.assign({}, START.w), n: 0 }; }
 export const hasLearned = () => { const m = get().readyModel; return !!(m && m.n > 0); };
-export function forget() { const st = get(); delete st.readyModel; save(); }
+export function forget() { const st = get(); delete st.readyModel; delete st.readyLog; save(); }
+export const MODEL_V = 2; // v122 was 1 (learned from your light choice); v123 learns only from Green sessions
 const hrs = h => { const r = Math.round(h * 2) / 2; return (r % 1 ? Math.floor(r) + '½' : String(r)) + ' hrs'; };
 const WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -85,10 +93,30 @@ export function learn(snap, outcome) {
   Object.keys(snap.x).forEach(k => { m.w[k] = clamp((m.w[k] || 0) + lr * err * snap.x[k], -3, 3); });
   m.n = (m.n || 0) + 1; st.readyModel = m;
 }
-// what a session says: tough (1), fine (0) or unclear (null)
-//   chose: the light you picked; ratio: what you lifted against "Today, try…" (null if nothing to compare); early: stopped well short
-export function outcome({ chose, ratio, early }) {
-  if (chose === 'yellow' || chose === 'red' || early || (ratio != null && ratio < 0.95)) return 1;
+// what a session says, for the one target (an unusually hard Green session): 1 hard, 0 not, null unclear
+//   feel: your answer ('easier' | 'usual' | 'harder'), ratio: lifts against "Today, try…", early: stopped well short
+export function outcome({ feel, ratio, early }) {
+  if (feel) return feel === 'harder' ? 1 : 0;           // your answer comes first
+  if (early || (ratio != null && ratio < 0.95)) return 1;
   if (ratio != null && ratio >= 0.98) return 0;
   return null;
 }
+const p0 = x => { let z = START.b; Object.keys(x).forEach(k => { z += (START.w[k] || 0) * x[k]; }); return sig(z); };
+// the private record: one line per gym session, written at Finish, settled once (when the Session done sheet closes)
+export function record(id, a, ratio, early) {
+  const st = get(), L = st.readyLog || (st.readyLog = []), snap = a.ready || null;
+  L.push({ id, date: a.date, v: MODEL_V, informed: !!(snap && snap.x && Object.keys(snap.x).length), p: snap ? Math.round(snap.p * 1000) / 1000 : null,
+    p0: snap && snap.x ? Math.round(p0(snap.x) * 1000) / 1000 : null, x: snap ? snap.x : null, light: a.light, adjusted: a.light !== 'green',
+    ratio: ratio == null ? null : Math.round(ratio * 1000) / 1000, early: !!early, feel: null, label: null, from: null, trained: false, settled: false });
+  if (L.length > 300) L.splice(0, L.length - 300);
+}
+export function setFeel(id, feel) { const e = (get().readyLog || []).find(x => x.id === id); if (e && !e.settled) { e.feel = feel; save(); } }
+// settle one session: decide its label and, only for an informed Green session, learn from it. Exactly once.
+export function settle(id) {
+  const st = get(), e = (st.readyLog || []).find(x => x.id === id); if (!e || e.settled) return;
+  e.label = outcome({ feel: e.feel, ratio: e.ratio, early: e.early }); e.from = e.feel ? 'feel' : e.label != null ? 'lifts' : null;
+  if (e.light === 'green' && e.informed && e.label != null) { learn({ x: e.x, p: e.p }, e.label); e.trained = true; }
+  e.settled = true; save();
+}
+// anything left unsettled (the app was closed before the sheet was), except the one still on screen
+export function settlePending(except) { (get().readyLog || []).filter(e => !e.settled && e.id !== except).forEach(e => settle(e.id)); }

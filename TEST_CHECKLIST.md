@@ -189,6 +189,7 @@ _Run `node tools/tests/backup.js` after **any** change to `store.js`, `settings.
 - [ ] Share or save on cards opens the iOS share sheet **straight from the tap**. Save Image puts it in Photos.
 - [ ] **Airplane mode:** every screen, food search, PDFs and cards still work.
 - [ ] Skate home plays smoothly with tap or touch.
+- [ ] (v123) Finish a gym session: "How did it feel compared to usual?" with three icons; tap one (Noted. Thanks.), tap another to change; Back to Move. The readiness card's first day says "A guess from your own logs, not a health check."
 - [ ] (v122) Move: after a short or groggy night, "Maybe a Yellow day" with reasons; Make it Yellow; after a good night, "Looks like a Green day". Finish a gym session, then Settings → More shows Forget what Move learned.
 - [ ] (v121) Gym: an exercise done twice+ shows "Today, try …"; Use it, or Next on the empty boxes; set 2's line and reps follow; a set at the top of the range says Next time …; Yellow day holds steady; the screen still fits the iPhone without scrolling past the keypad.
 - [ ] (v120) Just say it: "chicken gravy" asks Is this it?; fix it with Find it and log; next time it's ticked with "you usually". Say "four tortillas" with the mic (it may write For): 4. The × leaves a row out. Settings → More → Forget appears after learning.

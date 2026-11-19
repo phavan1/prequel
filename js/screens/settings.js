@@ -22,7 +22,7 @@ export function mount(root) {
     if ((b = t.closest('button[data-darktone]'))) { get().settings.darkTone = b.dataset.darktone; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; } // v108
     if ((b = t.closest('[data-look]'))) { get().settings.theme = b.dataset.look; save(); window.dispatchEvent(new Event('prequel-theme')); render(root); return; }
     if (t.closest('[data-forgetmove]')) { // v122
-      openSheet('<h2>Forget what Move learned?</h2><p>The Green and Yellow suggestions on Move go back to their starting point and learn again from your next sessions. Your workouts, sleep and everything you logged stay.</p><button type="button" class="btn" data-forgetmoveyes>Forget it</button><button type="button" class="btn ghost" data-close>Keep it</button>', e => {
+      openSheet('<h2>Forget what Move learned?</h2><p>The Green and Yellow suggestions on Move go back to their starting point and learn again from your next sessions, and its private notes on past sessions are cleared. Your workouts, sleep and everything you logged stay.</p><button type="button" class="btn" data-forgetmoveyes>Forget it</button><button type="button" class="btn ghost" data-close>Keep it</button>', e => {
         if (e.target.closest('[data-forgetmoveyes]')) { moveForget(); closeSheet(); render(root); toast('Done. It\'ll learn again as you go.'); } });
       return; }
     if (t.closest('[data-forget]')) { // v120

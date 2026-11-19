@@ -7,7 +7,7 @@ import { editSession } from './days.js';
 import { removeEntry } from '../activities.js';
 import { count as goalCount, unitOf as goalUnit } from '../goals.js';
 import { plan, nextSet, learnedStep, learnedDrop, range, e1rm } from '../coach.js'; // v121: Today, try…
-import { suggest, snapshot, learn as readyLearn, outcome as readyOutcome } from '../ready.js'; // v122: the readiness suggestion
+import { suggest, snapshot, record as readyRecord, setFeel, settle as readySettle, settlePending } from '../ready.js'; // v122: the readiness suggestion; v123: its record and feedback
 import { wu, showA, kgA, showNum, askLb } from '../units.js'; // v71: kg or lb (saved in kg, shown and typed in your unit)
 
 const CHEERS = ['Nice one.', 'Look at you go.', 'That one wobbled. Still counts.', 'Breathe. You did that.', 'Sweaty and proud.', 'One more in the bank.', 'Okay, that was strong.'];
@@ -57,6 +57,7 @@ export function unmount() { clearInterval(timer); }
 
 function render() {
   root.classList.toggle('in-workout', view === 'wk');
+  { const open = document.querySelector('#sheet [data-feelfor]'); settlePending(open ? open.dataset.feelfor : null); } // v123: anything left from a session whose sheet never closed
   if (view === 'hub') renderHub(); else if (view === 'start') renderStart(); else renderWk();
 }
 
@@ -78,6 +79,14 @@ function suggestion() {
 // v122: the readiness suggestion (ready.js), above the lights. It replaced v45's one rule (a groggy wake-up or under
 // 5 hours of rest). Only on today's Move, only while the light is still the Green it starts on, never Red, and it never
 // changes your choice: "Make it Yellow" is one tap.
+// v123: "How did it feel compared to usual?" on Session done. One tap saves it (tap another to change); leaving is skipping
+const FEEL_ICON = {
+  easier: '<path d="M3 9c3-3 6 3 9 0s6 3 9 0M3 15c3-3 6 3 9 0s6 3 9 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  usual: '<path d="M4 12h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  harder: '<path d="M2 19l6.5-10 4 6 3-4L22 19z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>' };
+const feelHtml = id => '<div class="hf" data-feelfor="' + esc(id) + '"><p class="q" id="hfq">How did it feel compared to usual?</p><div class="opts" role="group" aria-labelledby="hfq">' +
+  [['easier', 'Easier'], ['usual', 'Usual'], ['harder', 'Harder']].map(([k, t]) => '<button type="button" data-feel="' + k + '" aria-pressed="false"><span class="c"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">' + FEEL_ICON[k] + '</svg></span>' + t + '</button>').join('') +
+  '</div><p class="thanks" hidden>Noted. Thanks.</p></div>';
 function readyCard() {
   if (hintGone === today() || light !== 'green' || logDate() !== today()) return ''; // once you pick a light, it steps aside for the day
   const s = suggest(); if (!s) return '';
@@ -87,6 +96,7 @@ function readyCard() {
     if (rn.last !== today() && rn.days < 3) { rn.days++; rn.last = today(); save(); }
     if (rn.last === today()) note = '<p class="why">Going on your training only. Sleep on Rest would help it guess.</p>';
   }
+  { const st = get(); if (!st.readyIntro) { st.readyIntro = today(); save(); } if (st.readyIntro === today()) note += '<p class="why">A guess from your own logs, not a health check.</p>'; } // v123: said once (the first day it shows)
   return '<div class="readycard ' + (y ? 'y' : 'g') + '"><span class="dot" aria-hidden="true">' + (y ? '~' : '✓') + '</span><div><b>' + (y ? 'Maybe a Yellow day' : 'Looks like a Green day') + '</b><small>' + s.reasons.map(esc).join(' · ') + '</small>' +
     (y ? '<button type="button" class="go" data-light="yellow">Make it Yellow</button>' : '') + note + '</div></div>';
 }
@@ -316,24 +326,22 @@ function commit() {
   if (!reduceMotion) pop(root.querySelector('#him'));
 }
 
-// v122: how the session went, for the readiness model: your own Yellow / Red (only when it had suggested Green, so it
-// can't teach itself), what you lifted against "Today, try…" (best estimated one-rep max per exercise, against the
-// plan's), and stopping well short of the planned sets
+// v122/v123: how the session went, for the readiness record: what you lifted against "Today, try…" for the light you
+// actually chose (best estimated one-rep max per exercise, against that plan's), and stopping well short of the
+// planned sets. Nothing is learned here: that waits for your answer on the Session done sheet (ready.js settle).
 function readyAfter(a) {
-  if (!a.ready) return;
   const EXL = EX(); let sum = 0, n = 0, planned = 0, done = 0;
   a.items.forEach((it, j) => {
     planned += Number(it[1]) || 0; const L = a.log[j] || []; done += L.length; if (!L.length) return;
     const e = EXL[it[0]] || {}; if (e.t !== 'wr' && e.t !== 'bw') return;
     const C = coachHist(j); if (!C) return; const { hist, kind } = C, bw = kind === 'bw';
     const step = bw ? 0 : learnedStep(hist, defStep(kind, e, hist.length ? hist[hist.length - 1].sets[0].w : 0));
-    const t = plan({ hist, rng: range(it[2]), step, date: a.date, bw }); if (!t) return;
+    const t = plan({ hist, rng: range(it[2]), step, light: a.light, date: a.date, bw }); if (!t) return;
     const got = L.filter(x => kindOfSet(x, it[0]) === kind && Number(x.b) > 0).map(x => bw ? Number(x.b) : e1rm(coachW(x, kind), Number(x.b)));
     if (!got.length) return; const want = bw ? t.r : e1rm(t.w, t.r); if (!(want > 0)) return;
     sum += Math.max(...got) / want; n++;
   });
-  const y = readyOutcome({ chose: a.ready.p < 0.5 ? a.light : 'green', ratio: n ? sum / n : null, early: planned > 0 && done < planned * 0.6 });
-  if (y != null) readyLearn(a.ready, y);
+  return { ratio: n ? sum / n : null, early: planned > 0 && done < planned * 0.6 };
 }
 function finish() {
   const st = get(), a = act();
@@ -351,21 +359,26 @@ function finish() {
     if (prevMax > 0 && nowMax > prevMax) pb = true;
     st.lifts[x.key] = x.sets[x.sets.length - 1];
   });
-  readyAfter(a); // v122: learn from how it went, before this session joins your history
+  const how = readyAfter(a); // v123: how it went, worked out before this session joins your history
   const first = st.sessions.length === 0;
   const session = { id: uid(), date: a.date, ts: Date.now(), workoutId: a.id, workoutName: a.n, light: a.light, exercises };
   // how long it took (v66): from starting to your last set, plus a few minutes to cool down. Only when logged live,
   // on the day, and only if it's believable (5 min to 4 h); otherwise left out rather than made up
   if (a.started && a.lastAt && a.date === today()) { const m = Math.round((Math.min(Date.now(), a.lastAt + 3 * 60000) - a.started) / 60000); if (m >= 5 && m <= 240) session.mins = m; } // v73: kept quietly, shown nowhere for now (Phavan: people often log after the workout)
   st.sessions.push(session);
+  readyRecord(session.id, a, how.ratio, how.early); // v123: the private record (settled when the sheet closes)
   addMoment('move', a.n + (sets ? ' · ' + sets + (sets === 1 ? ' set' : ' sets') : ''), a.date, { ref: session.id, bright: pb || first ? 1 : 0 });
   st.active = null; save();
   const n = st.sessions.length;
   openSheet('<div class="done" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + him('quietyes', 'pop', 'Your character, quietly proud, towel over his shoulder') +
     '<div class="big">Session ' + n + ' done.</div>' +
     '<p class="muted">' + (sets ? exercises.length + (exercises.length === 1 ? ' exercise, ' : ' exercises, ') + sets + (sets === 1 ? ' set' : ' sets') + '. ' : 'You showed up. It counts. ') + (pb ? 'A new heaviest lift, so your star shines brighter.' : 'A star just went up in your sky.') + '</p>' +
-    '<p class="muted" style="font-size:13px">' + n + ' of 100.' + (n >= 100 ? ' You made it. And it keeps going.' : '') + '</p>' +
-    '<button type="button" class="btn wide" data-copydone>Copy this workout</button><button type="button" class="btn alt wide" data-close>Back to Move</button></div>', copyDone(session));
+    '<p class="muted" style="font-size:13px">' + n + ' of 100.' + (n >= 100 ? ' You made it. And it keeps going.' : '') + '</p>' + feelHtml(session.id) +
+    '<button type="button" class="btn wide" data-copydone>Copy this workout</button><button type="button" class="btn alt wide" data-close>Back to Move</button></div>', (e, w) => {
+      const f = e.target.closest('[data-feel]'); if (f) { setFeel(session.id, f.dataset.feel); w.querySelectorAll('[data-feel]').forEach(b => b.setAttribute('aria-pressed', String(b === f))); const nt = w.querySelector('.hf .thanks'); if (nt) nt.hidden = false; return; }
+      return copyDone(session)(e, w); });
+  // v123: once the sheet goes (Back to Move, a tap outside, or anything else), the session is settled exactly once
+  { const wrap = document.getElementById('sheet'); const ob = new MutationObserver(() => { if (!document.body.contains(wrap)) { ob.disconnect(); readySettle(session.id); } }); ob.observe(document.body, { childList: true }); }
   view = 'start'; render();
 }
 
