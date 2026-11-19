@@ -1208,6 +1208,7 @@ html[data-theme="dark"] .jscene .jscenehill .jground { fill: #2F4A38; }
   /* Me: goals and your journey, with Looking back under them, on the left; your wall and the rest on the right */
   .dcols.me3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: 'a b'; } /* v105: Looking back moved to its own page */
   .dcols.me3 .ca { grid-area: a; } .dcols.me3 .cb { grid-area: b; }
+  .dcols.me3.solo { grid-template-columns: minmax(0, 560px); grid-template-areas: 'b'; justify-content: center; } .dcols.me3.solo .ca { display: none; } /* v124: nothing in the first column yet */
   .screen-me .hero { margin-top: 8px; }
   .screen-me .gear { top: 28px; }
   .wallstack.two { padding-top: 44px; }

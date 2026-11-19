@@ -74,6 +74,9 @@ function render(root) {
     })() +
     '</div></div>' +
     nav('me');
+  // v124: on a laptop or iPad, Me splits into two columns. With nothing in the first one yet (a new person, or goals
+  // and Move switched off), that left a big empty half and pushed everything right: now it's one centred column
+  const ca = root.querySelector('.dcols.me3 .ca'); if (ca && !ca.textContent.trim() && !ca.querySelector('img,svg,button,a')) root.querySelector('.dcols.me3').classList.add('solo');
 }
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

@@ -4,6 +4,10 @@ import { dayDate } from './pdf.js';
 // What's new: a few plain lines for every update, newest first. Shown once after an update, and kept in Settings.
 // Every release adds an entry here (same number as VERSION in sw.js). Write it the way you'd tell a friend.
 export const NEWS = [
+  { v: 124, date: '2026-11-20', items: [
+    'Setting up Move for the first time now asks km or miles too, right after kg or lb.',
+    'On an iPad or laptop, Me no longer leaves an empty half when there\'s nothing in its first column yet: it sits in one tidy column in the middle.'
+  ] },
   { v: 123, date: '2026-11-20', items: [
     'After a gym session, Session done asks one small thing: how did it feel compared to usual? Easier, Usual or Harder. One tap, change it if you like, or just carry on.',
     'The Green or Yellow suggestion on Move now learns only from what it can fairly judge: your answer first, then how your lifts went, and only on Green days. Choosing Yellow is never counted against you.',

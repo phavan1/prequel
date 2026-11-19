@@ -7,7 +7,7 @@ import { count, unitOf, checkFinished, openEditGoal, ensureGoals } from '../goal
 import { weights } from '../nutrition.js';
 import { weightSheet } from '../weight.js';
 import { openMoveReport } from '../reports.js';
-import { wu, withUnit, setUnit, isDist, distShow, distSave, distLabel } from '../units.js';
+import { wu, withUnit, setUnit, isDist, distShow, distSave, distLabel, du, setDistUnit } from '../units.js';
 
 // the milestone an activity has right now (gym's old "road to 100" is a sessions goal, so it counts too)
 export function milestoneOf(id) {
@@ -44,7 +44,7 @@ const timerText = () => { const t = get().actTimer; if (!t) return ''; const m =
 export function hubTick(root) { const el = root.querySelector('#acttime'); if (el) el.textContent = timerText(); }
 
 // ---------- choosing your activities: once, then any time from "Your activities" ----------
-let pick = null, own = false, road = 'keep', wpick = null; // wpick: kg or lb, asked once in the first setup (v71)
+let pick = null, own = false, road = 'keep', wpick = null, dpick = null; // v124: dpick, km or miles // wpick: kg or lb, asked once in the first setup (v71)
 function pickerHtml(first) {
   const st = get();
   if (!pick) pick = new Set(st.moveSetup ? st.moveSetup.picked : (st.sessions.length || st.active ? ['gym'] : []));
@@ -57,6 +57,7 @@ function pickerHtml(first) {
     (ms ? '<div class="roadq"><b>You were on the road to ' + ms.target + ' rep days.</b><span>Keep that milestone?</span><div class="chips"><button type="button" class="chip small" data-road="keep" aria-pressed="' + (road === 'keep') + '">Keep it</button><button type="button" class="chip small" data-road="change" aria-pressed="' + (road === 'change') + '">Change the number</button><button type="button" class="chip small" data-road="drop" aria-pressed="' + (road === 'drop') + '">No milestone</button></div>' +
       (road === 'change' ? '<input id="roadN" type="text" inputmode="numeric" placeholder="How many rep days?" value="' + ms.target + '">' : '') + '</div>' : '') +
     (first ? (() => { wpick = wpick || wu(); return '<div class="roadq wq"><b>Do you lift in kg or lb?</b><span>For your weights and body weight. You can change it in Settings.</span><div class="seg wunit">' + ['kg', 'lb'].map(u => '<button type="button" data-wpick="' + u + '" aria-pressed="' + (wpick === u) + '">' + u + '</button>').join('') + '</div></div>'; })() : '') + // v71
+    (first ? (() => { dpick = dpick || du(); return '<div class="roadq wq"><b>Do you go by km or miles?</b><span>For walks, runs, rides and hikes. You can change it in Settings.</span><div class="seg wunit">' + [['km', 'km'], ['mi', 'miles']].map(([u, t]) => '<button type="button" data-dpick="' + u + '" aria-pressed="' + (dpick === u) + '">' + t + '</button>').join('') + '</div></div>'; })() : '') + // v124
     '<div class="err" id="pickErr"></div><button type="button" class="btn" data-picksave>' + (first ? 'That\'s me' : 'Save') + '</button>' + (first ? '' : '<button type="button" class="btn alt" data-close>Cancel</button>') + '</div>';
 }
 
@@ -164,6 +165,7 @@ export function hubClick(e, root, rerender, openGym, openSession) {
   if ((b = t.closest('[data-pick]'))) { const k = b.dataset.pick; pick.has(k) ? pick.delete(k) : pick.add(k); b.setAttribute('aria-pressed', String(pick.has(k))); return true; }
   if (t.closest('[data-ownact]')) { own = !own; redrawPicker(root); return true; }
   if ((b = t.closest('[data-road]'))) { road = b.dataset.road; redrawPicker(root); return true; }
+  if ((b = t.closest('[data-dpick]'))) { dpick = b.dataset.dpick; b.parentNode.querySelectorAll('[data-dpick]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return true; } // v124
   if ((b = t.closest('[data-wpick]'))) { wpick = b.dataset.wpick; b.parentNode.querySelectorAll('[data-wpick]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return true; }
   if (t.closest('[data-oaadd]')) {
     const box = t.closest('.picker'), n = box.querySelector('#oaName').value.trim(); if (!n) { box.querySelector('#oaName').focus(); return true; }
@@ -180,6 +182,7 @@ export function hubClick(e, root, rerender, openGym, openSession) {
     }
     const custom = Object.assign({}, (st.moveSetup || {}).custom || {}, customDraft);
     if (box.querySelector('[data-wpick]')) setUnit(wpick || wu()); // v71: their pick, kg or lb
+    if (box.querySelector('[data-dpick]')) setDistUnit(dpick || du()); // v124: and km or miles
     st.moveSetup = { picked: [...pick], custom }; save();
     pick = null; own = false; road = 'keep'; for (const k in customDraft) delete customDraft[k];
     if (document.getElementById('sheet')) closeSheet();
